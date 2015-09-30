@@ -1,0 +1,81 @@
+/*ckwg +5
+ * Copyright 2011 by Kitware, Inc. All Rights Reserved. Please refer to
+ * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
+ * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
+ */
+
+#ifndef vidtk_klt_homography_super_process_h_
+#define vidtk_klt_homography_super_process_h_
+
+#include <kwklt/klt_track.h>
+
+#include <pipeline/super_process.h>
+#include <process_framework/pipeline_aid.h>
+
+#include <vil/vil_image_view.h>
+#include <vil/vil_pyramid_image_view.h>
+#include <vgl/algo/vgl_h_matrix_2d.h>
+#include <utilities/timestamp.h>
+#include <utilities/homography.h>
+
+#include <tracking/shot_break_flags.h>
+
+namespace vidtk
+{
+
+class klt_homography_super_process_impl;
+class shot_break_flags;
+
+class klt_homography_super_process
+  : public super_process
+{
+public:
+  typedef klt_homography_super_process self_type;
+
+  klt_homography_super_process( vcl_string const& name );
+
+  ~klt_homography_super_process();
+
+  virtual config_block params() const;
+
+  virtual bool set_params( config_block const& );
+
+  virtual bool initialize();
+
+  virtual process::step_status step2();
+
+  void set_timestamp( timestamp const& );
+  VIDTK_INPUT_PORT( set_timestamp, timestamp const& );
+
+  void set_image_pyramid( vil_pyramid_image_view<float> const& );
+  VIDTK_INPUT_PORT( set_image_pyramid, vil_pyramid_image_view<float> const& );
+
+  void set_image_pyramid_gradx( vil_pyramid_image_view<float> const& );
+  VIDTK_INPUT_PORT( set_image_pyramid_gradx, vil_pyramid_image_view<float> const& );
+
+  void set_image_pyramid_grady( vil_pyramid_image_view<float> const& );
+  VIDTK_INPUT_PORT( set_image_pyramid_grady, vil_pyramid_image_view<float> const& );
+
+  void set_mask( vil_image_view<bool> const& );
+  VIDTK_OPTIONAL_INPUT_PORT( set_mask, vil_image_view<bool> const& );
+
+  /// The output homography from source (current) to reference image.
+  image_to_image_homography const& src_to_ref_homography() const;
+  VIDTK_OUTPUT_PORT( image_to_image_homography const&, src_to_ref_homography );
+
+  image_to_image_homography ref_to_src_homography() const;
+  VIDTK_OUTPUT_PORT( image_to_image_homography, ref_to_src_homography );
+
+  vcl_vector< klt_track_ptr > const& active_tracks() const;
+  VIDTK_OUTPUT_PORT( vcl_vector< klt_track_ptr > const&, active_tracks );
+
+  vidtk::shot_break_flags get_output_shot_break_flags ( ) const;
+  VIDTK_OUTPUT_PORT( vidtk::shot_break_flags, get_output_shot_break_flags );
+
+private:
+  klt_homography_super_process_impl * impl_;
+};
+
+} // end namespace vidtk
+
+#endif // vidtk_klt_homography_super_process_h_

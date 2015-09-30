@@ -1,0 +1,342 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<viper xmlns="http://lamp.cfar.umd.edu/viper#" xmlns:data="http://lamp.cfar.umd.edu/viperdata#">
+    <config>
+        <descriptor name="Information" type="FILE">
+            <attribute dynamic="false" name="SOURCETYPE" type="http://lamp.cfar.umd.edu/viperdata#lvalue">
+                <data:lvalue-possibles>
+                    <data:lvalue-enum value="SEQUENCE"/>
+                    <data:lvalue-enum value="FRAMES"/>
+                </data:lvalue-possibles>
+            </attribute>
+            <attribute dynamic="false" name="NUMFRAMES" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+            <attribute dynamic="false" name="FRAMERATE" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+            <attribute dynamic="false" name="H-FRAME-SIZE" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+            <attribute dynamic="false" name="V-FRAME-SIZE" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+        </descriptor>
+        <descriptor name="PERSON" type="OBJECT">
+            <attribute dynamic="true" name="Location" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+            <attribute dynamic="true" name="Occlusion" type="http://lamp.cfar.umd.edu/viperdata#fvalue">
+                <default>
+                    <data:fvalue value="0.0"/>
+                </default>
+            </attribute>
+            <attribute dynamic="true" name="Event-Related Occlusion" type="http://lamp.cfar.umd.edu/viperdata#fvalue">
+                <default>
+                    <data:fvalue value="0.0"/>
+                </default>
+            </attribute>
+            <attribute dynamic="true" name="Standing" type="http://lamp.cfar.umd.edu/viperdata#bvalue">
+                <default>
+                    <data:bvalue value="false"/>
+                </default>
+            </attribute>
+            <attribute dynamic="true" name="Walking" type="http://lamp.cfar.umd.edu/viperdata#bvalue">
+                <default>
+                    <data:bvalue value="false"/>
+                </default>
+            </attribute>
+            <attribute dynamic="true" name="Running" type="http://lamp.cfar.umd.edu/viperdata#bvalue">
+                <default>
+                    <data:bvalue value="false"/>
+                </default>
+            </attribute>
+            <attribute dynamic="true" name="Digging" type="http://lamp.cfar.umd.edu/viperdata#bvalue">
+                <default>
+                    <data:bvalue value="false"/>
+                </default>
+            </attribute>
+            <attribute dynamic="true" name="Gesturing" type="http://lamp.cfar.umd.edu/viperdata#bvalue">
+                <default>
+                    <data:bvalue value="false"/>
+                </default>
+            </attribute>
+            <attribute dynamic="true" name="Carrying" type="http://lamp.cfar.umd.edu/viperdata#bvalue">
+                <default>
+                    <data:bvalue value="false"/>
+                </default>
+            </attribute>
+            <attribute dynamic="true" name="Opening a Trunk" type="http://lamp.cfar.umd.edu/viperdata#bvalue">
+                <default>
+                    <data:bvalue value="false"/>
+                </default>
+            </attribute>
+            <attribute dynamic="true" name="Closing a Trunk" type="http://lamp.cfar.umd.edu/viperdata#bvalue">
+                <default>
+                    <data:bvalue value="false"/>
+                </default>
+            </attribute>
+            <attribute dynamic="true" name="Getting Into a Vehicle" type="http://lamp.cfar.umd.edu/viperdata#bvalue">
+                <default>
+                    <data:bvalue value="false"/>
+                </default>
+            </attribute>
+            <attribute dynamic="true" name="Getting Out of a Vehicle" type="http://lamp.cfar.umd.edu/viperdata#bvalue">
+                <default>
+                    <data:bvalue value="false"/>
+                </default>
+            </attribute>
+            <attribute dynamic="true" name="Loading a Vehicle" type="http://lamp.cfar.umd.edu/viperdata#bvalue">
+                <default>
+                    <data:bvalue value="false"/>
+                </default>
+            </attribute>
+            <attribute dynamic="true" name="Unloading a Vehicle" type="http://lamp.cfar.umd.edu/viperdata#bvalue">
+                <default>
+                    <data:bvalue value="false"/>
+                </default>
+            </attribute>
+            <attribute dynamic="true" name="Entering a Facility" type="http://lamp.cfar.umd.edu/viperdata#bvalue">
+                <default>
+                    <data:bvalue value="false"/>
+                </default>
+            </attribute>
+            <attribute dynamic="true" name="Exiting a Facility" type="http://lamp.cfar.umd.edu/viperdata#bvalue">
+                <default>
+                    <data:bvalue value="false"/>
+                </default>
+            </attribute>
+            <attribute dynamic="true" name="Sitting" type="http://lamp.cfar.umd.edu/viperdata#bvalue">
+                <default>
+                    <data:bvalue value="false"/>
+                </default>
+            </attribute>
+            <attribute dynamic="true" name="Throwing" type="http://lamp.cfar.umd.edu/viperdata#bvalue">
+                <default>
+                    <data:bvalue value="false"/>
+                </default>
+            </attribute>
+            <attribute dynamic="true" name="Pushing" type="http://lamp.cfar.umd.edu/viperdata#bvalue">
+                <default>
+                    <data:bvalue value="false"/>
+                </default>
+            </attribute>
+            <attribute dynamic="true" name="Pulling" type="http://lamp.cfar.umd.edu/viperdata#bvalue">
+                <default>
+                    <data:bvalue value="false"/>
+                </default>
+            </attribute>
+            <attribute dynamic="true" name="Carrying Together" type="http://lamp.cfar.umd.edu/viperdata#bvalue">
+                <default>
+                    <data:bvalue value="false"/>
+                </default>
+            </attribute>
+            <attribute dynamic="true" name="Kicking" type="http://lamp.cfar.umd.edu/viperdata#bvalue">
+                <default>
+                    <data:bvalue value="false"/>
+                </default>
+            </attribute>
+            <attribute dynamic="true" name="Climbing Atop" type="http://lamp.cfar.umd.edu/viperdata#bvalue">
+                <default>
+                    <data:bvalue value="false"/>
+                </default>
+            </attribute>
+            <attribute dynamic="true" name="Laying Wire" type="http://lamp.cfar.umd.edu/viperdata#bvalue">
+                <default>
+                    <data:bvalue value="false"/>
+                </default>
+            </attribute>
+            <attribute dynamic="true" name="Not Scored" type="http://lamp.cfar.umd.edu/viperdata#bvalue">
+                <default>
+                    <data:bvalue value="false"/>
+                </default>
+            </attribute>
+        </descriptor>
+        <descriptor name="VEHICLE" type="OBJECT">
+            <attribute dynamic="true" name="Location" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+            <attribute dynamic="true" name="Occlusion" type="http://lamp.cfar.umd.edu/viperdata#fvalue">
+                <default>
+                    <data:fvalue value="0.0"/>
+                </default>
+            </attribute>
+            <attribute dynamic="true" name="Event-Related Occlusion" type="http://lamp.cfar.umd.edu/viperdata#fvalue">
+                <default>
+                    <data:fvalue value="0.0"/>
+                </default>
+            </attribute>
+            <attribute dynamic="true" name="Turning" type="http://lamp.cfar.umd.edu/viperdata#bvalue">
+                <default>
+                    <data:bvalue value="false"/>
+                </default>
+            </attribute>
+            <attribute dynamic="true" name="Starting" type="http://lamp.cfar.umd.edu/viperdata#bvalue">
+                <default>
+                    <data:bvalue value="false"/>
+                </default>
+            </attribute>
+            <attribute dynamic="true" name="Stopping" type="http://lamp.cfar.umd.edu/viperdata#bvalue">
+                <default>
+                    <data:bvalue value="false"/>
+                </default>
+            </attribute>
+            <attribute dynamic="true" name="U-Turn" type="http://lamp.cfar.umd.edu/viperdata#bvalue">
+                <default>
+                    <data:bvalue value="false"/>
+                </default>
+            </attribute>
+            <attribute dynamic="true" name="Maintaining Distance" type="http://lamp.cfar.umd.edu/viperdata#bvalue">
+                <default>
+                    <data:bvalue value="false"/>
+                </default>
+            </attribute>
+            <attribute dynamic="true" name="No. Vehicle" type="http://lamp.cfar.umd.edu/viperdata#fvalue">
+                <default>
+                    <data:fvalue value="2.0"/>
+                </default>
+            </attribute>
+            <attribute dynamic="true" name="Passing" type="http://lamp.cfar.umd.edu/viperdata#bvalue">
+                <default>
+                    <data:bvalue value="false"/>
+                </default>
+            </attribute>
+            <attribute dynamic="true" name="Looping" type="http://lamp.cfar.umd.edu/viperdata#bvalue">
+                <default>
+                    <data:bvalue value="false"/>
+                </default>
+            </attribute>
+            <attribute dynamic="true" name="Driving into a Facility" type="http://lamp.cfar.umd.edu/viperdata#bvalue">
+                <default>
+                    <data:bvalue value="false"/>
+                </default>
+            </attribute>
+            <attribute dynamic="true" name="Driving out of a Facility" type="http://lamp.cfar.umd.edu/viperdata#bvalue">
+                <default>
+                    <data:bvalue value="false"/>
+                </default>
+            </attribute>
+            <attribute dynamic="true" name="Not Scored" type="http://lamp.cfar.umd.edu/viperdata#bvalue">
+                <default>
+                    <data:bvalue value="false"/>
+                </default>
+            </attribute>
+            <attribute dynamic="true" name="FOV" type="http://lamp.cfar.umd.edu/viperdata#lvalue">
+                <data:lvalue-possibles>
+                    <data:lvalue-enum value="2x"/>
+                    <data:lvalue-enum value="UN"/>
+                    <data:lvalue-enum value="N"/>
+                    <data:lvalue-enum value="NM"/>
+                    <data:lvalue-enum value="M"/>
+                    <data:lvalue-enum value="?"/>
+                </data:lvalue-possibles>
+            </attribute>
+            <attribute dynamic="true" name="Wavelength" type="http://lamp.cfar.umd.edu/viperdata#lvalue">
+                <data:lvalue-possibles>
+                    <data:lvalue-enum value="DTV"/>
+                    <data:lvalue-enum value="IR"/>
+                </data:lvalue-possibles>
+            </attribute>
+        </descriptor>
+    </config>
+    <data>
+        <sourcefile filename="file:/C:/Documents%20and%20Settings/lmatthew/Desktop/New%20Folder/U-ITAR_20090330_1148_F8_1_Person1-5_12_ViPER.mpg">
+            <file id="0" name="Information">
+                <attribute name="SOURCETYPE"/>
+                <attribute name="NUMFRAMES">
+                    <data:dvalue value="9289"/>
+                </attribute>
+                <attribute name="FRAMERATE">
+                    <data:fvalue value="1.0"/>
+                </attribute>
+                <attribute name="H-FRAME-SIZE"/>
+                <attribute name="V-FRAME-SIZE"/>
+            </file>
+            <object framespan="1866:1917" id="0" name="VEHICLE">
+                <attribute name="Location">
+                    <data:bbox framespan="1866:1911" height="62"
+                        width="62" x="217" y="158"/>
+                    <data:bbox framespan="1914:1917" height="62"
+                        width="62" x="217" y="157"/>
+                </attribute>
+                <attribute name="Occlusion">
+                    <data:fvalue framespan="1866:2469" value="0.0"/>
+                </attribute>
+                <attribute name="Event-Related Occlusion">
+                    <data:fvalue framespan="1866:2469" value="0.0"/>
+                </attribute>
+                <attribute name="Turning">
+                    <data:bvalue framespan="1866:2469" value="true"/>
+                </attribute>
+                <attribute name="Starting">
+                    <data:bvalue framespan="1866:2469" value="false"/>
+                </attribute>
+                <attribute name="Stopping">
+                    <data:bvalue framespan="1866:2469" value="false"/>
+                </attribute>
+                <attribute name="U-Turn">
+                    <data:bvalue framespan="1866:2469" value="false"/>
+                </attribute>
+                <attribute name="Maintaining Distance">
+                    <data:bvalue framespan="1866:2469" value="false"/>
+                </attribute>
+                <attribute name="No. Vehicle">
+                    <data:fvalue framespan="1866:2469" value="2.0"/>
+                </attribute>
+                <attribute name="Passing">
+                    <data:bvalue framespan="1866:2469" value="false"/>
+                </attribute>
+                <attribute name="Looping">
+                    <data:bvalue framespan="1866:2469" value="false"/>
+                </attribute>
+                <attribute name="Driving into a Facility">
+                    <data:bvalue framespan="1866:2469" value="false"/>
+                </attribute>
+                <attribute name="Driving out of a Facility">
+                    <data:bvalue framespan="1866:2469" value="false"/>
+                </attribute>
+                <attribute name="Not Scored">
+                    <data:bvalue framespan="1866:2469" value="false"/>
+                </attribute>
+                <attribute name="FOV"/>
+                <attribute name="Wavelength"/>
+            </object>
+            <object framespan="812:934" id="1" name="VEHICLE">
+                <attribute name="Location">
+                    <data:bbox framespan="812:812" height="62"
+                        width="62" x="283" y="217"/>
+                    <data:bbox framespan="813:819" height="62"
+                        width="62" x="283" y="218"/>
+                </attribute>
+                <attribute name="Occlusion">
+                    <data:fvalue framespan="812:934" value="0.0"/>
+                </attribute>
+                <attribute name="Event-Related Occlusion">
+                    <data:fvalue framespan="812:934" value="0.0"/>
+                </attribute>
+                <attribute name="Turning">
+                    <data:bvalue framespan="812:934" value="true"/>
+                </attribute>
+                <attribute name="Starting">
+                    <data:bvalue framespan="812:934" value="false"/>
+                </attribute>
+                <attribute name="Stopping">
+                    <data:bvalue framespan="812:934" value="false"/>
+                </attribute>
+                <attribute name="U-Turn">
+                    <data:bvalue framespan="812:934" value="false"/>
+                </attribute>
+                <attribute name="Maintaining Distance">
+                    <data:bvalue framespan="812:934" value="false"/>
+                </attribute>
+                <attribute name="No. Vehicle">
+                    <data:fvalue framespan="812:934" value="2.0"/>
+                </attribute>
+                <attribute name="Passing">
+                    <data:bvalue framespan="812:934" value="false"/>
+                </attribute>
+                <attribute name="Looping">
+                    <data:bvalue framespan="812:934" value="false"/>
+                </attribute>
+                <attribute name="Driving into a Facility">
+                    <data:bvalue framespan="812:934" value="false"/>
+                </attribute>
+                <attribute name="Driving out of a Facility">
+                    <data:bvalue framespan="812:934" value="false"/>
+                </attribute>
+                <attribute name="Not Scored">
+                    <data:bvalue framespan="812:934" value="false"/>
+                </attribute>
+                <attribute name="FOV"/>
+                <attribute name="Wavelength"/>
+            </object>
+        </sourcefile>
+    </data>
+</viper>

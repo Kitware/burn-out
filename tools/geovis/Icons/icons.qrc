@@ -1,0 +1,14 @@
+<RCC>
+  <qresource prefix="/Icons" >
+    <file>pqVcrPlay24.png</file>
+    <file>pqVcrBack24.png</file>
+    <file>pqVcrFirst24.png</file>
+    <file>pqVcrForward24.png</file>
+    <file>pqVcrLast24.png</file>
+    <file>pqVcrPause24.png</file>
+    <file>fileopen.png</file>
+    <file>filesave.png</file>
+    <file>print.png</file>
+    <file>help.png</file>
+  </qresource>
+</RCC>

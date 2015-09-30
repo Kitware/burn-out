@@ -1,0 +1,1 @@
+# 1:Track-id  2:Track-length  3:Frame-number  4-5:Tracking-plane-loc(x,y)  6-7:velocity(x,y)  8-9:Image-loc(x,y)  10-13:Img-bbox(TL_x,TL_y,BR_x,BR_y)  14:Area  15-17:World-loc(x,y,z) 18:timesetamp  19:object-type-id  20:activity-type-id

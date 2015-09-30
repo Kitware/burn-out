@@ -1,0 +1,7 @@
+# vxl is required to use vidtk
+find_package( VXL REQUIRED )
+
+# VIDTK include directory
+set( VIDTK_INCLUDE_DIRS "@vidtk_all_SOURCE_DIR@/library" "@vidtk_all_SOURCE_DIR@/wrappers" )
+
+# Export definitions for vidtk to be used from find_package
