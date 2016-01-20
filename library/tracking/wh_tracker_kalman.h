@@ -32,7 +32,7 @@ class wh_tracker_kalman
     };
 
     wh_tracker_kalman(const_parameters_sptr kp = NULL);
-    ~wh_tracker_kalman();
+    virtual ~wh_tracker_kalman();
 
     virtual void get_current_width( double & ) const;
     virtual void get_current_height( double & ) const;
