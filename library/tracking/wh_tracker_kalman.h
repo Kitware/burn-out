@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010-2011 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2016 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -31,10 +31,8 @@ class wh_tracker_kalman
       // placeholder for any future wh_tracker specific parameters
     };
 
-    typedef vbl_smart_ptr< const_parameters > const_parameters_sptr;
-
     wh_tracker_kalman(const_parameters_sptr kp = NULL);
-    ~wh_tracker_kalman();
+    virtual ~wh_tracker_kalman();
 
     virtual void get_current_width( double & ) const;
     virtual void get_current_height( double & ) const;
