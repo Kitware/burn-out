@@ -12,7 +12,7 @@ template class vidtk::da_so_tracker_kalman_extended< vidtk::extended_kalman_func
 template class vidtk::da_so_tracker_kalman_extended< vidtk::extended_kalman_functions::speed_heading_fun >;
 template class vidtk::da_so_tracker_kalman_extended< vidtk::extended_kalman_functions::circular_fun >;
 
-#include <vbl/vbl_smart_ptr.txx>
+#include <vbl/vbl_smart_ptr.hxx>
 
 // Instantiate the smart pointer
 VBL_SMART_PTR_INSTANTIATE( vidtk::da_so_tracker_kalman_extended< vidtk::extended_kalman_functions::linear_fun >::const_parameters );

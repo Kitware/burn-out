@@ -5,7 +5,7 @@
  */
 
 #include <tracking/image_object.h>
-#include <vbl/vbl_smart_ptr.txx>
+#include <vbl/vbl_smart_ptr.hxx>
 #include <vgl/vgl_vector_2d.h>
 #include <tracking/tracking_keys.h>
 

@@ -5,7 +5,7 @@
  */
 
 #include <vxl_config.h>
-#include <vbl/vbl_smart_ptr.txx>
+#include <vbl/vbl_smart_ptr.hxx>
 #include "amhi.txx"
 
 template class vidtk::amhi< vxl_byte >;

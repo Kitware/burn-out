@@ -14,7 +14,7 @@
 #include <vnl/io/vnl_io_vector_fixed.h>
 #include <vgl/io/vgl_io_polygon.h>
 #include <vgl/io/vgl_io_box_2d.h>
-#include <vgl/io/vgl_io_box_2d.txx> // to implicitly instantiate for unsigned
+#include <vgl/io/vgl_io_box_2d.hxx> // to implicitly instantiate for unsigned
 
 #include <utilities/log.h>
 

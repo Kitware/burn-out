@@ -14,7 +14,7 @@
 #include <utilities/unchecked_return_value.h>
 #include <utilities/log.h>
 
-#include <vbl/vbl_smart_ptr.txx>
+#include <vbl/vbl_smart_ptr.hxx>
 #include <vcl_algorithm.h>
 
 namespace vidtk

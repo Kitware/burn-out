@@ -13,7 +13,7 @@
 
 #include <vsl/vsl_fwd.h>
 #include <tracking/track.h>
-#include <vbl/vbl_smart_ptr.txx>
+#include <vbl/vbl_smart_ptr.hxx>
 
 namespace vidtk
 {

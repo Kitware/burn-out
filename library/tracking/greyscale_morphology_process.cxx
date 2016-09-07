@@ -10,8 +10,8 @@
 #include <vcl_cassert.h>
 #include <vil/algo/vil_greyscale_erode.h>
 #include <vil/algo/vil_greyscale_dilate.h>
-#include <vil/algo/vil_greyscale_erode.txx>
-#include <vil/algo/vil_greyscale_dilate.txx>
+#include <vil/algo/vil_greyscale_erode.hxx>
+#include <vil/algo/vil_greyscale_dilate.hxx>
 
 namespace vidtk
 {

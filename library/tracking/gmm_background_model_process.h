@@ -15,7 +15,7 @@
 
 #include <bbgm/bbgm_image_sptr.h>
 #include <bbgm/bbgm_image_of.h>
-#include <bbgm/bbgm_image_of.txx>
+#include <bbgm/bbgm_image_of.hxx>
 #include <bbgm/bbgm_update.h>
 #include <bbgm/bbgm_detect.h>
 

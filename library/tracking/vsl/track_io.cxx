@@ -8,15 +8,15 @@
 
 #include <vsl/vsl_binary_io.h>
 #include <vsl/vsl_vector_io.h>
-#include <vsl/vsl_vector_io.txx>
+#include <vsl/vsl_vector_io.hxx>
 
 #include <vnl/io/vnl_io_vector_fixed.h>
-#include <vnl/io/vnl_io_vector_fixed.txx>
+#include <vnl/io/vnl_io_vector_fixed.hxx>
 #include <vil/io/vil_io_image_view.h>
 #include <vgl/io/vgl_io_box_2d.h>
-#include <vgl/io/vgl_io_box_2d.txx>
+#include <vgl/io/vgl_io_box_2d.hxx>
 #include <vbl/io/vbl_io_smart_ptr.h>
-#include <vbl/io/vbl_io_smart_ptr.txx>
+#include <vbl/io/vbl_io_smart_ptr.hxx>
 #include <tracking/tracking_keys.h>
 #include <tracking/pvo_probability.h>
 #include <tracking/vsl/image_object_io.h>

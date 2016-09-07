@@ -7,6 +7,6 @@
 //track_linking_functor.cxx
 #include "track_linking_functor.h"
 
-#include <vbl/vbl_smart_ptr.txx>
+#include <vbl/vbl_smart_ptr.hxx>
 
 VBL_SMART_PTR_INSTANTIATE( vidtk::track_linking_functor );

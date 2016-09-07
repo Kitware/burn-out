@@ -10,7 +10,7 @@
 #include <vcl_set.h>
 #include <vcl_deque.h>
 #include <vcl_algorithm.h>
-#include <vbl/vbl_smart_ptr.txx>
+#include <vbl/vbl_smart_ptr.hxx>
 #include <vul/vul_timer.h>
 #include <pipeline/super_process.h>
 #include <utilities/log.h>

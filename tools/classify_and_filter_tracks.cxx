@@ -19,7 +19,7 @@
 #include <vnl/vnl_random.h>
 #include <vnl/vnl_math.h>
 #include <vsl/vsl_vector_io.h>
-#include <vsl/vsl_vector_io.txx>
+#include <vsl/vsl_vector_io.hxx>
 
 #include <utilities/log.h>
 

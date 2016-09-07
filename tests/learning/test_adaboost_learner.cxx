@@ -17,7 +17,6 @@
 #include <learning/learner_data_class_vector.h>
 #include <learning/learner_data_class_single_vector.h>
 #include <learning/linear_weak_learners.h>
-#include <learning/gaussian_weak_learners.h>
 #include <learning/stump_weak_learners.h>
 #include <learning/learner_data_class_single_vector.h>
 

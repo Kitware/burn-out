@@ -6,7 +6,7 @@
 
 #include "sync_pipeline.h"
 
-#include <vbl/vbl_smart_ptr.txx>
+#include <vbl/vbl_smart_ptr.hxx>
 #include <vul/vul_timer.h>
 
 #include <utilities/log.h>

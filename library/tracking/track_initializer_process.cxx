@@ -20,7 +20,7 @@
 #include <utilities/unchecked_return_value.h>
 #include <tracking/tracking_keys.h>
 #include <rsdl/rsdl_bins_2d.h>
-#include <rsdl/rsdl_bins_2d.txx>
+#include <rsdl/rsdl_bins_2d.hxx>
 #include <rrel/rrel_linear_regression.h>
 #include <rrel/rrel_irls.h>
 #include <rrel/rrel_tukey_obj.h>

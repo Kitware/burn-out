@@ -127,7 +127,7 @@ wh_tracker_kalman
 
 } //namespace vidtk
 
-#include <vbl/vbl_smart_ptr.txx>
+#include <vbl/vbl_smart_ptr.hxx>
 
 // Instantiate the smart pointer
 VBL_SMART_PTR_INSTANTIATE( vidtk::wh_tracker_kalman::const_parameters);

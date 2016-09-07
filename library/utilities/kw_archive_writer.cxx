@@ -20,7 +20,7 @@
 #include <geographic/geo_coords.h>
 
 
-#include <vsl/vsl_vector_io.txx>
+#include <vsl/vsl_vector_io.hxx>
 VSL_VECTOR_IO_INSTANTIATE( vnl_vector_fixed< double VCL_COMMA 2> );
 
 namespace vidtk
