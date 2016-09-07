@@ -8,7 +8,7 @@
 #include <logger/vidtk_logger.h>
 
 #include <logger/logger_manager.h>
-#include <vbl/vbl_smart_ptr.txx>
+#include <vbl/vbl_smart_ptr.hxx>
 
 
 namespace vidtk {

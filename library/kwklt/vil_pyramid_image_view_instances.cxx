@@ -4,5 +4,5 @@
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
-#include <vil/vil_pyramid_image_view.txx>
+#include <vil/vil_pyramid_image_view.hxx>
 VIL_PYRAMID_IMAGE_VIEW_INSTANTIATE(vxl_byte);
