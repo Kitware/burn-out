@@ -136,8 +136,8 @@ image_object_reader_process
     txtfstr_.open( filename_.c_str() );
     if( !txtfstr_ )
     {
-      log_error( "Could not open \"" << txtfstr_
-        << "\" for reading; check config file \n" );
+//      log_error( "Could not open \"" << txtfstr_
+//:        << "\" for reading; check config file \n" );
       return false;
     }
     

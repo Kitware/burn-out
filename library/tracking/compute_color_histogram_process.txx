@@ -88,7 +88,7 @@ compute_color_histogram_process<PixType>
       objs_[i]->templ( *image_ );
 
     THistogram &hist =
-      objs_[i]->data_.get_or_create_ref<THistogram>( tracking_keys::histogram );
+      objs_[i]->data_.template get_or_create_ref<THistogram>( tracking_keys::histogram );
 
     hist.add( im_chip, &objs_[i]->mask_ );
   }

@@ -9,9 +9,12 @@
 #include <vil/vil_image_view.h>
 #include <vxl_config.h>
 
-using namespace vidtk;
+namespace vidtk
+{
 
 template class paired_buffer< timestamp, vil_image_view< vxl_byte > >;
 template class key_datum_pair< timestamp, vil_image_view< vxl_byte > >;
 template class paired_buffer< timestamp, double >;
 template class key_datum_pair< timestamp, double >;
+
+}
