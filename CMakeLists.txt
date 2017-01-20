@@ -2,12 +2,8 @@ cmake_minimum_required( VERSION 2.8.12 )
 
 project( vidtk_all )
 
-# vision-tpl can provide many of the external dependencies
-find_package(vision-tpl)
-if (vision-tpl_FOUND)
-  include(find_vtpl_package)
-endif()
-
+# fletch can provide many of the external dependencies
+find_package(fletch)
 find_package(VXL REQUIRED)
 include_directories(SYSTEM ${VXL_VCL_INCLUDE_DIR})
 include_directories(SYSTEM ${VXL_CORE_INCLUDE_DIR})

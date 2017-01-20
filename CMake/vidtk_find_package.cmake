@@ -3,8 +3,8 @@
 # VisionTPL was found. Else, fall back on base CMake find_package.
 #
 macro(vidtk_find_package)
-  if( vision-tpl_FOUND )
-    find_vtpl_package(${ARGN})
+  if( fletch_FOUND )
+    find_package(${ARGN})
   else()
     find_package(${ARGN})
   endif()
