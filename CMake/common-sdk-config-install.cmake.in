@@ -1,0 +1,5 @@
+get_filename_component(_SELF_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+include(${_SELF_DIR}/common-sdk-targets.cmake)
+get_filename_component(COMMON_SDK_INCLUDE_DIRS "${_SELF_DIR}/../../common_sdk/include" ABSOLUTE)
+get_filename_component(COMMON_SDK_DATA_DIR "${_SELF_DIR}/../../common_sdk/data" ABSOLUTE)
+get_filename_component(COMMON_SDK_BIN_DIR "${_SELF_DIR}/../bin" ABSOLUTE)

@@ -1,0 +1,39 @@
+<annotation>
+    <version>1.00</version>
+    <videoType>frames</videoType>
+    <folder>../test_frames/</folder>
+    <NumFrames>26</NumFrames>
+    <currentFrame>0</currentFrame>
+    <fileList>
+        <fileName>01.jpg</fileName>
+        <fileName>02.jpg</fileName>
+        <fileName>03.jpg</fileName>
+        <fileName>04.jpg</fileName>
+        <fileName>05.jpg</fileName>
+        <fileName>06.jpg</fileName>
+        <fileName>07.jpg</fileName>
+        <fileName>08.jpg</fileName>
+        <fileName>09.jpg</fileName>
+        <fileName>10.jpg</fileName>
+        <fileName>11.jpg</fileName>
+        <fileName>12.jpg</fileName>
+        <fileName>13.jpg</fileName>
+        <fileName>14.jpg</fileName>
+        <fileName>15.jpg</fileName>
+        <fileName>16.jpg</fileName>
+        <fileName>17.jpg</fileName>
+        <fileName>18.jpg</fileName>
+        <fileName>19.jpg</fileName>
+        <fileName>20.jpg</fileName>
+        <fileName>21.jpg</fileName>
+        <fileName>22.jpg</fileName>
+        <fileName>23.jpg</fileName>
+        <fileName>24.jpg</fileName>
+        <fileName>25.jpg</fileName>
+        <fileName>26.jpg</fileName>
+    </fileList>
+    <source>
+        <sourceImage>videos taken by Antonio Torrabla</sourceImage>
+        <sourceAnnotation>Qt-based C++ video labeling tool (by Ce Liu, Aug 2007)</sourceAnnotation>
+    </source>
+</annotation>

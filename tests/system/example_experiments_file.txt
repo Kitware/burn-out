@@ -1,0 +1,9 @@
+Area_D /mnt/videonas2/exportcont/projects/HADWAV/ground_truth_aoi/Area_D/ 416x450+0+0
+Ch_1_1 /mnt/videonas2/exportcont/projects/HADWAV/ground_truth_aoi/Ch_1_1/ 441x391+0+0
+Ch_1_3 /mnt/videonas2/exportcont/projects/HADWAV/ground_truth_aoi/Ch_1_3/ 831x620+0+0
+Ch_2_1 /mnt/videonas2/exportcont/projects/HADWAV/ground_truth_aoi/Ch_2_1/ 413x631+0+0
+Ch_2_2 /mnt/videonas2/exportcont/projects/HADWAV/ground_truth_aoi/Ch_2_2/ 738x685+0+0
+Ch_2_3 /mnt/videonas2/exportcont/projects/HADWAV/ground_truth_aoi/Ch_2_3/ 947x886+0+0
+Ch_2_4 /mnt/videonas2/exportcont/projects/HADWAV/ground_truth_aoi/Ch_2_4/ 576x504+0+0
+Ch_3_1 /mnt/videonas2/exportcont/projects/HADWAV/ground_truth_aoi/Ch_3_1/ 460x441+0+0
+

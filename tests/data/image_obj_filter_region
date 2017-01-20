@@ -1,0 +1,7 @@
+#Below are 2 triangular filter regions for testing filter_image_objects_process.
+
+#The comments and blank lines are intentionally added to test the shell and
+#blank line filters being used in the class.
+
+-73.76038695126473 42.850873 -73.75777004854450 42.850873 -73.76038695126473 42.849013
+-73.75515314582427 42.849013 -73.75515314582427 42.847153 -73.76038695126473 42.847153

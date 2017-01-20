@@ -1,0 +1,4 @@
+${vidtk_tests_SOURCE_DIR}/data/red_river_test0_000000.jpg
+${vidtk_tests_SOURCE_DIR}/data/red_river_Meta_000000.txt
+${vidtk_tests_SOURCE_DIR}/data/red_river_test0_000001.jpg
+${vidtk_tests_SOURCE_DIR}/data/red_river_Meta_000001.txt

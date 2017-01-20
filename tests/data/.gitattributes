@@ -1,0 +1,11 @@
+default_vidtk_db.spatialite                                          hooks.MaxObjectKiB=4000
+remove_completely_stationary_aoi_41_residential_and_plaza_v3.kw18    hooks.MaxObjectKiB=5000
+test_strings_file.txt                                                -whitespace
+kw18-test.trk                                                        hooks.MaxObjectKiB=2000
+lair-linkable-track-src.kw18                                         hooks.MaxObjectKiB=6000
+lair-linkable-track-truth.kw18                                       hooks.MaxObjectKiB=6000
+test_img_1.ntf                                                       hooks.MaxObjectKiB=28000
+test_img_1.geo_xfm.png                                               hooks.MaxObjectKiB=3000
+test_img_1.roi.png                                                   hooks.MaxObjectKiB=3000
+test_img_1.roi2.png                                                  hooks.MaxObjectKiB=3000
+test_kwsoti/*.txt                                                    -whitespace

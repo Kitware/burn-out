@@ -1,0 +1,7 @@
+ResInMeters = .008
+MaxHumans = 3
+Frequency = .5
+FrameWidth = 800
+FrameHeight = 800
+StartFrame = 0
+LastFrame = 25

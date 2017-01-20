@@ -1,0 +1,12 @@
+get_filename_component(_SELF_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+include(${_SELF_DIR}/event-sdk-targets.cmake)
+get_filename_component(EVENT_SDK_INCLUDE_DIRECTORY "${_SELF_DIR}/../../event_sdk/include" ABSOLUTE)
+get_filename_component(COMMON_SDK_INCLUDE_DIRECTORY "${_SELF_DIR}/../../common_sdk/include" ABSOLUTE)
+get_filename_component(COMMON_SDK_DOC_DIRECTORY "${_SELF_DIR}/../../common_sdk/Documentation" ABSOLUTE)
+get_filename_component(COMMON_SDK_BIN_DIRECTORY "${_SELF_DIR}/../../bin" ABSOLUTE)
+
+
+set(EVENT_SDK_INCLUDE_DIRS ${EVENT_SDK_INCLUDE_DIRS} ${EVENT_SDK_INCLUDE_DIRECTORY})
+set(EVENT_SDK_INCLUDE_DIRS ${EVENT_SDK_INCLUDE_DIRS} ${COMMON_SDK_INCLUDE_DIRECTORY})
+get_filename_component(EVENT_SDK_DATA_DIR "${_SELF_DIR}/../../event_sdk/data" ABSOLUTE)
+get_filename_component(EVENT_SDK_LIB_DIR "${_SELF_DIR}/../../lib" ABSOLUTE)

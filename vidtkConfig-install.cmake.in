@@ -1,0 +1,7 @@
+# Build the appropriate include directory
+get_filename_component(_SELF_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+get_filename_component(_VIDTK_ROOT "${_SELF_DIR}/../.." ABSOLUTE)
+set( VIDTK_INCLUDE_DIRS "${_VIDTK_ROOT}/include" )
+
+# Include the library targets
+include(${_SELF_DIR}/vidtkConfigTargets.cmake)
