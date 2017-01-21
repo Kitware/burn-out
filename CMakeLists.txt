@@ -4,7 +4,10 @@ project( vidtk_all )
 
 # fletch can provide many of the external dependencies
 find_package(fletch)
+
+# vxl is a hard requirement
 find_package(VXL REQUIRED)
+include(${VXL_CMAKE_DIR}/UseVXL.cmake)
 include_directories(SYSTEM ${VXL_VCL_INCLUDE_DIR})
 include_directories(SYSTEM ${VXL_CORE_INCLUDE_DIR})
 link_directories(${VXL_LIBRARY_DIR})
@@ -337,7 +340,7 @@ endif()
 
 # Required VXL git version
 include(GitVersionTest)
-check_reachable_git_hash(VXL ${VXL_CMAKE_DIR} "e03c56a32e5f52c80d86b503a778210437bb861d")
+#check_reachable_git_hash(VXL ${VXL_CMAKE_DIR} "e03c56a32e5f52c80d86b503a778210437bb861d")
 
 add_subdirectory( wrappers )
 include_directories( SYSTEM wrappers )
