@@ -9,10 +9,10 @@
 #include <string>
 #include <vsl/vsl_binary_io.h>
 #include <vsl/vsl_vector_io.h>
-#include <vsl/vsl_vector_io.txx>
+#include <vsl/vsl_vector_io.hxx>
 #include <vul/vul_file.h>
 #include <vbl/io/vbl_io_smart_ptr.h>
-#include <vbl/io/vbl_io_smart_ptr.txx>
+#include <vbl/io/vbl_io_smart_ptr.hxx>
 #include <tracking_data/vsl/track_io.h>
 #include <tracking_data/vsl/image_object_io.h>
 #include <utilities/vsl/timestamp_io.h>

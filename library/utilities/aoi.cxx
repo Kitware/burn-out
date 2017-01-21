@@ -6,7 +6,7 @@
 
 #include "aoi.h"
 
-#include <vbl/vbl_smart_ptr.txx>
+#include <vbl/vbl_smart_ptr.hxx>
 #include <cstdlib>
 #include <utilities/video_metadata.h>
 

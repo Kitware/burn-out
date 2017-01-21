@@ -6,7 +6,7 @@
 
 #include "async_pipeline.h"
 
-#include <vbl/vbl_smart_ptr.txx>
+#include <vbl/vbl_smart_ptr.hxx>
 #include <vul/vul_timer.h>
 
 #include <pipeline_framework/super_process.h>

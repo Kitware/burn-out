@@ -6,7 +6,7 @@
 
 #include <vxl_config.h>
 #include <object_detectors/transform_image_object_functors.txx>
-#include <vbl/vbl_smart_ptr.txx>
+#include <vbl/vbl_smart_ptr.hxx>
 
 template class vidtk::add_image_clip_to_image_object<vxl_byte>;
 

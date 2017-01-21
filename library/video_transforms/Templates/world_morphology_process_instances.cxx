@@ -6,10 +6,10 @@
 
 #include <video_transforms/world_morphology_process.txx>
 
-#include <vil/algo/vil_greyscale_erode.txx>
+#include <vil/algo/vil_greyscale_erode.hxx>
 VIL_GREYSCALE_ERODE_INSTANTIATE(vxl_uint_16);
 
-#include <vil/algo/vil_greyscale_dilate.txx>
+#include <vil/algo/vil_greyscale_dilate.hxx>
 VIL_GREYSCALE_DILATE_INSTANTIATE(vxl_uint_16);
 
 template class vidtk::world_morphology_process< vxl_byte >;

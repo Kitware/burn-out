@@ -6,7 +6,7 @@
 
 #include "pvo_probability.h"
 
-#include <vbl/vbl_smart_ptr.txx>
+#include <vbl/vbl_smart_ptr.hxx>
 #include <cassert>
 #include <iostream>
 #include <algorithm>

@@ -5,7 +5,7 @@
  */
 
 #include <video_transforms/warp_image.txx>
-#include <vil/vil_bicub_interp.txx>
+#include <vil/vil_bicub_interp.hxx>
 
 #define INSTANTIATE( PixType )                                              \
 template bool vidtk::warp_image( vil_image_view<PixType> const& src,        \

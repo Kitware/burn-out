@@ -6,7 +6,7 @@
 
 #include "gaussian_weak_learners.h"
 
-#include <vpdl/vpdl_distribution.txx>
+#include <vpdl/vpdl_distribution.hxx>
 
 VPDL_DISTRIBUTION_INSTANTIATE(double,0);
 

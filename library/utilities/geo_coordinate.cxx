@@ -7,7 +7,7 @@
 #include "geo_coordinate.h"
 
 #include <geographic/geo_coords.h>
-#include <vbl/vbl_smart_ptr.txx>
+#include <vbl/vbl_smart_ptr.hxx>
 
 namespace vidtk {
 namespace  geo_coord {

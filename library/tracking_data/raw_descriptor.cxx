@@ -6,7 +6,7 @@
 
 #include "raw_descriptor.h"
 
-#include <vbl/vbl_smart_ptr.txx>
+#include <vbl/vbl_smart_ptr.hxx>
 #include <sstream>
 
 

@@ -7,7 +7,7 @@
 #include <tracking_data/image_object.h>
 #include <tracking_data/tracking_keys.h>
 
-#include <vbl/vbl_smart_ptr.txx>
+#include <vbl/vbl_smart_ptr.hxx>
 #include <vgl/vgl_vector_2d.h>
 
 #include <boost/make_shared.hpp>

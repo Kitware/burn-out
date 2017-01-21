@@ -11,7 +11,7 @@
 
 #include <tracking_data/track.h>
 #include <utilities/timestamp.h>
-#include <vbl/vbl_smart_ptr.txx>
+#include <vbl/vbl_smart_ptr.hxx>
 
 
 namespace vidtk

@@ -3,7 +3,7 @@
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
-#include <vgl/vgl_intersection.txx>
+#include <vgl/vgl_intersection.hxx>
 
 // These are located here since tracks are using unsigned int bouding box.
 // Later on, it might be prudent to convert all unsingned uses to be signed.

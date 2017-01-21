@@ -5,7 +5,7 @@
  */
 
 #include "track_writer_interface.h"
-#include <vbl/vbl_smart_ptr.txx>
+#include <vbl/vbl_smart_ptr.hxx>
 
 namespace vidtk
 {
