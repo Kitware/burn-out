@@ -16,8 +16,6 @@
 #include "convolve.h"
 #include "klt_util.h"   /* printing */
 
-#include <vcl_compiler.h>
-
 #define MAX_KERNEL_WIDTH        71
 
 #if VIDTK_SSE2
