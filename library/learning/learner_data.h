@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -9,8 +9,8 @@
 
 #include <vnl/vnl_vector.h>
 
-#include <vcl_cassert.h>
-#include <vcl_ostream.h>
+#include <cassert>
+#include <ostream>
 
 #include <vbl/vbl_ref_count.h>
 #include <vbl/vbl_smart_ptr.h>
@@ -30,28 +30,25 @@ class learner_data : public vbl_ref_count
     virtual unsigned int number_of_descriptors() const = 0;
     virtual unsigned int number_of_components(unsigned int d) const = 0;
     virtual vnl_vector<double> vectorize() const = 0;
+    virtual void write(std::ostream& os) const = 0;
 };
 
 ///Base class of the training data
 class learner_training_data : public learner_data
 {
   public:
-    learner_training_data( int label ) : label_(label)
+    learner_training_data( int lbl ) : label_(lbl)
     {
-      assert(label == -1 || label == 1);
     }
     /// Returns the class of the ground truth
     virtual int label() const
     { return label_; }
-    /// Sets the class of the ground truth.  It can be either
-    /// -1 or 1
-    virtual void set_label( int label )
+    /// Sets the class of the ground truth.
+    virtual void set_label( int lbl )
     {
-      assert(label == -1 || label == 1);
-      label_ = label;
+      label_ = lbl;
     }
   protected:
-    ///The label is either -1 or 1
     int label_;
 };
 
@@ -60,6 +57,8 @@ typedef vbl_smart_ptr<learner_data> learner_data_sptr;
 
 }
 
-vcl_ostream& operator<< (vcl_ostream& os, const vidtk::learner_training_data &p);
+std::ostream& operator<< (std::ostream& os, const vidtk::learner_data &p);
+
+std::ostream& operator<< (std::ostream& os, const vidtk::learner_training_data &p);
 
 #endif

@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2011 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2011-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -8,9 +8,9 @@
 #ifndef _BASE_READER_WRITER_H_
 #define _BASE_READER_WRITER_H_
 
-#include <vcl_string.h>
-#include <vcl_ostream.h>
-#include <vcl_istream.h>
+#include <string>
+#include <ostream>
+#include <istream>
 
 
 namespace vidtk
@@ -43,7 +43,7 @@ public:
    *
    * @sa set_instance_name
    */
-  base_reader_writer (vcl_string const& tag);
+  base_reader_writer (std::string const& tag);
 
   virtual base_reader_writer* clone() const = 0;
 
@@ -63,10 +63,10 @@ public:
    *
    * @return The fully amended tag name is returned.
    */
-  vcl_string const& add_instance_name (vcl_string const& name);
-  vcl_string const& get_instance_name () const { return m_instanceName; }
+  std::string const& add_instance_name (std::string const& name);
+  std::string const& get_instance_name () const { return m_instanceName; }
 
-  vcl_string const& entry_tag_string() const;
+  std::string const& entry_tag_string() const;
 
 // ----------------------------------------------------------------
 /** Verify tag at head of stream.
@@ -81,17 +81,17 @@ public:
  * @retval true - tag recognised
  * @retval false - tag not recognised
  */
-  virtual bool verify_tag(vcl_istream & str) const;
+  virtual bool verify_tag(std::istream & str) const;
 
-  virtual void write_object(vcl_ostream & str) = 0;
-  virtual void write_header(vcl_ostream & str) = 0;
+  virtual void write_object(std::ostream & str) = 0;
+  virtual void write_header(std::ostream & str) = 0;
 
   /** Read object from stream.
    *
    * @return The number of objects not read. So return zero (0) for
    * successful reads from methods that read one object.
    */
-  virtual int read_object(vcl_istream & str) = 0;
+  virtual int read_object(std::istream & str) = 0;
 
   /** Indicates valid input read.  This predicate indicates that valid
    * datum has been read.
@@ -104,8 +104,8 @@ protected:
 
 
 private:
-  vcl_string m_entryTag;
-  vcl_string m_instanceName;
+  std::string m_entryTag;
+  std::string m_instanceName;
   bool m_validEntry;
 
 }; // end class base_reader_writer
@@ -130,7 +130,7 @@ class base_reader_writer_T
   : public base_reader_writer
 {
 public:
-  base_reader_writer_T(vcl_string const& tag, T * obj)
+  base_reader_writer_T(std::string const& tag, T * obj)
     : base_reader_writer (tag),
       m_objectData(obj)
   { }
@@ -140,10 +140,10 @@ public:
 
   /** Reset pointer to datum to read/write
    */
-  void set_datum_addr ( T * ptr) { m_objectData = ptr; }
+  virtual void set_datum_addr ( T * ptr) { m_objectData = ptr; }
 
 protected:
-  T * datum_addr() { return m_objectData; }
+  virtual T * datum_addr() { return m_objectData; }
 
 
 private:

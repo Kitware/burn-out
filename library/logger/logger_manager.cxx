@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2013-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -7,16 +7,14 @@
 
 #include <logger/logger_manager.h>
 
-#ifdef USE_LOG4CXX
-#include <logger/logger_factory_log4cxx.h>
-#endif
-
+#include <logger/logger_factory.h>
 #include <logger/logger_factory_mini_logger.h>
 
 #include <vul/vul_file.h>
 #include <vul/vul_arg.h>
-#include <vcl_cstdlib.h>
-#include <vcl_cstring.h>
+#include <cstdlib>
+#include <cstring>
+#include <iostream>
 
 #include <boost/thread/locks.hpp>
 #include <boost/thread/mutex.hpp>
@@ -39,7 +37,6 @@ namespace vidtk {
 logger_manager * logger_manager::s_instance = 0;
 
 
-
 // ----------------------------------------------------------------
 /** Constructor.
  *
@@ -53,47 +50,61 @@ logger_manager
   // Need to create a factory class at this point because loggers
   // are created by static initializers. we can wait no longer until
   // we provide a method for creating these loggers.
-  //
-  // This implies that we need to read a config or something so we
-  // can determine which one to create.
 
-#ifdef USE_LOG4CXX
-
-  char * factory = vcl_getenv("VIDTK_LOGGER_FACTORY");
-  if ((0 != factory) && (vcl_strcmp(factory, "MINI_LOGGER") == 0) )
+  bool try_default(false);
+  char const* factory = std::getenv("VIDTK_LOGGER_FACTORY");
+  if ( 0 == factory )
   {
-    m_logFactory = new ::vidtk::logger_ns::logger_factory_mini_logger();
-  }
-  else // default factory
-  {
-    m_logFactory = new ::vidtk::logger_ns::logger_factory_log4cxx();
-  }
-
+    try_default = true;
+    // If no special factory is specified, try default name
+#if defined(WIN32)
+    factory = "vidtk_logger_plugin.dll";
+#elif defined(__APPLE__)
+    factory = "vidtk_logger_plugin.so";
 #else
-
-  m_logFactory = new ::vidtk::logger_ns::logger_factory_mini_logger();
-
+    factory = "vidtk_logger_plugin.so";
 #endif
+  }
 
-  /*
-   * An alternate approach to managing the list of factories is to
-   * have each factory register with the manager at load time (static
-   * constructor). This would give the manager a more dynamic approach
-   * to logger factories. The problem arises when we allow loggers to
-   * be created at static constructor time (which we do). There is no
-   * portable and reliable way to make sure the factories register
-   * before the first logger is created.  :-(
-   *
-   *
-   */
+  try
+  {
+    // Dynamically load logger factory.
+    m_loggerLoader.reset( new class_loader( factory ) );
 
+    // Make sure this class is the expected logger factory.
+    if ( m_loggerLoader->get_object_type() == typeid( vidtk::logger_ns::logger_factory ).name() )
+    {
+      // Set factory as the one loaded from library.
+      m_logFactory.reset( m_loggerLoader->create_object< logger_ns::logger_factory >() );
+      return;
+    }
+  }
+  catch( std::runtime_error &e )
+  {
+    // Only give error if the environment specified logger could not be found
+    if ( ! try_default )
+    {
+      std::cerr << "ERROR: Could not load logger factory as specified in environment variable \"VIDTK_LOGGER_FACTORY\"\n"
+                << "Defaulting to built-in logger.\n"
+                << e.what() << std::endl;
+    }
+    else
+    {
+      std::cerr << "Info: Could not load default logger factory.\n"
+                << "Typical usage: export VIDTK_LOGGER_FACTORY=" << factory << "\n"
+                << "Specify name of shared object, with or without a path. Behaviour depends on host system.\n"
+                << "Defaulting to built-in logger." << std::endl;
+    }
+  }
+
+  // Create a default logger back end
+  m_logFactory.reset( new ::vidtk::logger_ns::logger_factory_mini_logger() );
 }
 
 
 logger_manager
 ::~logger_manager()
 {
-
 }
 
 
@@ -124,47 +135,30 @@ logger_manager * logger_manager
 
 
 // ----------------------------------------------------------------
-/* Initialize.
- *
- * Initialize the logging subsystem using the commane line
- * arguments.
- *
- * The following items are initialized:
- * - application name - from argv[0] (override by option --logger-app xxx)
- * - application instance name - from option --logger-app-instance xxx
- * - system name - from gethostname()
- * - config file name - from option --logger-config xxx
- *
- * @param[in] argc - number of elements in argv,
- * @param[in] argv - vector of erguments.
- *
- * @retval 0 - initialization completed o.k.
- * @retval -1 - error in initialization.
- */
 int logger_manager
 ::initialize(int argc, char ** argv)
 {
-  vcl_string config_file;
+  std::string config_file;
 
   if (argc > 0)
   {
     // Get the name of the application program from the executable file name
-    vcl_string app = vul_file::strip_directory(argv[0]);
-    m_applicationName = app;
+    std::string app = vul_file::strip_directory(argv[0]);
+    m_logFactory->set_application_name( app );
 
     // parse argv for allowable options.
-    vul_arg < vcl_string > app_name_arg("--logger-app", "Application name. overrides argv[0].");
-    vul_arg < vcl_string > app_instance_arg( "--logger-app-instance", "Application instance name.");
-    vul_arg < vcl_string > config_file_arg( "--logger-config", "Configuration file name.");
+    vul_arg < std::string > app_name_arg("--logger-app", "Application name. overrides argv[0].");
+    vul_arg < std::string > app_instance_arg( "--logger-app-instance", "Application instance name.");
+    vul_arg < std::string > config_file_arg( "--logger-config", "Configuration file name.");
 
     vul_arg_parse( argc, argv );
 
     if ( ! app_name_arg().empty())
     {
-      m_applicationName = app_name_arg();
+      m_logFactory->set_application_name( app_name_arg() );
     }
 
-    m_applicationInstanceName = app_instance_arg();
+    m_logFactory->set_application_instance_name( app_instance_arg() );
     config_file = config_file_arg();
   }
 
@@ -174,12 +168,13 @@ int logger_manager
   ///@todo use portable call for gethostname()
   char host_buffer[1024];
   gethostname (host_buffer, sizeof host_buffer);
-  m_systemName = host_buffer;
+  m_logFactory->set_system_name( host_buffer );
 
 #endif
 
   // initialise adapter to do real logging.
   m_logFactory->initialize (config_file);
+  m_initialized = true;
 
   return (0);
 }
@@ -198,64 +193,58 @@ vidtk_logger_sptr logger_manager
 
 
 vidtk_logger_sptr logger_manager
-::get_logger( vcl_string const& name )
+::get_logger( std::string const& name )
 {
-  return get_logger(name.c_str() );
+  return get_logger( name.c_str() );
 }
 
 
-vcl_string const& logger_manager
-::get_application_name() const
-{
-  return m_applicationName;
-}
-
-
-vcl_string const& logger_manager
-::get_application_instance_name() const
-{
-  return m_applicationInstanceName;
-}
-
-
-vcl_string const& logger_manager
-::get_system_name() const
-{
-  return m_systemName;
-}
-
-
-vcl_string const& logger_manager
+std::string const&
+logger_manager
 ::get_factory_name() const
 {
-  return m_logFactory->get_name();
+  return m_logFactory->get_factory_name();
 }
 
 
-// ----------------------------------------------------------------
-/* Set location strings.
- *
- *
- */
-void logger_manager
-::set_application_name (vcl_string const& name)
+  std::string const& logger_manager
+::get_application_name() const
 {
-  m_applicationName = name;
+  return m_logFactory->get_application_name();
+}
+
+
+std::string const& logger_manager
+::get_application_instance_name() const
+{
+  return m_logFactory->get_application_instance_name();
+}
+
+
+std::string const& logger_manager
+::get_system_name() const
+{
+  return m_logFactory->get_system_name();
+}
+
+void logger_manager
+::set_application_name( std::string const& name )
+{
+  m_logFactory->set_application_name( name );
 }
 
 
 void logger_manager
-::set_application_instance_name (vcl_string const& name)
+::set_application_instance_name( std::string const& name )
 {
-  m_applicationInstanceName = name;
+  m_logFactory->set_application_instance_name( name );
 }
 
 
 void logger_manager
-::set_system_name (vcl_string const& name)
+::set_system_name( std::string const& name )
 {
-  m_systemName = name;
+  m_logFactory->set_system_name( name );
 }
-
 
 } // end namespace

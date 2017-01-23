@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2011 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2011-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -12,7 +12,7 @@
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/signals2/mutex.hpp>
 
-#include <vcl_string.h>
+#include <string>
 #include <vbl/vbl_smart_ptr.h>
 #include <vcl_atomic_count.h>
 #include "object_cache.h"
@@ -144,16 +144,16 @@ public:
     }
   }
 
-  static vcl_string to_string( uuid_t u )
+  static std::string to_string( uuid_t u )
   {
-    vcl_stringstream uuid_strstrm;
+    std::stringstream uuid_strstrm;
     uuid_strstrm << u;
     return uuid_strstrm.str();
   }
 
-  static void to_uuid( vcl_string s, uuid_t & u )
+  static void to_uuid( std::string s, uuid_t & u )
   {
-    vcl_stringstream strm( s );
+    std::stringstream strm( s );
     strm >> u;
   }
 

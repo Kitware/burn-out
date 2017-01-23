@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -9,34 +9,11 @@
 
 #include <process_framework/process.h>
 #include <process_framework/pipeline_aid.h>
+#include <process_framework/function_caller_helper.h>
 
 
 namespace vidtk
 {
-
-
-namespace helper
-{
-
-template<class T>
-struct holder
-{
-  holder() { }
-  holder( T p ) : val_( p ) { }
-  T value() const { return val_; }
-  T val_;
-};
-
-template<class T>
-struct holder<T&>
-{
-  holder() : ptr_( NULL ) { }
-  holder( T& p ) : ptr_( &p ) { }
-  T& value() const { return *ptr_; }
-  T* ptr_;
-};
-
-}
 
 
 template <class Arg1Type, class Arg2Type>
@@ -46,7 +23,7 @@ class function_caller_2_process
 public:
   typedef function_caller_2_process self_type;
 
-  function_caller_2_process( vcl_string const& name );
+  function_caller_2_process( std::string const& name );
 
   ~function_caller_2_process();
 

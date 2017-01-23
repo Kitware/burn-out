@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -13,12 +13,18 @@
 
 #include <learning/weak_learner.h>
 
-#include <vcl_vector.h>
-#include <vcl_string.h>
-#include <vcl_sstream.h>
-#include <vcl_iostream.h>
-#include <vcl_iomanip.h>
-#include <vcl_fstream.h>
+#include <vector>
+#include <string>
+#include <sstream>
+#include <iostream>
+#include <iomanip>
+#include <fstream>
+
+#include <logger/logger.h>
+#undef VIDTK_DEFAULT_LOGGER
+#define VIDTK_DEFAULT_LOGGER __vidtk_logger_auto_linear_weak_learners_h__
+VIDTK_LOGGER("linear_weak_learners_h");
+
 
 namespace vidtk
 {
@@ -27,8 +33,8 @@ namespace vidtk
 class linear_weak_learner : public weak_learner
 {
   public:
-    linear_weak_learner( vcl_string const & name, int desc )
-      : weak_learner(name, desc), sign_(1)
+    linear_weak_learner( std::string const & _name, int desc )
+      : weak_learner(_name, desc), sign_(1)
     {}
     linear_weak_learner( )
     {}
@@ -39,11 +45,11 @@ class linear_weak_learner : public weak_learner
              vnl_vector<double> const & weights );
 
     virtual int classify(learner_data const & data);
-    virtual vcl_string gplot_command() const;
+    virtual std::string gplot_command() const;
     virtual weak_learners::learner get_id() const
     { return weak_learners::linear_weak_learner; }
-    virtual bool read(vcl_istream & in);
-    virtual bool write(vcl_ostream & out) const;
+    virtual bool read(std::istream & in);
+    virtual bool write(std::ostream & out) const;
   protected:
     vnl_vector< double > beta_;
     int sign_;
@@ -53,8 +59,8 @@ class linear_weak_learner : public weak_learner
 class lm_linear_weak_learner : public linear_weak_learner
 {
   public:
-    lm_linear_weak_learner( vcl_string const & name, int desc ) : linear_weak_learner(name, desc){}
-    virtual weak_learner_sptr train( vcl_vector< learner_training_data_sptr > const & datas,
+    lm_linear_weak_learner( std::string const & _name, int desc ) : linear_weak_learner(_name, desc){}
+    virtual weak_learner_sptr train( training_feature_set const & datas,
                                      vnl_vector<double> const & weights );
     virtual weak_learner_sptr clone() const
     { return new lm_linear_weak_learner(*this); }
@@ -79,7 +85,7 @@ class lm_linear_weak_learner : public linear_weak_learner
         }
         virtual void f(vnl_vector<double> const& x, vnl_vector<double>& fx)
         {
-          vcl_cout << "begin" << vcl_endl;
+          LOG_INFO( "begin" );
           assert(fx.size() == 1.0);
           assert(x.size() == 1.0);
           assert(weights_.size() == values_.size());
@@ -96,7 +102,7 @@ class lm_linear_weak_learner : public linear_weak_learner
               fx[0] += weights_[i] * dp * dp;
             }
           }
-          vcl_cout << "end" << vcl_endl;
+          LOG_INFO( "end" );
         }
       protected:
         vnl_vector<double> const & weights_;
@@ -109,7 +115,7 @@ class lm_linear_weak_learner : public linear_weak_learner
 class lm_linear_weak_learner_v2 : public linear_weak_learner
 {
   public:
-    lm_linear_weak_learner_v2( vcl_string const & name, int desc ) : linear_weak_learner(name, desc){}
+    lm_linear_weak_learner_v2( std::string const & _name, int desc ) : linear_weak_learner(_name, desc){}
     virtual weak_learner_sptr clone() const
     { return new lm_linear_weak_learner_v2(*this); }
     virtual weak_learner_sptr
@@ -140,7 +146,7 @@ class lm_linear_weak_learner_v2 : public linear_weak_learner
         }
         virtual void f(vnl_vector<double> const& x, vnl_vector<double>& fx)
         {
-//           vcl_cout << "begin" << vcl_endl;
+//           LOG_INFO( "begin" );
           assert(fx.size() == values_.size());
           assert(x.size() == values_[0].size());
           assert(weights_.size() == values_.size());
@@ -164,11 +170,11 @@ class lm_linear_weak_learner_v2 : public linear_weak_learner
               fx[i] = 0.05*(weights_[i] * dp * weights_[i] * dp)/values_[i].squared_magnitude();
             }
           }
-//           vcl_cout << "end" << vcl_endl;
+//           LOG_INFO( "end" );
         }
       protected:
         vnl_vector<double> const & weights_;
-        vcl_vector< vnl_vector<double> > values_;
+        std::vector< vnl_vector<double> > values_;
         vnl_vector<int> labels_;
     };
 };
@@ -177,7 +183,7 @@ class lm_linear_weak_learner_v2 : public linear_weak_learner
 class lm_bias_positive_linear_weak_learner : public linear_weak_learner
 {
   public:
-    lm_bias_positive_linear_weak_learner( vcl_string const & name, int desc ) : linear_weak_learner(name, desc){}
+    lm_bias_positive_linear_weak_learner( std::string const & _name, int desc ) : linear_weak_learner(_name, desc){}
     virtual weak_learner_sptr clone() const
     { return new lm_bias_positive_linear_weak_learner(*this); }
     virtual weak_learner_sptr train( training_feature_set const & datas,
@@ -204,7 +210,7 @@ class lm_bias_positive_linear_weak_learner : public linear_weak_learner
         }
         virtual void f(vnl_vector<double> const& x, vnl_vector<double>& fx)
         {
-//           vcl_cout << "begin" << vcl_endl;
+//           LOG_INFO( "begin" );
           assert(fx.size() == 1.0);
           assert(x.size() == 1.0);
           assert(weights_.size() == values_.size());
@@ -218,7 +224,7 @@ class lm_bias_positive_linear_weak_learner : public linear_weak_learner
               fx[0] += weights_[i] *  weights_[i] * dp * dp;
             }
           }
-//           vcl_cout << "end" << vcl_endl;
+//           LOG_INFO( "end" );
         }
       protected:
         vnl_vector<double> const & weights_;
@@ -231,7 +237,7 @@ class lm_bias_positive_linear_weak_learner : public linear_weak_learner
 class lm_bias_negative_linear_weak_learner : public linear_weak_learner
 {
   public:
-    lm_bias_negative_linear_weak_learner( vcl_string const & name, int desc ) : linear_weak_learner(name, desc){}
+    lm_bias_negative_linear_weak_learner( std::string const & _name, int desc ) : linear_weak_learner(_name, desc){}
     virtual weak_learner_sptr clone() const
     { return new lm_bias_negative_linear_weak_learner(*this); }
     virtual weak_learner_sptr train( training_feature_set const & datas,
@@ -257,7 +263,7 @@ class lm_bias_negative_linear_weak_learner : public linear_weak_learner
         }
         virtual void f(vnl_vector<double> const& x, vnl_vector<double>& fx)
         {
-//           vcl_cout << "begin" << vcl_endl;
+//           LOG_INFO( "begin" );
           assert(fx.size() == 1.0);
           assert(x.size() == 1.0);
           assert(weights_.size() == values_.size());
@@ -274,7 +280,7 @@ class lm_bias_negative_linear_weak_learner : public linear_weak_learner
               fx[0] += weights_[i] * weights_[i] * dp * dp;
             }
           }
-//           vcl_cout << "end" << vcl_endl;
+//           LOG_INFO( "end" );
         }
       protected:
         vnl_vector<double> const & weights_;

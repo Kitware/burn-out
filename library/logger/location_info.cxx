@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010,2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -7,7 +7,6 @@
 
 #include <logger/location_info.h>
 
-#include <vpl/vpl.h>
 #include <vul/vul_file.h>
 
 
@@ -59,7 +58,7 @@ location_info
  *
  *
  */
-vcl_string location_info
+std::string location_info
 ::get_file_name() const
 {
   return vul_file::strip_directory (m_fileName);
@@ -71,7 +70,7 @@ vcl_string location_info
  *
  *
  */
-vcl_string location_info
+std::string location_info
 ::get_file_path() const
 {
   return vul_file::basename (m_fileName);
@@ -83,7 +82,7 @@ vcl_string location_info
  *
  *
  */
-vcl_string location_info
+std::string location_info
 ::get_signature() const
 {
   return m_methodName;
@@ -97,26 +96,26 @@ vcl_string location_info
  * ex: void namespace::class::method(class::type var)
  * would return "method"
  */
-vcl_string location_info
+std::string location_info
 ::get_method_name() const
 {
-  vcl_string tmp(m_methodName);
+  std::string tmp(m_methodName);
 
   // Clear all parameters from signature
   size_t parenPos = tmp.find('(');
-  if (parenPos != vcl_string::npos)
+  if (parenPos != std::string::npos)
   {
     tmp.erase(parenPos);
   }
 
   size_t colonPos = tmp.rfind("::");
-  if (colonPos != vcl_string::npos)
+  if (colonPos != std::string::npos)
   {
     tmp.erase(0, colonPos + 2);
   }
 
   size_t spacePos = tmp.rfind(' ');
-  if (spacePos != vcl_string::npos)
+  if (spacePos != std::string::npos)
   {
     tmp.erase(0, spacePos + 1);
   }
@@ -132,28 +131,28 @@ vcl_string location_info
  * ex: void namespace::class::method(class::type var)
  * would return "namespace::class"
  */
-vcl_string location_info
+std::string location_info
 ::get_class_name() const
 {
-  vcl_string tmp(m_methodName);
+  std::string tmp(m_methodName);
 
   // Clear all parameters from signature
   size_t parenPos = tmp.find('(');
-  if (parenPos != vcl_string::npos)
+  if (parenPos != std::string::npos)
   {
     tmp.erase(parenPos);
   }
 
   // Erase return type if any
   size_t spacePos = tmp.rfind(' ');
-  if (spacePos != vcl_string::npos)
+  if (spacePos != std::string::npos)
   {
     tmp.erase(0, spacePos + 1);
   }
 
   // erase all characters after last "::"
   size_t colonPos = tmp.rfind("::");
-  if (colonPos != vcl_string::npos)
+  if (colonPos != std::string::npos)
   {
     tmp.erase(colonPos);
   }

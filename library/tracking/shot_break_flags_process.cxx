@@ -1,22 +1,19 @@
 /*ckwg +5
- * Copyright 2011 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2011-2016 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
 #include "shot_break_flags_process.h"
 
-#include <utilities/log.h>
-#include <utilities/unchecked_return_value.h>
-#include <tracking/track_initializer_process.h>
-#include <tracking/tracking_keys.h>
+#include <tracking_data/tracking_keys.h>
 
 namespace vidtk
 {
 
 shot_break_flags_process
-::shot_break_flags_process( vcl_string const& name )
-  : process( name, "shot_break_flags_process" ),
+::shot_break_flags_process( std::string const& _name )
+  : process( _name, "shot_break_flags_process" ),
     got_data( false )
 {
   this->initialize();
@@ -110,7 +107,7 @@ shot_break_flags_process
 }
 
 
-shot_break_flags const&
+shot_break_flags
 shot_break_flags_process
 ::flags() const
 {

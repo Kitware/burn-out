@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -7,8 +7,8 @@
 #ifndef vidtk_checked_bool_h_
 #define vidtk_checked_bool_h_
 
-#include <vcl_string.h>
-#include <vcl_sstream.h>
+#include <string>
+#include <sstream>
 
 /** \file
     \brief
@@ -86,7 +86,7 @@ public:
   ///Constructor: pass a bool value.
   checked_bool( bool v );
   ///Constructor: pass a failure message.
-  checked_bool( vcl_string const& failure_msg );
+  checked_bool( std::string const& failure_msg );
   ///An overload to avoid char const* being converted to bool.
   checked_bool( char const* failure_msg );
 
@@ -117,12 +117,14 @@ public:
   operator bool() const;
 
   ///Checked bool message.
-  vcl_string const& message() const;
+  std::string const& message() const;
+
+  bool to_bool();
 
 private:
   bool value_;
   mutable bool checked_;
-  vcl_string msg_;
+  std::string msg_;
 };
 
 /// \brief Create a \c false checked_bool object using stream operators.
@@ -131,7 +133,7 @@ private:
 /// \code
 ///    return checked_bool_create( "failed because " << x << " != " << y );
 /// \endcode
-#define checked_bool_create( X ) vidtk::checked_bool( ( vcl_ostringstream() << X ).str() )
+#define checked_bool_create( X ) vidtk::checked_bool( ( std::ostringstream() << X ).str() )
 
 struct read_documentation_of_checked_bool_with_logical_operators;
 

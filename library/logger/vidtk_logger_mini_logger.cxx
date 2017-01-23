@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2013-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -10,27 +10,56 @@
 #include <logger/vidtk_mini_logger_formatter.h>
 #include <logger/vidtk_mini_logger_formatter_int.h>
 
-#include <logger/logger_manager.h>
+#include <logger/logger_factory.h>
 #include <logger/location_info.h>
-#include <vcl_iostream.h>
-#include <vpl/vpl.h>
+#include <iostream>
+#include <sstream>
+#include <map>
 
 #include <boost/thread/locks.hpp>
 #include <boost/thread/mutex.hpp>
+#include <boost/thread/shared_mutex.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/date_time.hpp>
+#include <boost/ptr_container/ptr_map.hpp>
 
+using namespace boost::posix_time;
 
 namespace vidtk {
 namespace logger_ns {
 
+// -- STATIC data --
+// Set up default logging stream
+std::ostream* vidtk_logger_mini_logger::s_output_stream = &std::cerr;
+
+
+// Use 1 mutex per stream.  This needs to be static to allow for multiple
+// loggers to use the same stream and still have it locked appropriately
+boost::mutex& get_stream_mtx( const std::ostream& s )
+{
+  static boost::shared_mutex stream_mtx_map_mtx;
+  static boost::ptr_map< const std::ostream*, boost::mutex > stream_mtx_map;
+
+  boost::shared_lock< boost::shared_mutex > stream_mtx_map_lock( stream_mtx_map_mtx );
+
+  // create a new mutex if not already there
+  if ( 0 == stream_mtx_map.count( &s ) )
+  {
+    boost::upgrade_lock< boost::shared_mutex > lock( stream_mtx_map_mtx );
+    const std::ostream* tsp = &s;
+    stream_mtx_map.insert( tsp, new boost::mutex() );
+  }
+
+  return stream_mtx_map[&s];
+}
+
 
 vidtk_logger_mini_logger
-::vidtk_logger_mini_logger (char const* realm)
-  :vidtk_logger(realm),
+::vidtk_logger_mini_logger (logger_factory* p, char const* realm)
+  :vidtk_logger( p, realm ),
    m_logLevel(vidtk_logger::LEVEL_TRACE),
    m_formatter(0)
-{
-
-}
+{ }
 
 
 vidtk_logger_mini_logger
@@ -109,11 +138,42 @@ vidtk_logger::log_level_t vidtk_logger_mini_logger
 /** Get logging stream.
  *
  * This method returns the stream used to write log messages.
+ * Please note, this functions first call MUST happen at first runtime use.
+ * if not, it's likely that std::cerr won't yet be initialized.
  */
-vcl_ostream& vidtk_logger_mini_logger
+std::ostream& vidtk_logger_mini_logger
 ::get_stream()
 {
-  return vcl_cerr;
+  // Make sure that any given stream only get's "imbued" once
+  static std::map<std::ostream*, bool> is_imbued;
+  static boost::mutex ctor_mtx;
+  boost::lock_guard<boost::mutex> ctor_lock(ctor_mtx);
+
+  if (!is_imbued[s_output_stream])
+  {
+    // Configure timestamp formatting
+    time_facet* f = new time_facet("%Y-%m-%d %H:%M:%s");
+    std::locale loc(std::locale(), f);
+    {
+      boost::lock_guard<boost::mutex> stream_lock(get_stream_mtx(*s_output_stream));
+      s_output_stream->imbue(loc);
+    }
+    is_imbued[s_output_stream] = true;
+  }
+
+  return *s_output_stream;
+}
+
+
+// ----------------------------------------------------------------
+/** Set logging stream;
+ *
+ *
+ */
+void vidtk_logger_mini_logger
+::set_output_stream( std::ostream* str )
+{
+  s_output_stream = str;
 }
 
 
@@ -124,7 +184,7 @@ vcl_ostream& vidtk_logger_mini_logger
  */
 
 void vidtk_logger_mini_logger
-::log_fatal (vcl_string const & msg)
+::log_fatal (std::string const & msg)
 {
   if (is_fatal_enabled())
   {
@@ -134,7 +194,7 @@ void vidtk_logger_mini_logger
 
 
 void vidtk_logger_mini_logger
-::log_fatal (vcl_string const & msg, vidtk::logger_ns::location_info const & location)
+::log_fatal (std::string const & msg, vidtk::logger_ns::location_info const & location)
 {
   if (is_fatal_enabled())
   {
@@ -144,7 +204,7 @@ void vidtk_logger_mini_logger
 
 
 void vidtk_logger_mini_logger
-::log_error (vcl_string const & msg)
+::log_error (std::string const & msg)
 {
   if (is_error_enabled())
   {
@@ -154,7 +214,7 @@ void vidtk_logger_mini_logger
 
 
 void vidtk_logger_mini_logger
-::log_error (vcl_string const & msg, vidtk::logger_ns::location_info const & location)
+::log_error (std::string const & msg, vidtk::logger_ns::location_info const & location)
 {
   if (is_error_enabled())
   {
@@ -164,7 +224,7 @@ void vidtk_logger_mini_logger
 
 
 void vidtk_logger_mini_logger
-::log_warn (vcl_string const & msg)
+::log_warn (std::string const & msg)
 {
   if (is_warn_enabled())
   {
@@ -174,7 +234,7 @@ void vidtk_logger_mini_logger
 
 
 void vidtk_logger_mini_logger
-::log_warn (vcl_string const & msg, vidtk::logger_ns::location_info const & location)
+::log_warn (std::string const & msg, vidtk::logger_ns::location_info const & location)
 {
   if (is_warn_enabled())
   {
@@ -185,7 +245,7 @@ void vidtk_logger_mini_logger
 
 
 void vidtk_logger_mini_logger
-::log_info (vcl_string const & msg)
+::log_info (std::string const & msg)
 {
   if (is_info_enabled())
   {
@@ -196,7 +256,7 @@ void vidtk_logger_mini_logger
 
 
 void vidtk_logger_mini_logger
-::log_info (vcl_string const & msg, vidtk::logger_ns::location_info const & location)
+::log_info (std::string const & msg, vidtk::logger_ns::location_info const & location)
 {
   if (is_info_enabled())
   {
@@ -207,7 +267,7 @@ void vidtk_logger_mini_logger
 
 
 void vidtk_logger_mini_logger
-::log_debug (vcl_string const & msg)
+::log_debug (std::string const & msg)
 {
   if (is_debug_enabled())
   {
@@ -217,7 +277,7 @@ void vidtk_logger_mini_logger
 
 
 void vidtk_logger_mini_logger
-::log_debug (vcl_string const & msg, vidtk::logger_ns::location_info const & location)
+::log_debug (std::string const & msg, vidtk::logger_ns::location_info const & location)
 {
   if (is_debug_enabled())
   {
@@ -228,7 +288,7 @@ void vidtk_logger_mini_logger
 
 
 void vidtk_logger_mini_logger
-::log_trace (vcl_string const & msg)
+::log_trace (std::string const & msg)
 {
   if (is_trace_enabled())
   {
@@ -238,7 +298,7 @@ void vidtk_logger_mini_logger
 
 
 void vidtk_logger_mini_logger
-::log_trace (vcl_string const & msg, vidtk::logger_ns::location_info const & location)
+::log_trace (std::string const & msg, vidtk::logger_ns::location_info const & location)
 {
   if (is_trace_enabled())
   {
@@ -253,20 +313,35 @@ void vidtk_logger_mini_logger
  *
  */
 void vidtk_logger_mini_logger
-::log_message ( vidtk_logger::log_level_t level, vcl_string const& msg)
+::log_message ( vidtk_logger::log_level_t level, std::string const& msg)
 {
   // If a formatter is specified, then use it.
   if (0 != m_formatter)
   {
+    boost::lock_guard<boost::mutex> formatter_lock(m_formatter_mtx);
     log_message (level, msg, *m_formatter);
     return;
   }
 
-
-  boost::lock_guard<boost::mutex> lock(m_lock);
-
   // Format this message on the stream
-  get_stream() << get_level_string(level) << " " << msg << "\n";
+
+  // Get the current time in milliseconds, creating a formated
+  // string for log message.
+  ptime now = microsec_clock::local_time();
+
+  // Ensure that multi-line messages still get the time and level prefix
+  std::string level_str = get_level_string(level);
+  std::string msg_part;
+  std::istringstream ss(msg);
+
+  std::ostream *s = &get_stream();
+  {
+    boost::lock_guard<boost::mutex> stream_lock(get_stream_mtx(*s));
+    while(getline(ss, msg_part))
+    {
+      *s << now << ' ' << level_str << ' ' << msg_part << '\n';
+    }
+  }
 }
 
 
@@ -276,21 +351,19 @@ void vidtk_logger_mini_logger
  *
  */
 void vidtk_logger_mini_logger
-::log_message ( vidtk_logger::log_level_t level, vcl_string const& msg,
-              vidtk::logger_ns::location_info const & location)
+::log_message ( vidtk_logger::log_level_t level,
+                std::string const& msg,
+                vidtk::logger_ns::location_info const & location)
 {
   // If a formatter is specified, then use it.
   if (0 != m_formatter)
   {
+    boost::lock_guard<boost::mutex> formatter_lock(m_formatter_mtx);
     log_message (level, msg, location, *m_formatter);
     return;
   }
 
-
-  boost::lock_guard<boost::mutex> lock(m_lock);
-
-  // Format this message on the stream
-  get_stream() << get_level_string(level) << " " << msg << "\n";
+  log_message(level, msg);
 }
 
 
@@ -302,13 +375,14 @@ void vidtk_logger_mini_logger
 void vidtk_logger_mini_logger
 ::register_formatter (vidtk_mini_logger_formatter * fmt)
 {
+  boost::lock_guard<boost::mutex> formatter_lock(m_formatter_mtx);
+
   // delete any existing formatter.
   delete m_formatter;
-
   m_formatter = fmt;
 
-  fmt->get_impl()->m_parent = m_parent;
-  fmt->get_impl()->m_logger = this;
+  m_formatter->get_impl()->m_parent = m_parent;
+  m_formatter->get_impl()->m_logger = this;
 }
 
 
@@ -318,17 +392,20 @@ void vidtk_logger_mini_logger
  *
  */
 void vidtk_logger_mini_logger
-::log_message ( vidtk_logger::log_level_t level, vcl_string const& msg,
-              vidtk::logger_ns::vidtk_mini_logger_formatter & formatter)
+::log_message ( vidtk_logger::log_level_t level,
+                std::string const& msg,
+                vidtk::logger_ns::vidtk_mini_logger_formatter & formatter)
 {
-  boost::lock_guard<boost::mutex> lock(m_lock);
-
   formatter.get_impl()->m_level = level;
   formatter.get_impl()->m_message = &msg;
   formatter.get_impl()->m_location = 0;
   formatter.get_impl()->m_realm = &m_loggingRealm;
 
-  formatter.format_message (get_stream() );
+  std::ostream *s = &get_stream();
+  {
+    boost::lock_guard<boost::mutex> stream_lock(get_stream_mtx(*s));
+    formatter.format_message(*s);
+  }
 }
 
 
@@ -338,18 +415,21 @@ void vidtk_logger_mini_logger
  *
  */
 void vidtk_logger_mini_logger
-::log_message ( vidtk_logger::log_level_t level, vcl_string const& msg,
-              vidtk::logger_ns::location_info const & location,
-              vidtk::logger_ns::vidtk_mini_logger_formatter & formatter)
+::log_message ( vidtk_logger::log_level_t level,
+                std::string const& msg,
+                vidtk::logger_ns::location_info const & location,
+                vidtk::logger_ns::vidtk_mini_logger_formatter & formatter)
 {
-  boost::lock_guard<boost::mutex> lock(m_lock);
-
   formatter.get_impl()->m_level = level;
   formatter.get_impl()->m_message = &msg;
   formatter.get_impl()->m_location = &location;
   formatter.get_impl()->m_realm = &m_loggingRealm;
 
-  formatter.format_message (get_stream() );
+  std::ostream *s = &get_stream();
+  {
+    boost::lock_guard<boost::mutex> stream_lock(get_stream_mtx(*s));
+    formatter.format_message(*s);
+  }
 }
 
 

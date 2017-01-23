@@ -1,10 +1,9 @@
 #ckwg +4
-# Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+# Copyright 2010, 2013 by Kitware, Inc. All Rights Reserved. Please refer to
 # KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
 # Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
 
-find_program(git_command git)
-
+find_package(Git)
 
 # git_verify_commit(<source_dir> <refspec>)
 #
@@ -18,8 +17,18 @@ find_program(git_command git)
 # 
 function(git_verify_commit _src_dir _refspec)
   set(valid_commit NO PARENT_SCOPE)
-  if(git_command)
-    execute_process(COMMAND ${git_command} rev-parse --verify ${_refspec}^0
+  if(GIT_FOUND)
+    execute_process(COMMAND ${GIT_EXECUTABLE} rev-parse --is-inside-work-tree
+                    WORKING_DIRECTORY ${_src_dir}
+                    RESULT_VARIABLE is_git_repo
+                    OUTPUT_QUIET
+                    ERROR_QUIET)
+    if (NOT is_git_repo)
+      set(valid_repo YES PARENT_SCOPE)
+    else ()
+      return()
+    endif ()
+    execute_process(COMMAND ${GIT_EXECUTABLE} rev-parse --verify ${_refspec}^0
                     WORKING_DIRECTORY ${_src_dir}
                     RESULT_VARIABLE git_results
                     OUTPUT_QUIET
@@ -47,8 +56,8 @@ endfunction(git_verify_commit)
 # 
 function(git_merge_base _src_dir _refspec1 _refspec2)
   unset(_result)
-  if(git_command)
-    execute_process(COMMAND ${git_command} merge-base ${_refspec1} ${_refspec2}
+  if(GIT_FOUND)
+    execute_process(COMMAND ${GIT_EXECUTABLE} merge-base ${_refspec1} ${_refspec2}
                     WORKING_DIRECTORY ${_src_dir}
                     RESULT_VARIABLE git_results
                     OUTPUT_VARIABLE git_output
@@ -102,14 +111,19 @@ endfunction(git_commit_reachable)
 #
 function(check_reachable_git_hash _project_name _src_dir _reachable_hash)
 
-  if(NOT git_command)
+  if(NOT GIT_FOUND)
     message(WARNING "Git command not found, unable to check reachable hash")
     return()
   endif()
   git_verify_commit(${_src_dir} ${_reachable_hash})
+  if(NOT valid_repo)
+    message(WARNING "Unable to verify git commit (${_reachable_hash}) for ${_project_name} "
+                    "because it is not a git repository.  The assumption will be that it is valid.")
+    return()
+  endif ()
   if(NOT valid_commit)
-    message(WARNING "Required ${_project_name} git commit (${_reachable_hash}) "
-                    "is not valid.  Try a 'git fetch' in ${_src_dir}.")
+    message(SEND_ERROR "Required ${_project_name} git commit (${_reachable_hash}) "
+                       "is not valid.  Try a 'git fetch' in ${_src_dir}.")
     return()
   endif()
 
@@ -120,9 +134,9 @@ function(check_reachable_git_hash _project_name _src_dir _reachable_hash)
                      "is reachable from the current checkout.")
     endif()
   else()
-    message(WARNING "Required ${_project_name} commit (${_reachable_hash}) "
-                    "is not reachable from the current checkout "
-                    "in ${_src_dir}")
+    message(SEND_ERROR "Required ${_project_name} commit (${_reachable_hash}) "
+                       "is not reachable from the current checkout "
+                       "in ${_src_dir}")
   endif()
 endfunction(check_reachable_git_hash)
 
@@ -141,14 +155,19 @@ endfunction(check_reachable_git_hash)
 #
 function(check_required_git_hash _project_name _src_dir _required_hash)
 
-  if(NOT git_command)
+  if(NOT GIT_FOUND)
     message(WARNING "Git command not found, unable to check required hash")
     return()
   endif()
   git_verify_commit(${_src_dir} ${_required_hash})
+  if(NOT valid_repo)
+    message(WARNING "Unable to verify git commit (${_reachable_hash}) for ${_project_name} "
+                    "because it is not a git repository.  The assumption will be that it is valid.")
+    return()
+  endif ()
   if(NOT valid_commit)
-    message(WARNING "Required ${_project_name} git commit (${_required_hash}) "
-                    "is not valid.  Try a 'git fetch' in ${_src_dir}.")
+    message(SEND_ERROR "Required ${_project_name} git commit (${_required_hash}) "
+                       "is not valid.  Try a 'git fetch' in ${_src_dir}.")
     return()
   endif()
 
@@ -161,9 +180,9 @@ function(check_required_git_hash _project_name _src_dir _required_hash)
                      "matches the current checkout.")
     endif()
   else()
-    message(WARNING "Required ${_project_name} commit (${_required_hash}) "
-                    "does not match HEAD commit (${head_hash}) "
-                    "in ${_src_dir}")
+    message(SEND_ERROR "Required ${_project_name} commit (${_required_hash}) "
+                       "does not match HEAD commit (${head_hash}) "
+                       "in ${_src_dir}")
   endif()
 endfunction(check_required_git_hash)
 

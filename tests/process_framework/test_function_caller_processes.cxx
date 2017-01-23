@@ -1,17 +1,17 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
-#include <vcl_iostream.h>
+#include <iostream>
 #include <vil/vil_image_view.h>
 #include <testlib/testlib_test.h>
 
 #include <process_framework/function_caller_2_process.h>
 #include <process_framework/pipeline_aid.h>
 #include <utilities/config_block.h>
-#include <pipeline/sync_pipeline.h>
+#include <pipeline_framework/sync_pipeline.h>
 
 
 // Put everything in an anonymous namespace so that different tests
@@ -24,7 +24,7 @@ using namespace vidtk;
 int g_func1_result;
 void function1( int A, double const& B )
 {
-  vcl_cout << "func1: A=" << A << "; B=" << B << "\n";
+  std::cout << "func1: A=" << A << "; B=" << B << "\n";
   if( A==5 && B==3.2 )
   {
     g_func1_result = 1;
@@ -102,7 +102,7 @@ private:
 void
 test_function_caller_2_process()
 {
-  vcl_cout << "\n\nTest function_caller_2_process\n\n\n";
+  std::cout << "\n\nTest function_caller_2_process\n\n\n";
 
   vidtk::sync_pipeline p;
 
@@ -121,13 +121,13 @@ test_function_caller_2_process()
 
   TEST( "Pipeline initialize", p.initialize(), true );
   TEST( "Pipeline step", p.execute(), process::SUCCESS );
-  vcl_cout << "Func 1 result" << g_func1_result << "\n";
+  std::cout << "Func 1 result" << g_func1_result << "\n";
   TEST( "Function 1 was called correctly", g_func1_result, 1 );
 
   feeder.next_int_value_1_ = 7;
   feeder.next_double_value_1_ = 3.1;
   TEST( "Pipeline step", p.execute(), process::SUCCESS );
-  vcl_cout << "Func 1 result" << g_func1_result << "\n";
+  std::cout << "Func 1 result" << g_func1_result << "\n";
   TEST( "Function 1 was called correctly", g_func1_result, 2 );
 }
 

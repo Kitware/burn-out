@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2011 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2011-2014 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -19,6 +19,9 @@
 #include <utilities/config_block.h>
 
 #include <boost/optional.hpp>
+#include <vgl/algo/vgl_h_matrix_2d.h>
+
+#include <boost/scoped_ptr.hpp>
 
 namespace vidtk
 {
@@ -31,9 +34,9 @@ class klt_tracking_process
 public:
   typedef klt_tracking_process self_type;
 
-  klt_tracking_process(vcl_string const& name);
+  klt_tracking_process(std::string const& name);
 
-  ~klt_tracking_process();
+  virtual ~klt_tracking_process();
 
   virtual config_block params() const;
 
@@ -41,11 +44,10 @@ public:
 
   virtual bool initialize();
 
-  bool reinitialize();
+  virtual bool reset();
 
   virtual bool step();
 
-  virtual bool reset();
 
   // for the moment, we only allow a 8-bit image. If we want to handle
   // 16-bit image, we would need to extend the underlying KLT to do
@@ -69,20 +71,24 @@ public:
   void set_timestamp(vidtk::timestamp const& ts);
   VIDTK_INPUT_PORT(set_timestamp, vidtk::timestamp const&);
 
+  /// The homography prediciton for where to search in the new frame
+  void set_homog_predict(vgl_h_matrix_2d<double> const &h);
+  VIDTK_OPTIONAL_INPUT_PORT(set_homog_predict, vgl_h_matrix_2d<double> const&);
+
   /// Set of tracks that are actively being tracked.
-  vcl_vector<klt_track_ptr> const& active_tracks() const;
-  VIDTK_OUTPUT_PORT(vcl_vector<klt_track_ptr> const&, active_tracks);
+  std::vector<klt_track_ptr> active_tracks() const;
+  VIDTK_OUTPUT_PORT(std::vector<klt_track_ptr>, active_tracks);
 
   /// Set of tracks that were created this round.
-  vcl_vector<klt_track_ptr> const& terminated_tracks() const;
-  VIDTK_OUTPUT_PORT(vcl_vector<klt_track_ptr> const&, terminated_tracks);
+  std::vector<klt_track_ptr> terminated_tracks() const;
+  VIDTK_OUTPUT_PORT(std::vector<klt_track_ptr>, terminated_tracks);
 
   /// Set of new tracks that were created at the last step.
-  vcl_vector<klt_track_ptr> const& created_tracks() const;
-  VIDTK_OUTPUT_PORT(vcl_vector<klt_track_ptr> const&, created_tracks);
+  std::vector<klt_track_ptr> created_tracks() const;
+  VIDTK_OUTPUT_PORT(std::vector<klt_track_ptr>, created_tracks);
 
 protected:
-  klt_tracking_process_impl* impl_;
+  boost::scoped_ptr<klt_tracking_process_impl> impl_;
   bool has_first_frame_;
 };
 

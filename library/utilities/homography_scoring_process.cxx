@@ -1,13 +1,10 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2016 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
 #include "homography_scoring_process.h"
-
-#include <utilities/unchecked_return_value.h>
-#include <utilities/log.h>
 
 #include <vgl/vgl_area.h>
 #include <vgl/vgl_distance.h>
@@ -16,6 +13,10 @@
 
 #include <cmath>
 
+#include <logger/logger.h>
+VIDTK_LOGGER("homography_scoring_process_cxx");
+
+
 namespace vidtk
 {
 
@@ -23,9 +24,15 @@ template<typename T>
 static vgl_polygon<T> transform_polygon( const vgl_polygon<T>& polygon, const vgl_h_matrix_2d<T>& homog );
 
 homography_scoring_process
-  ::homography_scoring_process( vcl_string const& name )
-  : process( name, "homography_scoring_process" ),
-    disabled_( true )
+  ::homography_scoring_process( std::string const& _name )
+  : process( _name, "homography_scoring_process" ),
+    disabled_( true ),
+    max_dist_offset_( 0 ),
+    area_percent_factor_( 0 ),
+    quadrant_( 0 ),
+    height_( 0 ),
+    width_( 0 ),
+    is_good_homog_( false )
 {
   config_.add_parameter( "disabled",
     "true",
@@ -73,19 +80,19 @@ homography_scoring_process
 {
   try
   {
-    blk.get("disabled",this->disabled_);
+    this->disabled_ = blk.get<bool>("disabled");
     if( !this->disabled_ )
     {
-      blk.get("max_dist_offset",this->max_dist_offset_);
-      blk.get("area_percent_factor",this->area_percent_factor_);
-      blk.get("quadrant",this->quadrant_);
-      blk.get("height",this->height_);
-      blk.get("width",this->width_);
+      this->max_dist_offset_ = blk.get<double>("max_dist_offset");
+      this->area_percent_factor_ = blk.get<double>("area_percent_factor");
+      this->quadrant_ = blk.get<int>("quadrant");
+      this->height_ = blk.get<int>("height");
+      this->width_ = blk.get<int>("width");
     }
   }
-  catch( unchecked_return_value& e)
+  catch( config_block_parse_error const& e)
   {
-    log_error( name() << ": couldn't set parameters: "<< e.what() <<"\n" );
+    LOG_ERROR( name() << ": couldn't set parameters: "<< e.what() );
 
     return false;
   }
@@ -152,7 +159,7 @@ homography_scoring_process
       orig_rect.push_back( width_,  -height_ );
       break;
     default:
-      log_error( name() << ": invalid quadrant: " << quadrant_ << "\n" );
+      LOG_ERROR( name() << ": invalid quadrant: " << quadrant_ );
       return false;
   }
 
@@ -169,10 +176,10 @@ homography_scoring_process
   {
     const double dist = vgl_distance( good_sheet[i], test_sheet[i] );
 
-    log_debug( name() << ": Moved point " << orig_sheet[i] << " to: " << vcl_endl
-                      << "  good: " << good_sheet[i] << vcl_endl
-                      << "  test: " << test_sheet[i] << vcl_endl
-                      << "  dist: " << dist << vcl_endl );
+    LOG_DEBUG( name() << ": Moved point " << orig_sheet[i] << " to: " << "\n"
+                      << "  good: " << good_sheet[i] << "\n"
+                      << "  test: " << test_sheet[i] << "\n"
+                      << "  dist: " << dist );
 
     if( dist > max_dist )
     {
@@ -182,8 +189,8 @@ homography_scoring_process
 
   if( max_dist > max_dist_offset_ )
   {
-    log_debug( name() << ": Distance " << max_dist
-                      << " > " << max_dist_offset_ << vcl_endl );
+    LOG_DEBUG( name() << ": Distance " << max_dist
+                      << " > " << max_dist_offset_ );
     is_good_homog_ = false;
   }
 
@@ -193,15 +200,15 @@ homography_scoring_process
   const double area_diff = std::abs( good_area - test_area );
   const double area_factor = area_diff / good_area;
 
-  log_debug( name() << ": Original area: " << orig_area << vcl_endl
-                    << "  good: " << good_area << vcl_endl
-                    << "  test: " << test_area << vcl_endl
-                    << "  offset: " << area_factor << vcl_endl );
+  LOG_DEBUG( name() << ": Original area: " << orig_area << "\n"
+                    << "  good: " << good_area << "\n"
+                    << "  test: " << test_area << "\n"
+                    << "  offset: " << area_factor );
 
   if( area_factor > area_percent_factor_ )
   {
-    log_debug( name() << ": Total area " << area_factor
-                      << " > " << area_percent_factor_ << vcl_endl );
+    LOG_DEBUG( name() << ": Total area " << area_factor
+                      << " > " << area_percent_factor_ );
     is_good_homog_ = false;
   }
 

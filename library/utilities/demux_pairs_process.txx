@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -11,7 +11,7 @@ namespace vidtk
 
 template<typename T1, typename T2>
 demux_pairs_process<T1, T2>
-::demux_pairs_process( const vcl_string &name )
+::demux_pairs_process( const std::string &name )
 : process(name, "demux_pairs_process"), p_(NULL)
 {
 }
@@ -25,7 +25,7 @@ demux_pairs_process<T1, T2>
 
 
 template<typename T1, typename T2>
-config_block 
+config_block
 demux_pairs_process<T1, T2>
 ::params() const
 {
@@ -34,7 +34,7 @@ demux_pairs_process<T1, T2>
 
 
 template<typename T1, typename T2>
-bool 
+bool
 demux_pairs_process<T1, T2>
 ::set_params( const config_block &blk)
 {
@@ -43,7 +43,7 @@ demux_pairs_process<T1, T2>
 
 
 template<typename T1, typename T2>
-bool 
+bool
 demux_pairs_process<T1, T2>
 ::initialize()
 {
@@ -52,7 +52,7 @@ demux_pairs_process<T1, T2>
 
 
 template<typename T1, typename T2>
-bool 
+bool
 demux_pairs_process<T1, T2>
 ::step()
 {
@@ -60,13 +60,13 @@ demux_pairs_process<T1, T2>
   {
     return false;
   }
-  
+
   this->first_.clear();
   this->first_.reserve(this->p_->size());
   this->second_.clear();
   this->second_.reserve(this->p_->size());
-  
-  for( typename vcl_vector<vcl_pair_t1_t2>::iterator i = this->p_->begin();
+
+  for( typename std::vector<std::pair_t1_t2>::iterator i = this->p_->begin();
        i != this->p_->end();
        ++i )
   {
@@ -79,16 +79,16 @@ demux_pairs_process<T1, T2>
 
 
 template<typename T1, typename T2>
-void 
+void
 demux_pairs_process<T1, T2>
-::set_pairs( vcl_vector<vcl_pair<T1, T2> > &p )
+::set_pairs( std::vector<std::pair<T1, T2> > &p )
 {
   this->p_ = &p;
 }
 
 
 template<typename T1, typename T2>
-vcl_vector<T1>& 
+std::vector<T1>&
 demux_pairs_process<T1, T2>
 ::first(void)
 {
@@ -97,7 +97,7 @@ demux_pairs_process<T1, T2>
 
 
 template<typename T1, typename T2>
-vcl_vector<T2>& 
+std::vector<T2>&
 demux_pairs_process<T1, T2>
 ::second(void)
 {

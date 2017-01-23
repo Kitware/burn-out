@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2011 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2011-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -12,10 +12,10 @@
 #include <utilities/homography.h>
 #include <utilities/timestamp.h>
 #include <vul/vul_sprintf.h>
-#include <vcl_cstdio.h>
-#include <vcl_ostream.h>
-#include <vcl_iomanip.h>
-#include <vcl_sstream.h>
+#include <cstdio>
+#include <ostream>
+#include <iomanip>
+#include <sstream>
 
 
 namespace vidtk
@@ -36,14 +36,14 @@ protected:
   homography_reader_writer_base() { }
 
 
-  void write_reference (vcl_ostream& str, vidtk::timestamp ts)
+  void write_reference (std::ostream& str, vidtk::timestamp ts)
   {
     str << ts.frame_number() << " "
-        << vcl_setprecision(20) << ts.time() << " ";
+        << std::setprecision(20) << ts.time() << " ";
   }
 
 
-  vidtk::timestamp read_reference (vcl_istream& str, vidtk::timestamp)
+  vidtk::timestamp read_reference (std::istream& str, vidtk::timestamp)
   {
     double time;
     unsigned int frame;
@@ -57,14 +57,14 @@ protected:
   }
 
 
-  void write_reference (vcl_ostream& str, vidtk::utm_zone_t utm)
+  void write_reference (std::ostream& str, vidtk::utm_zone_t utm)
   {
     str << utm.zone() << " "
         << utm.is_north() << " ";
   }
 
 
-  vidtk::utm_zone_t read_reference (vcl_istream& str, vidtk::utm_zone_t)
+  vidtk::utm_zone_t read_reference (std::istream& str, vidtk::utm_zone_t)
   {
     int zone;
     bool north;
@@ -79,15 +79,15 @@ protected:
   }
 
 
-  void write_reference (vcl_ostream& str, vidtk::plane_ref_t /*ref*/)
+  void write_reference (std::ostream& str, vidtk::plane_ref_t /*ref*/)
   {
     str << "[plane] ";
   }
 
 
-  vidtk::plane_ref_t read_reference (vcl_istream& str, vidtk::plane_ref_t)
+  vidtk::plane_ref_t read_reference (std::istream& str, vidtk::plane_ref_t)
   {
-    vcl_string junk;
+    std::string junk;
     str >> junk;
 
     return vidtk::plane_ref_t();
@@ -95,15 +95,15 @@ protected:
 
 
   // write transformation matrix
-  void write_base(vcl_ostream& str, homography * homog)
+  void write_base(std::ostream& str, homography * homog)
   {
-    vcl_stringstream working_stream;
-    vcl_string data_str;
+    std::stringstream working_stream;
+    std::string data_str;
     size_t idx;
 
     str << homog->is_valid() << " " << homog->is_new_reference() << " ";
 
-    working_stream  << vcl_setprecision(20)
+    working_stream  << std::setprecision(20)
                     << homog->get_transform().get_matrix();
     data_str = working_stream.str();
 
@@ -111,7 +111,7 @@ protected:
     for (int i = 0; i < 4; i++)
     {
       idx = data_str.find("\n");
-      if (idx == vcl_string::npos)
+      if (idx == std::string::npos)
       {
         break;
       }
@@ -123,7 +123,7 @@ protected:
   }
 
 
-  void read_base(vcl_istream& str, homography * homog)
+  void read_base(std::istream& str, homography * homog)
   {
     vidtk::homography::transform_t trans;
     bool valid;
@@ -172,7 +172,7 @@ public:
  *
  *
  */
-  virtual void write_object(vcl_ostream& str)
+  virtual void write_object(std::ostream& str)
   {
     str << this->entry_tag_string() << " " ;
 
@@ -182,7 +182,7 @@ public:
     // format src and dest ref's (timestamps)
     write_reference (str, base_reader_writer_T<T>::datum_addr()->get_source_reference() );
     write_reference (str, base_reader_writer_T<T>::datum_addr()->get_dest_reference() );
-    str << vcl_endl;
+    str << std::endl;
   }
 
 
@@ -191,11 +191,11 @@ public:
  *
  * This header line indicates the data values in the line.
  */
-  virtual void write_header(vcl_ostream & str)
+  virtual void write_header(std::ostream & str)
   {
     str << "# " << this->entry_tag_string()
         << "  [valid] [new-ref] [3x3 transform] [source-ref] [dest-ref]"
-        << vcl_endl;
+        << std::endl;
   }
 
 
@@ -204,9 +204,9 @@ public:
  *
  *
  */
-  virtual int read_object(vcl_istream& str)
+  virtual int read_object(std::istream& str)
   {
-    vcl_string input_tag;
+    std::string input_tag;
 
     str >> input_tag;
 

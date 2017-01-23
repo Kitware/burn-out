@@ -1,15 +1,21 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
 #include "timestamp.h"
-#include <utilities/log.h>
+
 #include <vul/vul_sprintf.h>
-#include <vcl_ctime.h>
-#include <vcl_cstring.h>
+#include <ctime>
+#include <cstring>
 #include <boost/foreach.hpp>
+
+#include <logger/logger.h>
+#undef VIDTK_DEFAULT_LOGGER
+#define VIDTK_DEFAULT_LOGGER __vidtk_logger_auto_timestamp_cxx__
+VIDTK_LOGGER("timestamp_cxx");
+
 
 
 
@@ -27,7 +33,7 @@ timestamp
   }
   else if( this->has_time() || other.has_time() )
   {
-    log_warning( "comparing timestamps that don't both have time values\n" );
+    LOG_WARN( "comparing timestamps that don't both have time values" );
     return false;
   }
   else if( this->has_frame_number() && other.has_frame_number() )
@@ -36,7 +42,7 @@ timestamp
   }
   else
   {
-    log_warning( "comparing timestamps that don't both have time values or frame number values, or are empty\n" );
+    LOG_WARN( "comparing timestamps that don't both have time values or frame number values, or are empty" );
     return false;
   }
 }
@@ -59,7 +65,7 @@ timestamp
   }
   else if( this->has_time() || other.has_time() )
   {
-    log_warning( "comparing timestamps that don't both have time values\n" );
+    LOG_WARN( "comparing timestamps that don't both have time values" );
     return false;
   }
   else if( this->has_frame_number() && other.has_frame_number() )
@@ -68,7 +74,7 @@ timestamp
   }
   else
   {
-    log_warning( "comparing timestamps that don't both have time values or frame number values, or are empty\n" );
+    LOG_WARN( "comparing timestamps that don't both have time values or frame number values, or are empty" );
     return false;
   }
 }
@@ -124,9 +130,9 @@ timestamp
  *
  *
  */
-vcl_ostream & operator<< (vcl_ostream& str, const vidtk::timestamp& obj)
+std::ostream & operator<< (std::ostream& str, const vidtk::timestamp& obj)
 {
-  vcl_string c_tim("");
+  std::string c_tim("");
   time_t tt = static_cast< time_t >(obj.time() * 1e-6);
   char buffer[128];
 
@@ -146,13 +152,13 @@ vcl_ostream & operator<< (vcl_ostream& str, const vidtk::timestamp& obj)
 
   if (obj.has_time())
   {
-    char* p = vcl_ctime(&tt); // this may return null if tt is out of range,
+    char* p = std::ctime(&tt); // this may return null if tt is out of range,
     if (p)
     {
       c_tim = " (";
       buffer[0] = 0;
-      vcl_strncpy (buffer, p, sizeof buffer);
-      buffer[vcl_strlen(buffer)-1] = 0; // remove NL
+      std::strncpy (buffer, p, sizeof buffer);
+      buffer[std::strlen(buffer)-1] = 0; // remove NL
 
       c_tim = c_tim + buffer;
       c_tim = c_tim + ")";
@@ -186,7 +192,7 @@ vcl_ostream & operator<< (vcl_ostream& str, const vidtk::timestamp& obj)
  *
  * @return The original stream is returned.
  */
-vcl_ostream & operator<< (vcl_ostream& str, const vidtk::timestamp::vector_t& obj)
+std::ostream & operator<< (std::ostream& str, const vidtk::timestamp::vector_t& obj)
 {
   int idx(0);
 

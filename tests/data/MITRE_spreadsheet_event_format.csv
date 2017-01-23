@@ -1,0 +1,11 @@
+"Mission ID","AOI #",,"Coordinates UL","Coordinates LR","AOI Frames Analyzed",,"Country Code",,"AOI Conditions/Descriptions","Reference Image","Locator Map"
+"TEST_TEST_1",1,,"42.849854N, 73.75896W","42.849785N, 73.75886W","100-900",,"US",,"The greatest copany in the world",,
+"Comments","Vehicle ID","Vehicle Type","Start/Stop","Coordinates DD","Start/Stop Frame","Total Stop Frames","Track File Name","Length of Track (Frames)",,,
+,"Vehicle 1",,"Stop","42.849824N, 73.75886W",182,,"TEST_Veh1","149-182",,,
+,,,,,,,,,,,
+,"Vehicle 2",,"Stop","42.849824N,,,, 73.75886W",179,6,"TEST_Veh_2","172-232",,,
+,,,"Start",42.849824N - 73.75886W,185,,,,,,
+,,,"Stop","42.849824N, 73.75886W",195,10,,,,,
+,,,"Start","42.849824N, 73.75886W","2,050",,,,,,
+
+blah blah blah,Vehicle 3,,Stop,"42.849824N, 73.75886W",182,,TEST_Veh3,149-182,,,

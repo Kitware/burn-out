@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2011 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2011-2013 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -43,12 +43,14 @@ public:
   virtual void set_image_pyramid_gradx(vil_pyramid_image_view<float> const&);
   virtual void set_image_pyramid_grady(vil_pyramid_image_view<float> const&);
   virtual void set_timestamp(timestamp const&);
+  virtual void set_homog_predict(vgl_h_matrix_2d<double> const &);
 
 protected:
   void find_new_features();
   int find_tracked_features();
 
   timestamp const* ts_;
+  float homog_predict_[9];
 
   KLT_TrackingPyramidRec klt_cur_;
   KLT_TrackingPyramidRec klt_prev_;

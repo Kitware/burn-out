@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2011 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2011-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -11,7 +11,7 @@
 #include <utilities/timestamp.h>
 #include <vil/vil_image_view.h>
 #include <vxl_config.h>
-#include <vcl_algorithm.h>
+#include <algorithm>
 
 // Put everything in an anonymous namespace so that different tests
 // won't conflict.
@@ -19,14 +19,14 @@ namespace {
 
 using namespace vidtk;
 
-bool test_frame( unsigned f, 
+bool test_frame( unsigned f,
                  paired_buffer< timestamp, vil_image_view< vxl_byte > > const& buff,
                  bool gt,
                  bool is_sorted=true )
 {
   timestamp ts;
   ts.set_frame_number( f );
-  vcl_cout<< "Find frame " << f << " in buffer...";
+  std::cout<< "Find frame " << f << " in buffer...";
   bool res;
   vil_image_view< vxl_byte > const& im = buff.find_datum( ts, res, is_sorted );
   TEST( "testing type const& datum ", res , gt );

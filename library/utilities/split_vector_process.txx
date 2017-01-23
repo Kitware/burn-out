@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -11,7 +11,7 @@ namespace vidtk
 
 template<typename T, int Predicate(const T&)>
 split_vector_process<T, Predicate>
-::split_vector_process( const vcl_string &name )
+::split_vector_process( const std::string &name )
 : process(name, "split_vector_process"), in_(NULL)
 {
 }
@@ -25,7 +25,7 @@ split_vector_process<T, Predicate>
 
 
 template<typename T, int Predicate(const T&)>
-config_block 
+config_block
 split_vector_process<T, Predicate>
 ::params() const
 {
@@ -34,7 +34,7 @@ split_vector_process<T, Predicate>
 
 
 template<typename T, int Predicate(const T&)>
-bool 
+bool
 split_vector_process<T, Predicate>
 ::set_params( const config_block &blk)
 {
@@ -43,7 +43,7 @@ split_vector_process<T, Predicate>
 
 
 template<typename T, int Predicate(const T&)>
-bool 
+bool
 split_vector_process<T, Predicate>
 ::initialize()
 {
@@ -52,7 +52,7 @@ split_vector_process<T, Predicate>
 
 
 template<typename T, int Predicate(const T&)>
-bool 
+bool
 split_vector_process<T, Predicate>
 ::step()
 {
@@ -60,15 +60,15 @@ split_vector_process<T, Predicate>
   {
     return false;
   }
-  
+
   this->positive_.clear();
   this->positive_.reserve(this->in_->size());
   this->zero_.clear();
   this->zero_.reserve(this->in_->size());
   this->negative_.clear();
   this->negative_.reserve(this->in_->size());
-  
-  for( typename vcl_vector<T>::const_iterator i = this->in_->begin();
+
+  for( typename std::vector<T>::const_iterator i = this->in_->begin();
        i != this->in_->end();
        ++i )
   {
@@ -93,16 +93,16 @@ split_vector_process<T, Predicate>
 
 
 template<typename T, int Predicate(const T&)>
-void 
+void
 split_vector_process<T, Predicate>
-::set_input( const vcl_vector<T> &in )
+::set_input( const std::vector<T> &in )
 {
   this->in_ = &in;
 }
 
 
 template<typename T, int Predicate(const T&)>
-vcl_vector<T>& 
+std::vector<T>&
 split_vector_process<T, Predicate>
 ::positive(void)
 {
@@ -111,7 +111,7 @@ split_vector_process<T, Predicate>
 
 
 template<typename T, int Predicate(const T&)>
-vcl_vector<T>& 
+std::vector<T>&
 split_vector_process<T, Predicate>
 ::zero(void)
 {
@@ -120,7 +120,7 @@ split_vector_process<T, Predicate>
 
 
 template<typename T, int Predicate(const T&)>
-vcl_vector<T>& 
+std::vector<T>&
 split_vector_process<T, Predicate>
 ::negative(void)
 {

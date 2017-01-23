@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -32,6 +32,10 @@ class value_learner_data : public learner_training_data
     { return data_.size(); }
     virtual vnl_vector<double> vectorize() const
     { return data_; }
+    virtual void write(std::ostream& os) const
+    {
+        os << data_;
+    }
   protected:
     vnl_vector<double> data_;
 };

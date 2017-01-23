@@ -1,11 +1,17 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
-#include <vcl_cassert.h>
+#include <cassert>
 #include "linear_weak_learners.h"
+
+#include <logger/logger.h>
+#undef VIDTK_DEFAULT_LOGGER
+#define VIDTK_DEFAULT_LOGGER __vidtk_logger_auto_linear_weak_learners_cxx__
+VIDTK_LOGGER("linear_weak_learners_cxx");
+
 
 namespace vidtk
 {
@@ -60,19 +66,19 @@ int linear_weak_learner::classify(learner_data const & data)
   return this->sign_;
 }
 
-vcl_string linear_weak_learner::gplot_command() const
+std::string linear_weak_learner::gplot_command() const
 {
   assert(beta_.size() == 3);
   double sl = -beta_[0]/beta_[1];
   double c = -beta_[2]/beta_[1];
-  vcl_stringstream ss;
+  std::stringstream ss;
   #define l(x) (((sl)*(x))+(c))
   ss << "set arrow from -100," << l(-100) << " to 100," << l(100) << " nohead lt -1 lw 1.2\n";
-  vcl_string result(ss.str());
+  std::string result(ss.str());
   return result;
 }
 
-bool linear_weak_learner::read(vcl_istream & in)
+bool linear_weak_learner::read(std::istream & in)
 {
   bool r = weak_learner::read(in);
   unsigned int s;
@@ -82,10 +88,10 @@ bool linear_weak_learner::read(vcl_istream & in)
   return r;
 }
 
-bool linear_weak_learner::write(vcl_ostream & out) const
+bool linear_weak_learner::write(std::ostream & out) const
 {
   bool r = weak_learner::write(out);
-  out << beta_.size() << " " << beta_ << " " << sign_ << vcl_endl;
+  out << beta_.size() << " " << beta_ << " " << sign_ << std::endl;
   return r;
 }
 
@@ -96,12 +102,12 @@ lm_linear_weak_learner_v2::train( training_feature_set const & datas,
 {
   assert( weights.size() == datas.size() );
   assert( datas.size() );
-  vcl_cout << "begin" << vcl_endl;
+  LOG_INFO( "begin" );
   lm_linear_weak_learner_v2 * result =
     new lm_linear_weak_learner_v2(name_,descriptor_);
   assert(result);
   const unsigned int n = datas[0]->get_value(descriptor_).size();
-//       vcl_cout << n << vcl_endl;
+//       LOG_INFO( n );
   vnl_matrix< double > X(datas.size(), n+1);
   vnl_matrix< double > W(datas.size(),datas.size());
   W.set_identity();
@@ -116,14 +122,14 @@ lm_linear_weak_learner_v2::train( training_feature_set const & datas,
     X(i,v.size()) = 1;
     y[i] = datas[i]->label()*weights[i];
     W(i,i) = weights[i];
-//         vcl_cout << weights[i] << vcl_endl;
+//         LOG_INFO( weights[i] );
   }
   vnl_matrix<double> Xt = X.transpose();
   vnl_matrix<double> XtWX = Xt*W*X;
   vnl_matrix_inverse<double> XtWX_i(XtWX);
   vnl_vector<double> beta = XtWX_i * Xt * y;
   result->beta_ = vnl_vector<double>(n+1);
-//       vcl_cout << beta << vcl_endl;
+//       LOG_INFO( beta );
   function lmf(n+1, datas, weights);
   vnl_levenberg_marquardt lm(lmf);
   lm.minimize_without_gradient(beta);
@@ -136,14 +142,14 @@ lm_linear_weak_learner_v2::train( training_feature_set const & datas,
   {
     result->sign_ = 1;
   }
-  vcl_cout << "end" << vcl_endl;
+  LOG_INFO( "end" );
   return result;
 }
 
 //=========================================================================================//
 
 weak_learner_sptr
-lm_linear_weak_learner::train( vcl_vector< learner_training_data_sptr > const & datas,
+lm_linear_weak_learner::train( training_feature_set const & datas,
                                   vnl_vector<double> const & weights )
 {
   assert( weights.size() == datas.size() );
@@ -151,7 +157,7 @@ lm_linear_weak_learner::train( vcl_vector< learner_training_data_sptr > const & 
   lm_linear_weak_learner * result = new lm_linear_weak_learner(name_,descriptor_);
   assert(result);
   const unsigned int n = datas[0]->get_value(descriptor_).size();
-//       vcl_cout << n << vcl_endl;
+//       LOG_INFO( n );
   vnl_matrix< double > X(datas.size(), n+1);
   vnl_matrix< double > W(datas.size(),datas.size());
   W.set_identity();
@@ -166,7 +172,7 @@ lm_linear_weak_learner::train( vcl_vector< learner_training_data_sptr > const & 
     X(i,v.size()) = 1;
     y[i] = datas[i]->label()*weights[i];
     W(i,i) = weights[i];
-//         vcl_cout << weights[i] << vcl_endl;
+//         LOG_INFO( weights[i] );
   }
   vnl_matrix<double> Xt = X.transpose();
   vnl_matrix<double> XtWX = Xt*W*X;
@@ -180,22 +186,22 @@ lm_linear_weak_learner::train( vcl_vector< learner_training_data_sptr > const & 
     dir[i] = beta[i];
 //         sum += beta[i]*beta[i];
   }
-//       vcl_cout << beta << vcl_endl;
+//       LOG_INFO( beta );
   double mag = dir.magnitude();
   dir = dir/mag;
   vnl_vector<double> c(1,beta[n]/mag);
   //dir /= sum;
-//       vcl_cout << dir << "  " << c << " " << dot_product(dir,dir) << vcl_endl;
+//       LOG_INFO( dir << "  " << c << " " << dot_product(dir,dir) );
   function lmf(dir, datas, weights);
   vnl_levenberg_marquardt lm(lmf);
   lm.minimize_without_gradient(c);
-//       vcl_cout << dir << "  " << c << vcl_endl;
+//       LOG_INFO( dir << "  " << c );
   for(unsigned int i = 0; i < n; ++i)
   {
     result->beta_[i] = dir[i];
   }
   result->beta_[n] = c[0];
-//       vcl_cout << "HERE" << vcl_endl;
+//       LOG_INFO( "HERE" );
   double er = learner_base::error_rate(result,datas,weights);
   if(er > 0.5) {
     result->sign_ = -1;
@@ -218,7 +224,7 @@ lm_bias_positive_linear_weak_learner
   lm_bias_positive_linear_weak_learner * result = new lm_bias_positive_linear_weak_learner(name_,descriptor_);
   assert(result);
   const unsigned int n = datas[0]->get_value(descriptor_).size();
-//       vcl_cout << n << vcl_endl;
+//       LOG_INFO( n );
   vnl_matrix< double > X(datas.size(), n+1);
   vnl_matrix< double > W(datas.size(),datas.size());
   W.set_identity();
@@ -246,16 +252,16 @@ lm_bias_positive_linear_weak_learner
     dir[i] = beta[i];
 //         sum += beta[i]*beta[i];
   }
-//       vcl_cout << beta << vcl_endl;
+//       LOG_INFO( beta );
   double mag = dir.magnitude();
   dir = dir/mag;
   vnl_vector<double> c(1,beta[n]/mag);
   //dir /= sum;
-//       vcl_cout << dir << "  " << c << " " << dot_product(dir,dir) << vcl_endl;
+//       LOG_INFO( dir << "  " << c << " " << dot_product(dir,dir) );
   function lmf(dir, datas, weights);
   vnl_levenberg_marquardt lm(lmf);
   lm.minimize_without_gradient(c);
-//       vcl_cout << dir << "  " << c << vcl_endl;
+//       LOG_INFO( dir << "  " << c );
   for(unsigned int i = 0; i < n; ++i)
   {
     result->beta_[i] = dir[i];
@@ -269,7 +275,7 @@ lm_bias_positive_linear_weak_learner
   {
     result->sign_ = 1;
   }
-//       vcl_cout << "HERE" << vcl_endl;
+//       LOG_INFO( "HERE" );
   return result;
 }
 
@@ -284,7 +290,7 @@ lm_bias_negative_linear_weak_learner
   lm_bias_negative_linear_weak_learner * result = new lm_bias_negative_linear_weak_learner(name_,descriptor_);
   assert(result);
   const unsigned int n = datas[0]->get_value(descriptor_).size();
-//       vcl_cout << n << vcl_endl;
+//       LOG_INFO( n );
   vnl_matrix< double > X(datas.size(), n+1);
   vnl_matrix< double > W(datas.size(),datas.size());
   W.set_identity();
@@ -312,16 +318,16 @@ lm_bias_negative_linear_weak_learner
     dir[i] = beta[i];
 //         sum += beta[i]*beta[i];
   }
-//       vcl_cout << beta << vcl_endl;
+//       LOG_INFO( beta );
   double mag = dir.magnitude();
   dir = dir/mag;
   vnl_vector<double> c(1,beta[n]/mag);
   //dir /= sum;
-//       vcl_cout << dir << "  " << c << " " << dot_product(dir,dir) << vcl_endl;
+//       LOG_INFO( dir << "  " << c << " " << dot_product(dir,dir) );
   function lmf(dir, datas, weights);
   vnl_levenberg_marquardt lm(lmf);
   lm.minimize_without_gradient(c);
-//       vcl_cout << dir << "  " << c << vcl_endl;
+//       LOG_INFO( dir << "  " << c );
   for(unsigned int i = 0; i < n; ++i)
   {
     result->beta_[i] = dir[i];
@@ -335,7 +341,7 @@ lm_bias_negative_linear_weak_learner
   {
     result->sign_ = 1;
   }
-//       vcl_cout << "HERE" << vcl_endl;
+//       LOG_INFO( "HERE" );
   return result;
 }
 

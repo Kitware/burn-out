@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010,2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -11,19 +11,18 @@
 
 #include <vbl/vbl_ref_count.h>
 #include <vbl/vbl_smart_ptr.h>
-#include <vcl_string.h>
+#include <string>
 
 
 namespace vidtk {
-
-// Partial types
 namespace logger_ns {
+
+  class logger_factory;
   class location_info;
   class vidtk_mini_logger_formatter;
+
 }
 
-
-class logger_manager;
 class vidtk_logger;
 
 typedef vbl_smart_ptr < vidtk_logger > vidtk_logger_sptr;
@@ -53,8 +52,8 @@ public:
     LEVEL_ERROR,
     LEVEL_FATAL };
 
-  vidtk_logger(const char * const realm);
-  vidtk_logger( vcl_string const& realm);
+  vidtk_logger( logger_ns::logger_factory* p, const char * const realm );
+  vidtk_logger( logger_ns::logger_factory* p, std::string const& realm );
   virtual ~vidtk_logger();
 
   // Check to see if level is enabled
@@ -68,7 +67,7 @@ public:
   virtual void set_level( log_level_t lev) = 0;
   virtual log_level_t get_level() const = 0;
 
-  vcl_string get_name();
+  std::string get_name();
 
   /**
    Log a message string with the FATAL level.
@@ -80,7 +79,7 @@ public:
 
    @param msg the message string to log.
   */
-  virtual void log_fatal (vcl_string const & msg) = 0;
+  virtual void log_fatal (std::string const & msg) = 0;
 
   /**
    Log a message string with the FATAL level.
@@ -93,7 +92,7 @@ public:
    @param msg the message string to log.
    @param location location of source of logging request.
   */
-  virtual void log_fatal (vcl_string const & msg,
+  virtual void log_fatal (std::string const & msg,
                           vidtk::logger_ns::location_info const & location) = 0;
 
   /**
@@ -106,7 +105,7 @@ public:
 
    @param msg the message string to log.
   */
-  virtual void log_error (vcl_string const & msg) = 0;
+  virtual void log_error (std::string const & msg) = 0;
 
   /**
    Log a message string with the ERROR level.
@@ -119,7 +118,7 @@ public:
    @param msg the message string to log.
    @param location location of source of logging request.
   */
-  virtual void log_error (vcl_string const & msg,
+  virtual void log_error (std::string const & msg,
                           vidtk::logger_ns::location_info const & location) = 0;
 
   /**
@@ -132,7 +131,7 @@ public:
 
    @param msg the message string to log.
   */
-  virtual void log_warn (vcl_string const & msg) = 0;
+  virtual void log_warn (std::string const & msg) = 0;
 
   /**
    Log a message string with the WARN level.
@@ -145,7 +144,7 @@ public:
    @param msg the message string to log.
    @param location location of source of logging request.
   */
-  virtual void log_warn (vcl_string const & msg,
+  virtual void log_warn (std::string const & msg,
                          vidtk::logger_ns::location_info const & location) = 0;
 
   /**
@@ -158,7 +157,7 @@ public:
 
    @param msg the message string to log.
   */
-  virtual void log_info (vcl_string const & msg) = 0;
+  virtual void log_info (std::string const & msg) = 0;
 
   /**
    Log a message string with the INFO level.
@@ -171,7 +170,7 @@ public:
    @param msg the message string to log.
    @param location location of source of logging request.
   */
-  virtual void log_info (vcl_string const & msg,
+  virtual void log_info (std::string const & msg,
                          vidtk::logger_ns::location_info const & location) = 0;
 
   /**
@@ -184,7 +183,7 @@ public:
 
    @param msg the message string to log.
   */
-  virtual void log_debug (vcl_string const & msg) = 0;
+  virtual void log_debug (std::string const & msg) = 0;
 
   /**
    Log a message string with the DEBUG level.
@@ -197,7 +196,7 @@ public:
    @param msg the message string to log.
    @param location location of source of logging request.
   */
-  virtual void log_debug (vcl_string const & msg,
+  virtual void log_debug (std::string const & msg,
                           vidtk::logger_ns::location_info const & location) = 0;
 
   /**
@@ -210,7 +209,7 @@ public:
 
    @param msg the message string to log.
   */
-  virtual void log_trace (vcl_string const & msg) = 0;
+  virtual void log_trace (std::string const & msg) = 0;
 
   /**
    Log a message string with the TRACE level.
@@ -223,7 +222,7 @@ public:
    @param msg the message string to log.
    @param location location of source of logging request.
   */
-  virtual void log_trace (vcl_string const & msg,
+  virtual void log_trace (std::string const & msg,
                           vidtk::logger_ns::location_info const & location) = 0;
 
   /**
@@ -236,7 +235,7 @@ public:
 
    @param msg the message string to log.
   */
-  virtual void log_message (log_level_t level, vcl_string const& msg) = 0;
+  virtual void log_message (log_level_t level, std::string const& msg) = 0;
 
   /**
    Log a message string with specified level.
@@ -249,7 +248,7 @@ public:
    @param msg the message string to log.
    @param location location of source of logging request.
   */
-  virtual void log_message (log_level_t level, vcl_string const& msg,
+  virtual void log_message (log_level_t level, std::string const& msg,
                             vidtk::logger_ns::location_info const & location) = 0;
 
 
@@ -260,18 +259,12 @@ public:
   */
   char const* get_level_string(vidtk_logger::log_level_t lev) const;
 
-
 protected:
-  ::vidtk::logger_manager * m_parent;
 
-  vcl_string m_loggingRealm;
-
-
-private:
-
+  logger_ns::logger_factory* m_parent;
+  std::string m_loggingRealm;
 
 }; // end class
-
 
 } // end namespace
 

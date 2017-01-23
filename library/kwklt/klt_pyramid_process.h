@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2011 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2011-2014 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -17,15 +17,16 @@
 namespace vidtk
 {
 
+template< class PixType >
 class klt_pyramid_process
   : public process
 {
 public:
   typedef klt_pyramid_process self_type;
 
-  klt_pyramid_process(vcl_string const& name);
+  klt_pyramid_process(std::string const& name);
 
-  ~klt_pyramid_process();
+  virtual ~klt_pyramid_process();
 
   virtual config_block params() const;
 
@@ -44,27 +45,24 @@ public:
   // templated.
 
   /// Set the next image to process.
-  void set_image(vil_image_view<vxl_byte> const& img);
+  void set_image(vil_image_view<PixType> const& img);
 
-  VIDTK_INPUT_PORT(set_image, vil_image_view<vxl_byte> const&);
+  VIDTK_INPUT_PORT(set_image, vil_image_view<PixType> const&);
 
   /// The image pyramid of the input image.
-  vil_pyramid_image_view<float> const& image_pyramid() const;
-
-  VIDTK_OUTPUT_PORT(vil_pyramid_image_view<float> const&, image_pyramid);
+  vil_pyramid_image_view<float> image_pyramid() const;
+  VIDTK_OUTPUT_PORT(vil_pyramid_image_view<float>, image_pyramid);
 
   /// The image pyramid of the x gradient.
-  vil_pyramid_image_view<float> const& image_pyramid_gradx() const;
-
-  VIDTK_OUTPUT_PORT(vil_pyramid_image_view<float> const&, image_pyramid_gradx);
+  vil_pyramid_image_view<float> image_pyramid_gradx() const;
+  VIDTK_OUTPUT_PORT(vil_pyramid_image_view<float>, image_pyramid_gradx);
 
   /// The image pyramid of the y gradient.
-  vil_pyramid_image_view<float> const& image_pyramid_grady() const;
-
-  VIDTK_OUTPUT_PORT(vil_pyramid_image_view<float> const&, image_pyramid_grady);
+  vil_pyramid_image_view<float> image_pyramid_grady() const;
+  VIDTK_OUTPUT_PORT(vil_pyramid_image_view<float>, image_pyramid_grady);
 
 protected:
-  vil_image_view<vxl_byte> img_;
+  vil_image_view<vxl_byte> img_; //This should be templated, but some of the klt code is assuming uchar images.
   vil_pyramid_image_view<float> pyramid_;
   vil_pyramid_image_view<float> pgradx_;
   vil_pyramid_image_view<float> pgrady_;
@@ -82,14 +80,19 @@ protected:
   int levels_;
 
   /// Sigma factor for computation of the image pyramid.
-  double init_sigma_;
+  float init_sigma_;
 
   /// Sigma factor for computation of the image pyramid.
-  double sigma_factor_;
+  float sigma_factor_;
 
   /// Sigma factor for computation of the image gradient pyramids.
-  double grad_sigma_;
+  float grad_sigma_;
 };
+
+template<>
+void klt_pyramid_process<vxl_uint_16>::set_image(vil_image_view<vxl_uint_16> const& img);
+template<>
+void klt_pyramid_process<vxl_byte>::set_image(vil_image_view<vxl_byte> const& img);
 
 
 } // end namespace vidtk

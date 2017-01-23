@@ -1,20 +1,21 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
+#ifndef vidtk_video_metadata_h_
+#define vidtk_video_metadata_h_
 
-#ifndef _VIDTK_VIDEO_METADATA_H_
-#define _VIDTK_VIDEO_METADATA_H_
+#include <utilities/geo_lat_lon.h>
+#include <utilities/homography.h>
 
-#include <utilities/timestamp.h>
-#include <vcl_ostream.h>
-#include <vcl_istream.h>
-#include <vcl_vector.h>
-#include <vcl_cmath.h>
+#include <ostream>
+#include <istream>
+#include <vector>
+#include <cmath>
+
 #include <vxl_config.h>
-
 
 namespace vidtk
 {
@@ -24,7 +25,7 @@ namespace vidtk
  *
  * This class represents the base class for tracker metadata.
  *
- * The basic information is the image timestampp, platform location,
+ * The basic information is the image timestamp, platform location,
  * platform orientation, and the sensor orientation. These are
  * considered the inputs.
  *
@@ -33,47 +34,8 @@ class video_metadata
 {
 public:
   // -- TYPES --
-  typedef vcl_vector < video_metadata > vector_t;
-
-// ----------------------------------------------------------------
-/** Geo-coordinate as latitude / longitude.
- *
- * This class represents a Latitude / longitude geolocated point.
- *
- * The values for latitude and longitude are in degrees, but there is
- * no required convention for longitude. It can be either 0..360 or
- * -180 .. 0 .. 180. It is up to the application.  If a specific
- * convention must be enforced, make a subclass.
- */
-  class lat_lon_t
-  {
-  public:
-    static const double INVALID;  // used to indicate uninitialized value
-
-    lat_lon_t() : m_lat(INVALID), m_lon(INVALID) { }
-    lat_lon_t(double lat, double lon) : m_lat(lat), m_lon(lon) { }
-
-    lat_lon_t& lat(double l) { m_lat = l; return ( *this ); }
-    lat_lon_t& lon(double l) { m_lon = l; return ( *this ); }
-    double lat() const { return ( m_lat ); }
-    double lon() const { return ( m_lon ); }
-
-    bool is_valid() const { return ((vcl_fabs(m_lat) <= 90.0) && (vcl_fabs(m_lon) <= 180.0)); }
-
-    bool operator == ( const lat_lon_t &rhs ) const
-    { return ( ( rhs.lat() == this->lat() ) && ( rhs.lon() == this->lon() ) ); }
-    bool operator != ( const lat_lon_t &rhs ) const { return ( !( this->operator == ( rhs ) ) ); }
-    lat_lon_t operator+ (const lat_lon_t & rhs) const;
-
-    vcl_ostream & ascii_serialize(vcl_ostream& str) const;
-    vcl_istream & ascii_deserialize(vcl_istream& str);
-
-  private:
-    double m_lat;
-    double m_lon;
-  }; // -- end class lat_lon_t --
-
-
+  typedef std::vector < video_metadata > vector_t;
+  typedef image_to_plane_homography homography_t;
 
   // -- CONSTRUCTORS --
   video_metadata();
@@ -82,7 +44,7 @@ public:
 
   // -- ACCESSORS --
   vxl_uint_64 timeUTC() const { return m_timeUTC; }
-  const lat_lon_t& platform_location() const { return ( m_platformLatLon ); }
+  const geo_coord::geo_lat_lon& platform_location() const { return ( m_platformLatLon ); }
 
   double platform_altitude() const { return ( m_platformAltitude );  }
   double platform_roll() const { return ( m_platformRoll ); }
@@ -93,32 +55,40 @@ public:
   double sensor_pitch() const { return ( m_sensorPitch ); }
   double sensor_yaw() const { return ( m_sensorYaw ); }
 
-  const lat_lon_t& corner_ul() const { return ( m_corner_ul ); }
-  const lat_lon_t& corner_ur() const { return ( m_corner_ur ); }
-  const lat_lon_t& corner_lr() const { return ( m_corner_lr ); }
-  const lat_lon_t& corner_ll() const { return ( m_corner_ll ); }
+  const geo_coord::geo_lat_lon& corner_ul() const { return ( m_corner_ul ); }
+  const geo_coord::geo_lat_lon& corner_ur() const { return ( m_corner_ur ); }
+  const geo_coord::geo_lat_lon& corner_lr() const { return ( m_corner_lr ); }
+  const geo_coord::geo_lat_lon& corner_ll() const { return ( m_corner_ll ); }
 
-  double slant_range() const { return (m_slantRange); }
-  double sensor_horiz_fov() const { return (m_sensorHorizFOV); }
-  double sensor_vert_fov() const { return (m_sensorVertFOV); }
+  double slant_range() const { return ( m_slantRange ); }
+  double sensor_horiz_fov() const { return ( m_sensorHorizFOV ); }
+  double sensor_vert_fov() const { return ( m_sensorVertFOV ); }
 
-  const lat_lon_t &  frame_center() const { return ( m_frameCenter ); }
+  const geo_coord::geo_lat_lon& frame_center() const { return ( m_frameCenter ); }
 
+  double horizontal_gsd() const { return ( m_horizontal_gsd ); }
+  double vertical_gsd() const { return ( m_vertical_gsd ); }
+  homography_t const &img_to_wld_homog() const { return ( m_img_to_wld_homog ); }
+  std::string const &camera_mode() const { return ( m_camera_mode ); }
+
+  bool has_valid_slant_range() const;
   bool has_valid_time() const;
   bool has_valid_corners() const ;
   bool has_valid_frame_center() const;
+  bool has_valid_gsd() const;
+  bool has_valid_horizontal_gsd() const;
+  bool has_valid_vertical_gsd() const;
+  bool has_valid_img_to_wld_homog() const;
+  bool has_valid_camera_mode() const;
   bool is_valid() const;
 
-  virtual vcl_ostream & to_stream (vcl_ostream& str) const;
-  vcl_ostream & ascii_serialize(vcl_ostream& str) const;
-  vcl_istream & ascii_deserialize(vcl_istream& str);
-
+  virtual std::ostream & to_stream (std::ostream& str) const;
 
   // -- MANIPULATORS --
   video_metadata& timeUTC(const vxl_uint_64& t) { m_timeUTC = t; return ( *this ); }
 
   // Platform location
-  video_metadata& platform_location(const lat_lon_t& loc) { m_platformLatLon = loc; return ( *this ); }
+  video_metadata& platform_location(const geo_coord::geo_lat_lon& loc) { m_platformLatLon = loc; return ( *this ); }
   video_metadata& platform_altitude(double v) { m_platformAltitude = v; return ( *this ); }
 
   // Platform orientation
@@ -132,19 +102,23 @@ public:
   video_metadata& sensor_yaw(double v) { m_sensorYaw = v; return ( *this ); }
 
   // Image corner points.
-  video_metadata& corner_ul(const lat_lon_t& v) { m_corner_ul = v; return ( *this ); }
-  video_metadata& corner_ur(const lat_lon_t& v) { m_corner_ur = v; return ( *this ); }
-  video_metadata& corner_lr(const lat_lon_t& v) { m_corner_lr = v; return ( *this ); }
-  video_metadata& corner_ll(const lat_lon_t& v) { m_corner_ll = v; return ( *this ); }
+  video_metadata& corner_ul(const geo_coord::geo_lat_lon& v) { m_corner_ul = v; return ( *this ); }
+  video_metadata& corner_ur(const geo_coord::geo_lat_lon& v) { m_corner_ur = v; return ( *this ); }
+  video_metadata& corner_lr(const geo_coord::geo_lat_lon& v) { m_corner_lr = v; return ( *this ); }
+  video_metadata& corner_ll(const geo_coord::geo_lat_lon& v) { m_corner_ll = v; return ( *this ); }
 
   video_metadata& slant_range(double v) { m_slantRange = v; return (*this); }
   video_metadata& sensor_horiz_fov(double v) { m_sensorHorizFOV = v; return (*this); }
   video_metadata& sensor_vert_fov(double v) { m_sensorVertFOV = v; return (*this); }
 
-  video_metadata & frame_center(const lat_lon_t v) { m_frameCenter = v; return ( *this ); }
+  video_metadata& frame_center(const geo_coord::geo_lat_lon v) { m_frameCenter = v; return ( *this ); }
+
+  video_metadata& horizontal_gsd(const double v) { m_horizontal_gsd = v; return ( *this ); }
+  video_metadata& vertical_gsd(const double v) { m_vertical_gsd = v; return ( *this ); }
+  video_metadata& img_to_wld_homog(const homography_t& v) { m_img_to_wld_homog = v; return ( *this ); }
+  video_metadata& camera_mode(const std::string& s) { m_camera_mode = s; return ( *this ); }
 
   video_metadata& is_valid( bool in );
-
 
   bool operator == ( const video_metadata &rhs ) const;
   bool operator != ( const video_metadata &rhs )  const { return ( !( this->operator == ( rhs ) ) ); }
@@ -157,44 +131,50 @@ private:
   vxl_uint_64 m_timeUTC;
 
   // platform position (in degrees)
-  lat_lon_t m_platformLatLon;
+  geo_coord::geo_lat_lon m_platformLatLon;
   double m_platformAltitude; // meters ASL??
 
   // platform orientation (RPY) (in degrees)
   // Using a right handed coordinate system. Platform axis is along the X axis.
   // The Z axis is down, making the Y axis point to the right.
-  double m_platformRoll;    // About the X axis. Positive roll is to the right
-  double m_platformPitch;   // About the Y axis. Positive pitch is up.
-  double m_platformYaw;     // About the Z axis. Positive yas is to the Right.
+  double m_platformRoll;      // About the X axis. Positive roll is to the right
+  double m_platformPitch;     // About the Y axis. Positive pitch is up.
+  double m_platformYaw;       // About the Z axis. Positive yas is to the Right.
 
   // sensor orientation WRT the platform (in degrees)
-  double m_sensorRoll;          // Relative to the platform
-  double m_sensorPitch;         // Relative to the platform - Elevation
-  double m_sensorYaw;           // Relative to the platform - Azimuth
+  double m_sensorRoll;        // Relative to the platform
+  double m_sensorPitch;       // Relative to the platform - Elevation
+  double m_sensorYaw;         // Relative to the platform - Azimuth
 
   // Corner points of the associated image.
   // Corners start in upper-left and go clockwise.
-  lat_lon_t m_corner_ul;
-  lat_lon_t m_corner_ur;
-  lat_lon_t m_corner_lr;
-  lat_lon_t m_corner_ll;
+  geo_coord::geo_lat_lon m_corner_ul;
+  geo_coord::geo_lat_lon m_corner_ur;
+  geo_coord::geo_lat_lon m_corner_lr;
+  geo_coord::geo_lat_lon m_corner_ll;
 
-  lat_lon_t m_frameCenter;
+  geo_coord::geo_lat_lon m_frameCenter;
 
+  // Field of view and slant angle parameters for the camera.
   double m_slantRange;
   double m_sensorHorizFOV;
   double m_sensorVertFOV;
+
+  // External device recommended ground sample distances (GSDs).
+  double m_horizontal_gsd;
+  double m_vertical_gsd;
+
+  // External device recommended image to world homographies.
+  homography_t m_img_to_wld_homog;
+
+  // String indicating the camera mode (typically the zoom level).
+  std::string m_camera_mode;
 
   bool m_is_valid;
 
 }; // end class video_metadata
 
-
-
-inline vcl_ostream & operator<< (vcl_ostream & str, const vidtk::video_metadata::lat_lon_t & obj)
-{ str << "[ " << obj.lat() << " / " << obj.lon() << " ]"; return (str); }
-
-inline vcl_ostream & operator<< (vcl_ostream & str, const vidtk::video_metadata & obj)
+inline std::ostream & operator<< (std::ostream & str, const vidtk::video_metadata & obj)
 { return obj.to_stream (str); }
 
 } // end namespace

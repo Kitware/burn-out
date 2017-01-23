@@ -17,12 +17,10 @@
 void vsl_b_write( vsl_b_ostream &os, vidtk::Image_Histogram_Type t );
 void vsl_b_read( vsl_b_istream &is, vidtk::Image_Histogram_Type &t );
 
-template< class imT, class maskT>
-void vsl_b_write( vsl_b_ostream& os, 
-                  const vidtk::image_histogram<imT, maskT> &h );
+void vsl_b_write( vsl_b_ostream& os,
+                  const vidtk::image_histogram &h );
 
-template< class imT, class maskT>
 void vsl_b_read( vsl_b_istream& is,
-                 vidtk::image_histogram<imT, maskT> &h );
+                 vidtk::image_histogram &h );
 
 #endif // vidtk_image_histogram_io_h_

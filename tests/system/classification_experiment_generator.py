@@ -146,15 +146,15 @@ def CreateTrainingSet(config_file, base_directory, experiment_name, output_file)
   frames_in.close()
   frames_out.close()
 
-  print "Generating for " + experiment_name
-  print "    Tracking"
+  print("Generating for " + experiment_name)
+  print("    Tracking")
   RunTracker( "detect_and_track.conf" )
-  print "    Creating example labels"
+  print("    Creating example labels")
   CreateExampleSet( ground_truth, gsd )
-  print "    Creating Pos and Neg Sets based on labels"
+  print("    Creating Pos and Neg Sets based on labels")
   CreatePositiveAndNegativeSet( gsd )
   input_video = base_directory + "/raw_video.avi"
-  print "    Generating check video"
+  print("    Generating check video")
   DrawVideosPVO( input_video )
 
   output_file.write( experiment_name + " " + os.getcwd() + "/training_pos.kw18 " + os.getcwd() + "/training_neg.kw18 " + gsd + "\n" )

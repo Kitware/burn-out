@@ -1,19 +1,23 @@
 /*ckwg +5
- * Copyright 2011 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2011-2016 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
 #include "shot_stitching_process.h"
 
-#include <vcl_deque.h>
+#include <deque>
 
-#include <utilities/unchecked_return_value.h>
-#include <tracking/shot_stitching_algo.h>
+#include <utilities/homography_util.h>
+
+#include <tracking/generic_shot_stitching_algo.h>
+
+#include <vnl/algo/vnl_determinant.h>
+
 #include <logger/logger.h>
 
 
-VIDTK_LOGGER ("shot_stitching_process");
+VIDTK_LOGGER( "shot_stitching_process" );
 
 
 namespace /* anon */
@@ -30,34 +34,50 @@ struct ssp_param_type
   bool enabled;
   int max_n_glitch_frames;
   double max_n_glitch_seconds;
-  bool verbose;
   int min_shot_size;
+  double determinant_threshold;
+  bool verbose;
 
   ssp_param_type()
     : enabled( true ),
       max_n_glitch_frames( 5 ),
       max_n_glitch_seconds( -1.0 ),
-      verbose( false ),
-      min_shot_size( 0 )
+      min_shot_size( 0 ),
+      determinant_threshold( 0.00001 ),
+      verbose( false )
   {
-    blk.add_parameter( "enabled", "0", "1 = enable; 0 = disable (pass all inputs)" );
-    blk.add_parameter( "max_n_glitch_frames", "5", "After N glitch frames, give up (-1 to wait forever)" );
-    blk.add_parameter( "max_n_glitch_seconds", "-1", "After N glitch seconds, give up  (-1 to wait forever)" );
-    blk.add_parameter( "min_shot_size", "2", "Min number of frames after new-ref to be considered a valid shot");
-    blk.add_parameter( "verbose", "0", "increase verbosity" );
+    blk.add_parameter( "enabled",
+      "0",
+      "1 = enable; 0 = disable (pass all inputs)" );
+    blk.add_parameter( "max_n_glitch_frames",
+      "5",
+      "After N glitch frames, give up (-1 to wait forever)" );
+    blk.add_parameter( "max_n_glitch_seconds",
+      "-1",
+      "After N glitch seconds, give up  (-1 to wait forever)" );
+    blk.add_parameter( "min_shot_size",
+      "2",
+      "Min number of frames after new-ref to be considered a valid shot" );
+    blk.add_parameter( "determinant_threshold",
+      "0.00001",
+      "Required homography determinant for a stitch to be considered successful" );
+    blk.add_parameter( "verbose",
+      "0",
+      "increase verbosity" );
   }
 
   bool set_params( const vidtk::config_block& b )
   {
     try
     {
-      b.get( "enabled", this->enabled );
-      b.get( "max_n_glitch_frames", this->max_n_glitch_frames );
-      b.get( "max_n_glitch_seconds", this->max_n_glitch_seconds );
-      b.get( "min_shot_size", this->min_shot_size );
-      b.get( "verbose", this->verbose );
+      this->enabled = b.get < bool >( "enabled" );
+      this->max_n_glitch_frames = b.get < int >( "max_n_glitch_frames" );
+      this->max_n_glitch_seconds = b.get < double >( "max_n_glitch_seconds" );
+      this->min_shot_size = b.get < int >( "min_shot_size" );
+      this->determinant_threshold = b.get < double >( "determinant_threshold" );
+      this->verbose = b.get < bool >( "verbose" );
     }
-    catch (vidtk::unchecked_return_value& e )
+    catch( vidtk::config_block_parse_error& e )
     {
       LOG_ERROR( "shot_stitching_process: param error: " << e.what() );
       return false;
@@ -106,7 +126,7 @@ public:
   int glitch_frame_count;
 
   // the data queue
-  vcl_deque< typename shot_stitching_process<PixType>::pads_type > data_queue;
+  std::deque< typename shot_stitching_process<PixType>::pads_type > data_queue;
 
   // our anchor packet for stitching (set in flush_queue() )
   struct
@@ -119,7 +139,7 @@ public:
   shot_stitching_process<PixType>* parent;
 
   // stitching algorithm object
-  shot_stitching_algo<PixType> stitcher;
+  generic_shot_stitching_algo<PixType> stitcher;
 
   explicit shot_stitching_process_impl( shot_stitching_process<PixType>* p )
     : parent( p ),
@@ -127,6 +147,8 @@ public:
   {
     // import the algorithm parameters
     params.blk.add_subblock( stitcher.params(), "algo" );
+    // set default algorithm type to KLT
+    params.blk.set( "algo:type", "klt" );
     reset();
   }
 
@@ -486,7 +508,7 @@ shot_stitching_process_impl< PixType >
 ::attempt_stitching()
 {
   bool new_ref_found(false);
-  unsigned nri;
+  int nri;  // new-ref frame index in queue
   // Scan the queue backwards looking for the entry with new-ref set.
   // That entry is the other end of the stitch.
   for (nri = data_queue.size()-1; nri >= 0; nri--)
@@ -509,9 +531,10 @@ shot_stitching_process_impl< PixType >
 
   if ( params.verbose )
   {
-    LOG_INFO("ssp: stitching from " << anchor.packet.timestamp_pad_
-             << " to " << data_queue[nri].timestamp_pad_
-             << "\n" << anchor.packet.src2ref_h_pad_ );
+    LOG_INFO("ssp: stitching from " << data_queue[nri].timestamp_pad_
+             << " to " << anchor.packet.timestamp_pad_
+             << "\n" << anchor.packet.src2ref_h_pad_
+             << "\n" << data_queue[nri].src2ref_h_pad_);
   }
 
 
@@ -520,12 +543,31 @@ shot_stitching_process_impl< PixType >
   // current2ref.
 
   image_to_image_homography current2anchor =
-    stitcher.stitch(data_queue[nri].image_pad_, anchor.packet.image_pad_);
+    stitcher.stitch(data_queue[nri].rescaled_image_pad_,
+                    data_queue[nri].metadata_mask_pad_,
+                    anchor.packet.rescaled_image_pad_,
+                    anchor.packet.metadata_mask_pad_);
+
+  LOG_TRACE( "frametrace: shot_stitching succeeded: " << current2anchor.is_valid() << " "
+             << anchor.packet.timestamp_pad_ << " : " << data_queue[nri].timestamp_pad_ );
 
   // if it didn't work, just return
   if ( !current2anchor.is_valid() )
   {
-    LOG_INFO ("ssp: stitching failed");
+    LOG_INFO ("ssp: stitching failed, unable to compute homography.");
+
+    // disable our adjustment and let the current reference frame be
+    // used.
+    major_adjustment_.set_valid(false);
+
+    return;
+  }
+
+  // check correctness of homography
+  if ( params.determinant_threshold > 0.0 &&
+       std::abs( vnl_determinant( current2anchor.get_transform().get_matrix() ) ) < params.determinant_threshold )
+  {
+    LOG_INFO ("ssp: stitching failed, invalid homography.");
 
     // disable our adjustment and let the current reference frame be
     // used.
@@ -538,12 +580,22 @@ shot_stitching_process_impl< PixType >
   // the status on the unusable frames in queue.
   current2anchor.set_new_reference(false);
   current2anchor.set_source_reference(data_queue[nri].src2ref_h_pad_.get_source_reference())
-    .set_dest_reference(anchor.packet.src2ref_h_pad_.get_dest_reference());
+    .set_dest_reference(anchor.packet.timestamp_pad_);
+  // Make sure this data element's shotbreak flags does not signal shot-end
+  // anymore. Funny things happen if this is set when its not really the end
+  // of a shot.
+  data_queue[nri].shot_break_flags_pad_.set_shot_end( false );
 
   if (params.verbose)
   {
     LOG_INFO ("ssp: stitching homog " << current2anchor);
   }
+
+  // We also need to incorporate "anchor to anchor's reference frame (anchor_ref)"
+  // transformation, where anchor is the last frame of the previous shot
+  // anchor's reference is the first frame of the last shot.
+  image_to_image_homography current2anchor_ref =
+    anchor.packet.src2ref_h_pad_ * current2anchor;
 
   //
   // Adjust our major adjustment to go from the original ref frame
@@ -552,11 +604,11 @@ shot_stitching_process_impl< PixType >
   if (major_adjustment_.is_valid())
   {
     LOG_INFO ("ssp: original major_adjustment: " << major_adjustment_ );
-    major_adjustment_ = major_adjustment_ * current2anchor;
+    major_adjustment_ = major_adjustment_ * current2anchor_ref;
   }
   else
   {
-    major_adjustment_ = current2anchor;
+    major_adjustment_ = current2anchor_ref;
   }
 
   if (params.verbose)
@@ -574,12 +626,12 @@ shot_stitching_process_impl< PixType >
   if ( params.verbose )
   {
     LOG_INFO("ssp: stitched; data queue size " << data_queue.size()
-             << "\nUsing bridge homog: " << current2anchor );
+             << "\nUsing bridge homog: " << current2anchor_ref );
   }
 
   // Delete all the elements in the queue (up to, but not including, the
   // new ref index) since they are unusable.
-  for (unsigned i = 0; i < nri; ++i)
+  for (int i = 0; i < nri; ++i)
   {
     if ( params.verbose )
     {
@@ -601,8 +653,8 @@ shot_stitching_process_impl< PixType >
 
 template< typename PixType >
 shot_stitching_process<PixType>
-::shot_stitching_process( const vcl_string& name )
-  : process( name, "shot_stitching_process" ),
+::shot_stitching_process( const std::string& _name )
+  : process( _name, "shot_stitching_process" ),
     p(0)
 {
   p =  new shot_stitching_process_impl< PixType >( this );

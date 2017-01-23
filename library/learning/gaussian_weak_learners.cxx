@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -62,12 +62,12 @@ weak_learner_gausian
   covar_not   *= (1./wgt_not);
   classifer->gaus_class_ = vpdl_gaussian< double, 0 >(mean_class,covar_class);
   classifer->gaus_not_ = vpdl_gaussian< double, 0 >(mean_not,covar_not);
-  return (weak_learner*)(classifer);
+  return static_cast<weak_learner*>(classifer);
 }
 
 bool
 weak_learner_gausian
-::read(vcl_istream & in)
+::read(std::istream & in)
 {
   bool r = weak_learner::read(in);
   unsigned int n;
@@ -84,13 +84,13 @@ weak_learner_gausian
 
 bool
 weak_learner_gausian
-::write(vcl_ostream & out) const
+::write(std::ostream & out) const
 {
   bool r = weak_learner::write(out);
-  out << gaus_class_.mean().size() << " " << gaus_class_.mean() << vcl_endl;
-  out << gaus_class_.covariance() << vcl_endl;
-  out << gaus_not_.mean() << vcl_endl;
-  out << gaus_not_.covariance() << vcl_endl;
+  out << gaus_class_.mean().size() << " " << gaus_class_.mean() << std::endl;
+  out << gaus_class_.covariance() << std::endl;
+  out << gaus_not_.mean() << std::endl;
+  out << gaus_not_.covariance() << std::endl;
   return r;
 }
 
@@ -129,12 +129,12 @@ weak_learner_single_gausian
   }
   covar_class *= (1./wgt_class);
   classifer->gaus_class_ = vpdl_gaussian< double, 0 >(mean_class,covar_class);
-  return (weak_learner*)(classifer);
+  return static_cast<weak_learner*>(classifer);
 }
 
 bool
 weak_learner_single_gausian
-::read(vcl_istream & in)
+::read(std::istream & in)
 {
   bool r = weak_learner::read(in);
   unsigned int n;
@@ -148,11 +148,11 @@ weak_learner_single_gausian
 
 bool
 weak_learner_single_gausian
-::write(vcl_ostream & out) const
+::write(std::ostream & out) const
 {
   bool r = weak_learner::write(out);
-  out << gaus_class_.mean().size() << " " << gaus_class_.mean() << vcl_endl;
-  out << gaus_class_.covariance() << vcl_endl;
+  out << gaus_class_.mean().size() << " " << gaus_class_.mean() << std::endl;
+  out << gaus_class_.covariance() << std::endl;
   return r;
 }
 
@@ -210,12 +210,12 @@ weak_learner_single_hw_gausian
   covar *= (1./wgt);
   classifer->gaus_ = vpdl_gaussian< double, 0 >(mean,covar);
   classifer->sign_ = sign_;
-  return (weak_learner*)(classifer);
+  return static_cast<weak_learner*>(classifer);
 }
 
 bool
 weak_learner_single_hw_gausian
-::read(vcl_istream & in)
+::read(std::istream & in)
 {
   bool r = weak_learner::read(in);
   unsigned int n;
@@ -229,11 +229,11 @@ weak_learner_single_hw_gausian
 
 bool
 weak_learner_single_hw_gausian
-::write(vcl_ostream & out) const
+::write(std::ostream & out) const
 {
   bool r = weak_learner::write(out);
-  out << gaus_.mean().size() << " " << gaus_.mean() << vcl_endl;
-  out << gaus_.covariance() << vcl_endl << sign_ << vcl_endl;
+  out << gaus_.mean().size() << " " << gaus_.mean() << std::endl;
+  out << gaus_.covariance() << std::endl << sign_ << std::endl;
   return r;
 }
 

@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2011 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2011-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -21,8 +21,8 @@
 #ifndef VIDTK_UTILITIES_EXTERNAL_BASE_PROCESS_H_
 #define VIDTK_UTILITIES_EXTERNAL_BASE_PROCESS_H_
 
-#include <vcl_string.h>
-#include <vcl_vector.h>
+#include <string>
+#include <vector>
 
 #include <utilities/config_block.h>
 #include <process_framework/process.h>
@@ -32,11 +32,16 @@
 namespace vidtk
 {
 
+/// @todo: This warning is being suppressed because, at the moment, there's nothing that can be done.
+/// The using code ( matlab plugin ) will crash if the return on the output_port is not a ref.
+/// It's likely that the code is trying to use it as a temporary for which it assumes maintained scope.
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
 class external_base_process : public process
 {
 public:
   typedef external_base_process self_type;
-  typedef vcl_map< vcl_string, boost::any > data_map_type;
+  typedef std::map< std::string, boost::any > data_map_type;
 
   virtual ~external_base_process();
 
@@ -52,19 +57,22 @@ public:
   // Pass all inputs in a property map
   virtual void set_inputs( const data_map_type& inputs );
   VIDTK_INPUT_PORT( set_inputs, const data_map_type& );
-  
+
   // Input ports, output ports, and step function will be defined in subclass
   bool step(void) = 0;
 
   // Retrieve all outputs in a property map
-  virtual data_map_type& outputs( void );
-  VIDTK_OUTPUT_PORT( data_map_type&, outputs );
+  //NOTE:  This is potentially a bad idea, but it is needed for the external matlab stuff
+  //       used by cete.  Please talk to others (possibly Juda) before chaning this to
+  //       something other than a reference.
+  virtual data_map_type & outputs( void );
+  VIDTK_OUTPUT_PORT( data_map_type & , outputs );
 
 protected:
 
   // Protected constructor to be called by subclasses
-  external_base_process(const vcl_string &proc_name,
-                        const vcl_string &class_name);
+  external_base_process(const std::string &proc_name,
+                        const std::string &class_name);
 
   config_block config_;
 

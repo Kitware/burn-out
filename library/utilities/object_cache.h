@@ -1,7 +1,13 @@
+/*ckwg +5
+ * Copyright 2013-2015 by Kitware, Inc. All Rights Reserved. Please refer to
+ * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
+ * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
+ */
+
 #ifndef vidtk_object_cache_h_
 #define vidtk_object_cache_h_
 
-#include <vcl_map.h>
+#include <map>
 #include <vbl/vbl_smart_ptr.h>
 
 #include <boost/uuid/uuid.hpp>
@@ -17,8 +23,6 @@ template<typename T> class uuid_able;
 
 typedef boost::uuids::uuid uuid_t;
 
-//typedef boost::uuids::uuid uuid_t;
-
 ///
 /// object_cache<T> keeps track of all in-core copies of class T
 /// object lifetime is controlled through smart_pointer/reference counting
@@ -28,18 +32,25 @@ template <typename T>
 class object_cache
 {
 public:
-  // might use boost::unordered_map (hash map) instead of vcl_map
+  // might use boost::unordered_map (hash map) instead of std::map
   //  note: uuid's are *already* hashes, and this would provide O(1)
   //  instead of O(logN) access, if it matters
-  typedef vcl_map<uuid_t, T*> cache_map_t;
+  typedef std::map<uuid_t, T*> cache_map_t;
 
   /// return the (only) instance of this (singleton) class
   static object_cache *get_instance()
   {
-    if (!instance_)
+    static boost::mutex instance_lock;
+
+    if ( ! instance_)
     {
-      instance_ = new object_cache;
+      boost::unique_lock< boost::mutex > lock( instance_lock );
+      if ( ! instance_ )
+      {
+        instance_ = new object_cache;
+      }
     }
+
     return instance_;
   }
 

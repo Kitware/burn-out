@@ -16,16 +16,18 @@ typedef struct  {
 }  _KLT_FloatImageRec, *_KLT_FloatImage;
 
 _KLT_FloatImage _KLTCreateFloatImage(
-  int ncols, 
+  int ncols,
   int nrows);
 
 void _KLTFreeFloatImage(
   _KLT_FloatImage);
-	
+
+#if 0
 void _KLTPrintSubFloatImage(
   _KLT_FloatImage floatimg,
   int x0, int y0,
   int width, int height);
+#endif
 
 #if 0
 void _KLTWriteFloatImageToPGM(
@@ -37,6 +39,10 @@ void _KLTWriteAbsFloatImageToPGM(
   _KLT_FloatImage img,
   char *filename,float scale);
 #endif
+
+void _KLTApply3x3HomogToXY(
+  float x0, float y0, const float *h,
+  float *x1, float *y1);
 
 #ifdef __cplusplus
 }

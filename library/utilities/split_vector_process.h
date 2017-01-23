@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -7,9 +7,9 @@
 #ifndef _VIDTK_SPLIT_VECTOR_PROCESS_H_
 #define _VIDTK_SPLIT_VECTOR_PROCESS_H_
 
-#include <vcl_string.h>
-#include <vcl_functional.h>
-#include <vcl_vector.h>
+#include <string>
+#include <functional>
+#include <vector>
 
 #include <boost/function.hpp>
 
@@ -27,7 +27,7 @@ class split_vector_process : public process
 public:
   typedef split_vector_process self_type;
 
-  split_vector_process( const vcl_string &name);
+  split_vector_process( const std::string &name);
 
   ~split_vector_process();
 
@@ -39,25 +39,25 @@ public:
 
   virtual bool step();
 
-  void set_input( const vcl_vector<T> &in );
-  VIDTK_INPUT_PORT( set_input, const vcl_vector<T>& );
+  void set_input( const std::vector<T> &in );
+  VIDTK_INPUT_PORT( set_input, const std::vector<T>& );
 
-  vcl_vector<T>& positive(void);
-  VIDTK_OUTPUT_PORT( vcl_vector<T>&, positive );
+  std::vector<T>& positive(void);
+  VIDTK_OUTPUT_PORT( std::vector<T>&, positive );
 
-  vcl_vector<T>& zero(void);
-  VIDTK_OUTPUT_PORT( vcl_vector<T>&, zero );
+  std::vector<T>& zero(void);
+  VIDTK_OUTPUT_PORT( std::vector<T>&, zero );
 
-  vcl_vector<T>& negative(void);
-  VIDTK_OUTPUT_PORT( vcl_vector<T>&, negative );
+  std::vector<T>& negative(void);
+  VIDTK_OUTPUT_PORT( std::vector<T>&, negative );
 
 private:
   config_block config_;
 
-  const vcl_vector<T> *in_;
-  vcl_vector<T> positive_;
-  vcl_vector<T> zero_;
-  vcl_vector<T> negative_;
+  const std::vector<T> *in_;
+  std::vector<T> positive_;
+  std::vector<T> zero_;
+  std::vector<T> negative_;
 };
 
 }  // namespace vidtk

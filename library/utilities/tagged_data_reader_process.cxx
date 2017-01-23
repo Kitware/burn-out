@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2011 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2011-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -43,7 +43,7 @@ public:
   }
 
 
-  virtual int missing_input (group_data_reader_writer::rw_vector_t const& objs)
+  virtual size_t missing_input (group_data_reader_writer::rw_vector_t const& objs)
   {
     LOG_INFO ("Input not found for " << objs.size() << " data types" );
     return 0;  // Allow all missing input
@@ -60,8 +60,8 @@ public:
  *
  */
 tagged_data_reader_process::
-tagged_data_reader_process(vcl_string const& name)
-  : base_reader_process(name, "tagged_data_reader_process"),
+tagged_data_reader_process(std::string const& _name)
+  : base_reader_process(_name, "tagged_data_reader_process"),
     m_state(0)
 {
   VIDTK_DEFAULT_LOGGER->set_level (vidtk_logger::LEVEL_TRACE);
@@ -90,7 +90,7 @@ set_params(config_block const& blk)
 
 
 bool tagged_data_reader_process::
-initialize(base_io_process::internal_t)
+initialize_internal()
 {
   if (! m_enabled)
   {
@@ -124,7 +124,7 @@ initialize(base_io_process::internal_t)
 
 
   // initialize the base class first
-  if (base_reader_process::initialize(INTERNAL) != true)
+  if (base_reader_process::initialize_internal() != true)
   {
     return (false);
   }
@@ -206,26 +206,6 @@ post_step_hook()
       m_state++;
   }
 }
-
-
-// ==== OUTPUT METHODS ======
-// ----------------------------------------------------------------
-/** Timestamp vector.
- *
- * Since we don't really handle the timestamp vector, we will create
- * one here from the last timestamp we have.
- */
-vidtk::timestamp::vector_t
-tagged_data_reader_process::
-get_output_timestamp_vector() const
-{
-  vidtk::timestamp::vector_t tsv;
-
-  tsv.push_back (m_timestamp);
-
-  return tsv;
-}
-
 
 
 } // end namespace

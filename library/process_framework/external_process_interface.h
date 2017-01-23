@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2011 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2011-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -29,12 +29,12 @@
 #include <utilities/config_block.h>
 #include <process_framework/external_base_process.h>
 
-extern "C" 
+extern "C"
 {
 
 // Constructor returning a pointer to the tracker object
 EXTERNAL_PROCESS_API
-vidtk::external_base_process* 
+vidtk::external_base_process*
 construct(void);
 
 // Set configuration parameters
@@ -42,9 +42,9 @@ EXTERNAL_PROCESS_API
 bool
 set_params(vidtk::external_base_process* obj, const vidtk::config_block &blk);
 
-// Initialize 
-EXTERNAL_PROCESS_API 
-bool 
+// Initialize
+EXTERNAL_PROCESS_API
+bool
 initialize(vidtk::external_base_process* obj);
 
 // Set process inputs
@@ -64,7 +64,7 @@ get_outputs(vidtk::external_base_process* obj, vidtk::external_base_process::dat
 
 // Destroy the tracker object
 EXTERNAL_PROCESS_API
-void 
+void
 destruct(vidtk::external_base_process *obj);
 
 } // extern "C"

@@ -1,23 +1,26 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2016 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
 #include "homography_writer_process.h"
 
-#include <vcl_algorithm.h>
-#include <utilities/unchecked_return_value.h>
-#include <utilities/log.h>
+#include <algorithm>
+
 #include <vnl/vnl_double_2.h>
 #include <vgl/vgl_area.h>
+
+#include <logger/logger.h>
+VIDTK_LOGGER("homography_writer_process_cxx");
+
 
 namespace vidtk
 {
 
 homography_writer_process
-  ::homography_writer_process( vcl_string const& name )
-  : process( name, "homography_writer_process" ),
+  ::homography_writer_process( std::string const& _name )
+  : process( _name, "homography_writer_process" ),
     disabled_( true ),
     FrameNumber( 0 ),
     TimeStamp( 0.0 ),
@@ -60,19 +63,17 @@ homography_writer_process
 {
   try
   {
-    blk.get("disabled",this->disabled_);
+    this->disabled_ = blk.get<bool>("disabled");
     if( !this->disabled_ )
     {
-      blk.get("output_filename",this->filename);
-      blk.get("append",this->append_file_);
+      this->filename = blk.get<std::string>("output_filename");
+      this->append_file_ = blk.get<bool>("append");
     }
   }
-  catch( unchecked_return_value& e)
+  catch( config_block_parse_error const& e)
   {
-    log_error( name() << ": couldn't set parameters: "<< e.what() <<"\n" );
-
-    // reset to old values
-    this->set_params( this->config_ );
+    LOG_ERROR( this->name() << ": set_params failed: "
+               << e.what() );
     return false;
   }
 
@@ -90,19 +91,19 @@ homography_writer_process
     this->set_output_file(this->filename);
     if( this->filestrm.fail() )
     {
-      log_error( "Could not open file: " + this->filename + "\n" );
+      LOG_ERROR( "Could not open file: " + this->filename + "" );
       return false;
     }
   }
 
-  this->filestrm << vcl_fixed;
+  this->filestrm << std::fixed;
 
   return true;
 }
 
-void 
+void
 homography_writer_process
-::set_output_file(vcl_string file)
+::set_output_file(std::string file)
 {
   if (filestrm.is_open())
   {
@@ -111,11 +112,11 @@ homography_writer_process
 
   if( this->append_file_ )
   {
-    filestrm.open( file.c_str(), vcl_ofstream::app );
+    filestrm.open( file.c_str(), std::ofstream::app );
   }
   else
   {
-    filestrm.open( file.c_str(), vcl_ofstream::out );
+    filestrm.open( file.c_str(), std::ofstream::out );
   }
 }
 
@@ -124,19 +125,21 @@ homography_writer_process
 ::step()
 {
   if( this->disabled_ )
-    return false;
-  
-  if (!this->filestrm.is_open())
   {
     return false;
   }
 
-  this->filestrm << this->FrameNumber << vcl_endl;
+  if( !this->filestrm.is_open() )
+  {
+    return false;
+  }
+
+  this->filestrm << this->FrameNumber << std::endl;
   this->filestrm.precision(6);
-  this->filestrm << this->TimeStamp << vcl_endl;
+  this->filestrm << this->TimeStamp << std::endl;
   this->filestrm.precision(20);
-  this->filestrm << this->Homography << vcl_endl;
-  
+  this->filestrm << this->Homography << std::endl;
+
   return true;
 }
 
@@ -145,7 +148,7 @@ void homography_writer_process::set_source_homography( vgl_h_matrix_2d<double> c
   this->Homography = H.get_matrix();
 }
 
-void homography_writer_process::set_source_vidtk_homography( image_to_image_homography const& H )
+void homography_writer_process::set_source_vidtk_homography( vidtk::homography const& H )
 {
   this->Homography = H.get_transform().get_matrix();
 }
@@ -157,4 +160,3 @@ void homography_writer_process::set_source_timestamp( vidtk::timestamp const& ts
 }
 
 } // end namespace vidtk
-

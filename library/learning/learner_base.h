@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -10,9 +10,9 @@
 #include <learning/learner_data.h>
 #include <learning/training_feature_set.h>
 
-#include <vcl_vector.h>
-#include <vcl_string.h>
-#include <vcl_iostream.h>
+#include <vector>
+#include <string>
+#include <iostream>
 
 #include <vbl/vbl_ref_count.h>
 #include <vbl/vbl_smart_ptr.h>
@@ -31,8 +31,8 @@ class learner_base : public vbl_ref_count
     /// Returns either -1 or 1 depending on what class the data falls in
     virtual int classify(learner_data const & data) = 0;
     /// Read and write the classifier
-    virtual bool read(vcl_istream &) = 0;
-    virtual bool write(vcl_ostream &) const = 0;
+    virtual bool read(std::istream &) = 0;
+    virtual bool write(std::ostream &) const = 0;
 };
 
 } //namespace vidtk

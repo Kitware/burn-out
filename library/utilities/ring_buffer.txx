@@ -1,12 +1,14 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
 #include "ring_buffer.h"
+#include <cassert>
+#include <logger/logger.h>
 
-#include <vcl_cassert.h>
+VIDTK_LOGGER( "ring_buffer_cxx" );
 
 namespace vidtk
 {
@@ -30,9 +32,9 @@ ring_buffer< Data >
 template<class Data>
 void
 ring_buffer< Data >
-::set_capacity( unsigned size )
+::set_capacity( unsigned cap )
 {
-  buffer_.resize( size );
+  buffer_.resize( cap );
 }
 
 
@@ -41,7 +43,7 @@ unsigned
 ring_buffer< Data >
 ::capacity() const
 {
-  return buffer_.size();
+  return static_cast<unsigned>( buffer_.size() );
 }
 
 
@@ -87,7 +89,7 @@ ring_buffer< Data >
 
 
 template<class Data>
-Data const&
+const Data&
 ring_buffer< Data >
 ::datum_at( unsigned offset ) const
 {
@@ -95,7 +97,12 @@ ring_buffer< Data >
 
   unsigned const N = capacity();
 
-  return buffer_[( head_ - offset + N ) % N];
+  int idx = static_cast<int>(head_) - static_cast<int>(offset) + static_cast<int>(N);
+  if (idx < 0)
+  {
+    LOG_ERROR("Ring buffer logic error: head_ " << head_ << " offset " << offset << " N " << N << " idx " << idx );
+  }
+  return buffer_[ static_cast<unsigned>( idx % N ) ];
 }
 
 

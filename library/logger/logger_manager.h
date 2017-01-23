@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -10,12 +10,13 @@
 
 #include <logger/vidtk_logger.h>
 
-#include <vcl_string.h>
+#include <string>
 #include <boost/noncopyable.hpp>
+#include <boost/scoped_ptr.hpp>
 
+#include <logger/class_loader.h>
 
 namespace vidtk {
-
 
 //
 // Partial types
@@ -34,8 +35,6 @@ class vidtk_logger;
  * The manager can handle get_logger() calls before it it is
  * initialized. Specifically, it is quite likely that get_logger()
  * calls will be made before the initialize() call.
- *
- * @todo add sequence diag for startup.
  */
 class logger_manager
   : public boost::noncopyable
@@ -66,8 +65,8 @@ public:
  * The configuration file structure and syntax depends on the
  * underlying logger implementaion currently being used.
  *
- * @param[in] argc - number of elements in argv,
- * @param[in] argv - vector of erguments.
+ * @param argc  number of elements in argv,
+ * @param argv  vector of erguments.
  *
  * @retval 0 - initialization completed o.k.
  * @retval -1 - error in initialization.
@@ -79,38 +78,29 @@ public:
   static vidtk_logger_sptr get_logger( char const* name );
 
   /** Get named logger object. */
-  static vidtk_logger_sptr get_logger( vcl_string const& name );
+  static vidtk_logger_sptr get_logger( std::string const& name );
 
+  /**
+   * @brief Get name of current logger factory.
+   *
+   * @return Name of logger factory.
+   */
+  std::string const&  get_factory_name() const;
 
-  // -- ACCESSORS --
-  /** Get name of application */
-  vcl_string const& get_application_name() const;
-
-  /** Get name of application instance */
-  vcl_string const& get_application_instance_name() const;
-
-  /** Get name of host system */
-  vcl_string const& get_system_name() const;
-
-  vcl_string const& get_factory_name() const;
+  std::string const& get_application_name() const;
+  std::string const& get_application_instance_name() const;
+  std::string const& get_system_name() const;
 
   // -- MANIPULATORS --
-  void set_application_name (vcl_string const& name);
-  void set_application_instance_name (vcl_string const& name);
-  void set_system_name (vcl_string const& name);
-
+  void set_application_name( std::string const& name );
+  void set_application_instance_name( std::string const& name );
+  void set_system_name( std::string const& name );
 
 private:
   logger_manager();
 
-
-  // location of this log manager
-  vcl_string m_applicationName;
-  vcl_string m_applicationInstanceName;
-  vcl_string m_systemName;
-//+ TODO   <ip-addr> m_systemIPAddr;
-
-  logger_ns::logger_factory * m_logFactory;
+  boost::scoped_ptr< logger_ns::logger_factory > m_logFactory;
+  boost::scoped_ptr< class_loader > m_loggerLoader;
 
   bool m_initialized;
 

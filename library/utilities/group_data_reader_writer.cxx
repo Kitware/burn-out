@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2011 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2011-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -7,7 +7,7 @@
 
 #include "group_data_reader_writer.h"
 
-#include <vcl_iostream.h>
+#include <iostream>
 #include <boost/foreach.hpp>
 #include <logger/logger.h>
 
@@ -24,11 +24,13 @@ class def_policy_t
   : public group_data_reader_writer::mismatch_policy
 {
 public:
+  virtual ~def_policy_t() { }
+
   // Allow all unrecognized input
   virtual bool unrecognized_input (const char * /*line*/) { return true; }
 
   // Do not allow group members to be not satisfied.
-  virtual int missing_input (group_data_reader_writer::rw_vector_t const& objs) { return objs.size(); }
+  virtual size_t missing_input (group_data_reader_writer::rw_vector_t const& objs) { return objs.size(); }
 };
 
 static def_policy_t default_policy;
@@ -82,7 +84,7 @@ void group_data_reader_writer
 
 // ----------------------------------------------------------------
 void group_data_reader_writer
-::write_object(vcl_ostream& str)
+::write_object(std::ostream& str)
 {
   str << s_group_marker << "\n";  // group start marker
 
@@ -95,7 +97,7 @@ void group_data_reader_writer
 
  // ----------------------------------------------------------------
 void group_data_reader_writer
-::write_header(vcl_ostream & str)
+::write_header(std::ostream & str)
 {
   BOOST_FOREACH ( base_reader_writer * obj, m_objectList )
   {
@@ -125,7 +127,7 @@ void group_data_reader_writer
  * or -1 for end of file.
  */
 int group_data_reader_writer
-::read_object(vcl_istream& str)
+::read_object(std::istream& str)
 {
   int full_count(0); // total number of objects read
   int skip_error_count(0);
@@ -164,7 +166,7 @@ int group_data_reader_writer
     rw_iterator_t ix;
     bool valid_read(false);
 
-    for (ix = local_list.begin(); ix != local_list.end(); ix++)
+    for (ix = local_list.begin(); ix != local_list.end(); ++ix)
     {
       base_reader_writer * obj = *ix;
 
@@ -196,7 +198,7 @@ int group_data_reader_writer
   if ( ! marker_seen)
   {
     // flush until we see group marker
-    vcl_string line;
+    std::string line;
     while (find_group_start (str, line) == 1)
     {
       m_currentPolicy->unrecognized_input (line.c_str());
@@ -228,10 +230,10 @@ int group_data_reader_writer
  * or end of stream.
  */
 bool group_data_reader_writer
-::verify_tag(vcl_istream& str) const
+::verify_tag(std::istream& str) const
 {
-  vcl_streampos pos = str.tellg();
-  vcl_string tag;
+  std::streampos pos = str.tellg();
+  std::string tag;
 
   str >> tag;                   // read tag
   if (str.fail() )
@@ -287,9 +289,9 @@ int group_data_reader_writer
  * @retval false - count this line as unhandled
  */
 bool group_data_reader_writer
-::skip_line(vcl_istream & str) const
+::skip_line(std::istream & str) const
 {
-  char buffer[4096];
+  char buffer[4096]; // FIXME: Static buffer size.
   str.getline(buffer, sizeof buffer);
 
   // Pass to policy object
@@ -310,10 +312,10 @@ bool group_data_reader_writer
  * @retval 1 - start of group marker
  */
 int group_data_reader_writer
-::skip_comment(vcl_istream & str) const
+::skip_comment(std::istream & str) const
 {
   char c;
-  char buffer[4096];
+  char buffer[4096]; // FIXME: Static buffer size.
 
   for (;;)
   {
@@ -327,7 +329,7 @@ int group_data_reader_writer
     if (c == '#')
     {
       // look for specific comment markers
-      str.seekg (-1, vcl_ios::cur);
+      str.seekg (-1, std::ios::cur);
 
       str.getline(buffer, sizeof buffer);
       if (strcmp (buffer, s_group_marker) == 0)
@@ -346,7 +348,7 @@ int group_data_reader_writer
   } // end for
 
   // Back up the stream one character
-  str.seekg (-1, vcl_ios::cur);
+  str.seekg (-1, std::ios::cur);
   return 0;
 }
 
@@ -363,14 +365,14 @@ int group_data_reader_writer
  * @retval 0 - start of group marker
  */
  int group_data_reader_writer
-::find_group_start(vcl_istream & str, vcl_string & line)
+::find_group_start(std::istream & str, std::string & line)
 {
   char c;
-  char buffer[4096];
+  char buffer[4096]; // FIXME: Static buffer size.
 
   for (;;)
   {
-    vcl_streampos pos = str.tellg();
+    std::streampos pos = str.tellg();
 
     str >> c;
     if (str.fail() )
@@ -385,7 +387,7 @@ int group_data_reader_writer
     {
       continue;
     }
-    str.seekg (-1, vcl_ios::cur);
+    str.seekg (-1, std::ios::cur);
 
     str.getline(buffer, sizeof buffer);
     if (str.fail() )

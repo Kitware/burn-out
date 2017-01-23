@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -27,7 +27,7 @@ class homography_holder_process
 public:
   typedef homography_holder_process self_type;
 
-  homography_holder_process( vcl_string const& pname );
+  homography_holder_process( std::string const& pname );
 
   ~homography_holder_process();
 
@@ -39,8 +39,8 @@ public:
 
   virtual bool step();
 
-  image_to_plane_homography const& homography_ref_to_wld();
-  VIDTK_OUTPUT_PORT( image_to_plane_homography const&, homography_ref_to_wld );
+  image_to_plane_homography homography_ref_to_wld();
+  VIDTK_OUTPUT_PORT( image_to_plane_homography, homography_ref_to_wld );
 
   // More output ports (e.g. plane_to_image, utm_to_image etc.) can be
   // added when required. Another possibility is to template this class

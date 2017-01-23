@@ -1,17 +1,23 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
 #include "histogram_weak_learners.h"
 
-#include <vcl_vector.h>
-#include <vcl_string.h>
-#include <vcl_sstream.h>
-#include <vcl_iostream.h>
-#include <vcl_iomanip.h>
-#include <vcl_fstream.h>
+#include <vector>
+#include <string>
+#include <sstream>
+#include <iostream>
+#include <iomanip>
+#include <fstream>
+
+#include <logger/logger.h>
+#undef VIDTK_DEFAULT_LOGGER
+#define VIDTK_DEFAULT_LOGGER __vidtk_logger_auto_histogram_weak_learners_cxx__
+VIDTK_LOGGER("histogram_weak_learners_cxx");
+
 
 namespace vidtk
 {
@@ -39,7 +45,7 @@ histogram_weak_learner::train( training_feature_set const & datas,
     }
   }
   if(min_==max_) max_+= 1.;
-//   vcl_cout << "min max " << min_ << " " << max_ << "   " << descriptor_ << " " << axis_ << vcl_endl;
+//   LOG_INFO( "min max " << min_ << " " << max_ << "   " << descriptor_ << " " << axis_ );
 //   assert(min_ != max_);
   vnl_vector<double> histogram_positive(1000,0), histogram_negative(1000,0);
   for( unsigned int i = 0; i < datas.size(); ++i )
@@ -64,7 +70,7 @@ histogram_weak_learner::train( training_feature_set const & datas,
     smoothed_histogram_positive[i] = smoothed_value(i,histogram_positive);
     smoothed_histogram_negative[i] = smoothed_value(i,histogram_negative);
   }
-  vcl_vector<char> bin_class(1000,0);
+  std::vector<char> bin_class(1000,0);
   for(unsigned int i = 0; i < 1000; ++i)
   {
     if(smoothed_histogram_positive[i] > smoothed_histogram_negative[i])
@@ -76,7 +82,7 @@ histogram_weak_learner::train( training_feature_set const & datas,
       bin_class[i] = -1;
     }
   }
-//   vcl_vector< char > old = bin_class;
+//   std::vector< char > old = bin_class;
   for(unsigned int i = 0; i < 1000; ++i)
   {
     if(bin_class[i] != 0){ continue; }
@@ -112,7 +118,7 @@ histogram_weak_learner::train( training_feature_set const & datas,
       }
       else
       {
-        unsigned int midpoint = (unsigned int)((begin+end)*0.5);
+        unsigned int midpoint = static_cast<unsigned int>((begin+end)*0.5);
         for(unsigned int j = begin; j <= midpoint; ++j)
         {
           bin_class[j] = bin_class[begin - 1];
@@ -125,14 +131,14 @@ histogram_weak_learner::train( training_feature_set const & datas,
     }
   }
   classifer->bin_class_ = bin_class;
-  return (weak_learner*)(classifer);
+  return static_cast<weak_learner*>(classifer);
 }
 
 int histogram_weak_learner::classify(learner_data const & data)
 {
 //   if(!(axis_ < data.get_value(descriptor_).size()))
 //   {
-//     vcl_cout << name_ << " " << descriptor_ << " " << axis_ << "  " << data.get_value(descriptor_).size() << vcl_endl;
+//     LOG_INFO( name_ << " " << descriptor_ << " " << axis_ << "  " << data.get_value(descriptor_).size() );
 //   }
   assert(axis_ < data.get_value(descriptor_).size());
   vnl_vector<double> v = data.get_value(descriptor_);
@@ -143,14 +149,14 @@ int histogram_weak_learner::classify(learner_data const & data)
 
 void histogram_weak_learner::debug(unsigned int /*t*/) const
 {
-//     vcl_string fname_prefix("adaboost_debug_lm_");
-//     vcl_stringstream ss;
-//     ss << fname_prefix << vcl_setw( 4 ) << vcl_setfill( '0' ) << t << ".csv";
+//     std::string fname_prefix("adaboost_debug_lm_");
+//     std::stringstream ss;
+//     ss << fname_prefix << std::setw( 4 ) << std::setfill( '0' ) << t << ".csv";
 //     ss >> fname_prefix;
-//     vcl_ofstream out(fname_prefix.c_str());
+//     std::ofstream out(fname_prefix.c_str());
 //     for(unsigned int i = 0; i < histogram_positive_.size(); ++i)
 //     {
-//       out << histogram_positive_[i] << "," << histogram_negative_[i]<< vcl_endl;
+//       out << histogram_positive_[i] << "," << histogram_negative_[i]<< std::endl;
 //     }
 //     out.close();
 }
@@ -171,7 +177,7 @@ double histogram_weak_learner::smoothed_value(int at, vnl_vector<double> & hist)
 }
 
 bool
-histogram_weak_learner::read(vcl_istream & in)
+histogram_weak_learner::read(std::istream & in)
 {
   bool r = weak_learner::read(in);
   in >> min_ >> max_ >> axis_;
@@ -186,15 +192,15 @@ histogram_weak_learner::read(vcl_istream & in)
 }
 
 bool
-histogram_weak_learner::write(vcl_ostream & out) const
+histogram_weak_learner::write(std::ostream & out) const
 {
   bool r = weak_learner::write(out);
-  out << min_ << " " << max_ << " " << axis_ << vcl_endl;
+  out << min_ << " " << max_ << " " << axis_ << std::endl;
   for(unsigned int i = 0; i < 1000; ++i)
   {
     out << static_cast<int>(bin_class_[i]) << " ";
   }
-  out << vcl_endl;
+  out << std::endl;
   return r;
 }
 
@@ -218,11 +224,11 @@ histogram_weak_learner_inSTD::train( training_feature_set const & datas,
     double d = v[axis_] - mean;
     var += weights[i]*(d*d);
   }
-  double std = vcl_sqrt(var);
+  double std = std::sqrt(var);
   min_ = mean-1.3*std;
   max_ = mean+1.3*std;
   if(min_ == max_) {max_ = min_+1;}
-//   vcl_cout << "min max " << min_ << " " << max_ << "   " << descriptor_ << " " << axis_ << vcl_endl;
+//   LOG_INFO( "min max " << min_ << " " << max_ << "   " << descriptor_ << " " << axis_ );
 //   assert(min_ != max_);
   vnl_vector<double> histogram_positive(1000,0), histogram_negative(1000,0);
   for( unsigned int i = 0; i < datas.size(); ++i )
@@ -247,7 +253,7 @@ histogram_weak_learner_inSTD::train( training_feature_set const & datas,
     smoothed_histogram_positive[i] = smoothed_value(i,histogram_positive);
     smoothed_histogram_negative[i] = smoothed_value(i,histogram_negative);
   }
-  vcl_vector<char> bin_class(1000,0);
+  std::vector<char> bin_class(1000,0);
   for(unsigned int i = 0; i < 1000; ++i)
   {
     if(smoothed_histogram_positive[i] > smoothed_histogram_negative[i])
@@ -259,7 +265,7 @@ histogram_weak_learner_inSTD::train( training_feature_set const & datas,
       bin_class[i] = -1;
     }
   }
-//   vcl_vector<char> old = bin_class;
+//   std::vector<char> old = bin_class;
   for(unsigned int i = 0; i < 1000; ++i)
   {
     if(bin_class[i] != 0){ continue; }
@@ -288,7 +294,7 @@ histogram_weak_learner_inSTD::train( training_feature_set const & datas,
       assert(begin != 0);
       if(!(end+1 < 1000))
       {
-        vcl_cout << begin << "  " << end << "    " << bin_class[end] << vcl_endl;
+        LOG_INFO( begin << "  " << end << "    " << bin_class[end] );
         assert(false);
       }
       if(bin_class[end+1]==bin_class[begin - 1])
@@ -300,7 +306,7 @@ histogram_weak_learner_inSTD::train( training_feature_set const & datas,
       }
       else
       {
-        unsigned int midpoint = (unsigned int)((begin+end)*0.5);
+        unsigned int midpoint = static_cast<unsigned int>((begin+end)*0.5);
         for(unsigned int j = begin; j <= midpoint; ++j)
         {
           bin_class[j] = bin_class[begin - 1];
@@ -313,7 +319,7 @@ histogram_weak_learner_inSTD::train( training_feature_set const & datas,
     }
   }
   classifer->bin_class_ = bin_class;
-  return (weak_learner*)(classifer);
+  return static_cast<weak_learner*>(classifer);
 }
 
 } //namespace vidtk

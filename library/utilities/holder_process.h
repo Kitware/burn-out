@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2014 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -7,7 +7,7 @@
 #ifndef vidtk_holder_process_h_
 #define vidtk_holder_process_h_
 
-#include <vcl_queue.h>
+#include <queue>
 
 #include <process_framework/process.h>
 #include <process_framework/pipeline_aid.h>
@@ -27,7 +27,7 @@ class holder_process
 public:
   typedef holder_process self_type;
 
-  holder_process( vcl_string const& name );
+  holder_process( std::string const& name );
 
   ~holder_process();
 
@@ -47,9 +47,8 @@ public:
 
   VIDTK_INPUT_PORT( set_input_datum, TData const& );
 
-  TData & get_output_datum( );
-
-  VIDTK_OUTPUT_PORT( TData &, get_output_datum );
+  TData get_output_datum( );
+  VIDTK_OUTPUT_PORT( TData, get_output_datum );
 
 protected:
   config_block config_;

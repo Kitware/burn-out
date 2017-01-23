@@ -1,11 +1,11 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
-#include <vcl_iostream.h>
-#include <vcl_sstream.h>
+#include <iostream>
+#include <sstream>
 #include <testlib/testlib_test.h>
 #include <vil/vil_image_view.h>
 #include <vil/algo/vil_threshold.h>
@@ -26,23 +26,23 @@
 namespace {
 
 
-vcl_string g_data_dir;
+std::string g_data_dir;
 
 
 inline double sqr( double x ) { return x*x; }
 
 
 void
-step( vidtk::klt_pyramid_process& pp,
+step( vidtk::klt_pyramid_process<vxl_byte>& pp,
       vidtk::klt_tracking_process& tp,
       vidtk::homography_process& hp,
       unsigned frame_number,
-      vcl_string const& filename )
+      std::string const& filename )
 {
   vidtk::timestamp ts;
   ts.set_frame_number( frame_number );
   vil_image_view<vxl_byte> img = vil_load( (g_data_dir+filename).c_str() );
-  vcl_cout << "Processing " << filename << "\n";
+  std::cout << "Processing " << filename << "\n";
   if( !img )
   {
     TEST( "File load", false, true );
@@ -67,12 +67,12 @@ step( vidtk::klt_pyramid_process& pp,
 
 void
 test_translation( vidtk::homography_process const& hp,
-                  vcl_vector< vnl_double_2 > const& pts,
+                  std::vector< vnl_double_2 > const& pts,
                   double dx, double dy,
                   bool expected_equal = true )
 {
   bool good = true;
-  vcl_cout << "Testing that homography is roughly a translation of ("
+  std::cout << "Testing that homography is roughly a translation of ("
            << dx << "," << dy << ")\n";
   for( unsigned i = 0; i < pts.size(); ++i )
   {
@@ -80,7 +80,7 @@ test_translation( vidtk::homography_process const& hp,
     vnl_double_3 wld = hp.project_to_world( img );
     vnl_double_3 exp_wld( pts[i][0], pts[i][1], 0 );
     double err = (wld-exp_wld).magnitude();
-    vcl_cout << img << " -> " << wld << " (expect " << exp_wld << "). Error = "
+    std::cout << img << " -> " << wld << " (expect " << exp_wld << "). Error = "
              << err << "\n";
     if( err > 0.5 )
     {
@@ -97,11 +97,11 @@ test_translation( vidtk::homography_process const& hp,
 void
 test_expected_translation()
 {
-  vcl_cout << "\n\n\nTest estimation under image translation\n\n";
+  std::cout << "\n\n\nTest estimation under image translation\n\n";
 
   using namespace vidtk;
 
-  klt_pyramid_process pp( "klt_pyramid" );
+  klt_pyramid_process<vxl_byte> pp( "klt_pyramid" );
   klt_tracking_process tp( "klt" );
   homography_process hp( "homog" );
 
@@ -110,16 +110,16 @@ test_expected_translation()
   // Comes out to zero, but klt_tracking has guards against it *being* zero
   blk.set( "min_feature_count_percent", "0.01" );
 
-  vcl_cout << "KLT\n";
+  std::cout << "KLT\n";
   TEST( "Set parameters", tp.set_params( blk ), true );
   TEST( "Initialize", tp.initialize(), true );
 
-  vcl_cout << "Homography\n";
+  std::cout << "Homography\n";
   //TEST( "Set parameters", hp.set_params( blk ), true );
   TEST( "Initialize", hp.initialize(), true );
 
   // For verification
-  vcl_vector< vnl_double_2 > world_pts;
+  std::vector< vnl_double_2 > world_pts;
   world_pts.push_back( vnl_double_2( 40, 40 ) );
   world_pts.push_back( vnl_double_2( 100, 40 ) );
   world_pts.push_back( vnl_double_2( 100, 100 ) );
@@ -167,11 +167,11 @@ test_expected_translation()
 void
 test_expected_translation_with_mask( bool use_mask )
 {
-  vcl_cout << "\n\n\nTest estimation with a provided mask\n\n";
+  std::cout << "\n\n\nTest estimation with a provided mask\n\n";
 
   using namespace vidtk;
 
-  klt_pyramid_process pp( "klt_pyramid" );
+  klt_pyramid_process<vxl_byte> pp( "klt_pyramid" );
   klt_tracking_process tp( "klt" );
   homography_process hp( "homog" );
 
@@ -183,18 +183,18 @@ test_expected_translation_with_mask( bool use_mask )
 
   config_block blk = tp.params();
   blk.set( "feature_count", "100" );
-  blk.set( "min_feature_count_percent", "0" );
+  blk.set( "min_feature_count_percent", "0.01" );
 
-  vcl_cout << "KLT\n";
+  std::cout << "KLT\n";
   TEST( "Set parameters", tp.set_params( blk ), true );
   TEST( "Initialize", tp.initialize(), true );
 
-  vcl_cout << "Homography\n";
+  std::cout << "Homography\n";
   //TEST( "Set parameters", hp.set_params( blk ), true );
   TEST( "Initialize", hp.initialize(), true );
 
   // For verification
-  vcl_vector< vnl_double_2 > world_pts;
+  std::vector< vnl_double_2 > world_pts;
   world_pts.push_back( vnl_double_2( 40, 40 ) );
   world_pts.push_back( vnl_double_2( 100, 40 ) );
   world_pts.push_back( vnl_double_2( 100, 100 ) );
@@ -202,25 +202,25 @@ test_expected_translation_with_mask( bool use_mask )
 
   if( use_mask )
   {
-    vcl_cout << "Using mask\n";
+    std::cout << "Using mask\n";
     hp.set_mask_image( mask );
   }
   else
   {
-    vcl_cout << "Not using mask\n";
+    std::cout << "Not using mask\n";
   }
 
   {
     step( pp, tp, hp, 0, "homog_test_mask_0.pgm" );
-    vcl_cout << tp.created_tracks().size() << " features created\n";
+    std::cout << tp.created_tracks().size() << " features created\n";
     test_translation( hp, world_pts, 0, 0 );
   }
 
   {
     step( pp, tp, hp, 1, "homog_test_mask_1.pgm" );
-    vcl_cout << tp.active_tracks().size() << " features tracked\n";
-    vcl_cout << tp.created_tracks().size() << " features created\n";
-    vcl_cout << tp.terminated_tracks().size() << " features terminated\n";
+    std::cout << tp.active_tracks().size() << " features tracked\n";
+    std::cout << tp.created_tracks().size() << " features created\n";
+    std::cout << tp.terminated_tracks().size() << " features terminated\n";
     test_translation( hp, world_pts, 0, 0, /*expected equal=*/ use_mask );
   }
 }

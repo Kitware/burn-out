@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -18,7 +18,7 @@ namespace vidtk
 class weak_learner_gausian : public weak_learner
 {
   public:
-    weak_learner_gausian( vcl_string const & name, int desc ) : weak_learner(name, desc)
+    weak_learner_gausian( std::string const & _name, int desc ) : weak_learner(_name, desc)
     {}
     weak_learner_gausian( )
     {}
@@ -37,8 +37,8 @@ class weak_learner_gausian : public weak_learner
     }
     virtual weak_learners::learner get_id() const
     { return weak_learners::weak_learner_gausian; }
-    virtual bool read(vcl_istream & in);
-    virtual bool write(vcl_ostream & out) const;
+    virtual bool read(std::istream & in);
+    virtual bool write(std::ostream & out) const;
   protected:
     vpdl_gaussian< double, 0 > gaus_class_;
     vpdl_gaussian< double, 0 > gaus_not_;
@@ -48,8 +48,8 @@ class weak_learner_gausian : public weak_learner
 class weak_learner_single_gausian : public weak_learner
 {
   public:
-    weak_learner_single_gausian( vcl_string const & name, int desc )
-      : weak_learner(name, desc)
+    weak_learner_single_gausian( std::string const & _name, int desc )
+      : weak_learner(_name, desc)
     {}
     weak_learner_single_gausian( )
     {}
@@ -68,8 +68,8 @@ class weak_learner_single_gausian : public weak_learner
     }
     virtual weak_learners::learner get_id() const
     { return weak_learners::weak_learner_single_gausian; }
-    virtual bool read(vcl_istream & in);
-    virtual bool write(vcl_ostream & out) const;
+    virtual bool read(std::istream & in);
+    virtual bool write(std::ostream & out) const;
   protected:
     vpdl_gaussian< double, 0 > gaus_class_;
 };
@@ -78,8 +78,8 @@ class weak_learner_single_gausian : public weak_learner
 class weak_learner_single_hw_gausian : public weak_learner
 {
   public:
-    weak_learner_single_hw_gausian( vcl_string const & name, int desc )
-      : weak_learner(name, desc)
+    weak_learner_single_hw_gausian( std::string const & _name, int desc )
+      : weak_learner(_name, desc)
     {}
     weak_learner_single_hw_gausian( )
     {}
@@ -98,8 +98,8 @@ class weak_learner_single_hw_gausian : public weak_learner
     }
     virtual weak_learners::learner get_id() const
     { return weak_learners::weak_learner_single_hw_gausian; }
-    virtual bool read(vcl_istream & in);
-    virtual bool write(vcl_ostream & out) const;
+    virtual bool read(std::istream & in);
+    virtual bool write(std::ostream & out) const;
   protected:
     vpdl_gaussian< double, 0 > gaus_;
     int sign_;

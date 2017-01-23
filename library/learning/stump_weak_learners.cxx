@@ -1,24 +1,30 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
 #include "stump_weak_learners.h"
 
-#include <vcl_cassert.h>
-#include <vcl_iostream.h>
-#include <vcl_algorithm.h>
+#include <cassert>
+#include <iostream>
+#include <algorithm>
 
 #include <vnl/vnl_math.h>
+
+#include <logger/logger.h>
+#undef VIDTK_DEFAULT_LOGGER
+#define VIDTK_DEFAULT_LOGGER __vidtk_logger_auto_stump_weak_learners_cxx__
+VIDTK_LOGGER("stump_weak_learners_cxx");
+
 
 namespace vidtk
 {
 
 stump_weak_learner
 ::stump_weak_learner( int s, unsigned int d, double v,
-                      vcl_string const & name, int desc )
-      : weak_learner(name, desc),
+                      std::string const & _name, int desc )
+      : weak_learner(_name, desc),
         sign_(s), dim_(d), value_(v)
 {
 }
@@ -48,8 +54,8 @@ stump_weak_learner
       best_dim = i;
     }
   }
-  return (weak_learner *)(new stump_weak_learner( best_sign, best_dim,
-                                                  best_value, name_,descriptor_) );
+  return static_cast<weak_learner*>(new stump_weak_learner( best_sign, best_dim,
+                                                            best_value, name_,descriptor_) );
 }
 
 int
@@ -57,14 +63,10 @@ stump_weak_learner
 ::classify(learner_data const & data)
 {
   double v = data.get_value_at(descriptor_,dim_);
-  //vcl_cerr << descriptor_ << " " << dim_ << " " << v << " " << value_ << vcl_endl;
+  //LOG_INFO( descriptor_ << " " << dim_ << " " << v << " " << value_ );
   if(v > value_)
   {
     return sign_;
-  }
-  else if(v==value_)
-  {
-    return -sign_;
   }
   else
   {
@@ -94,7 +96,7 @@ stump_weak_learner
                     unsigned int d, int & s, double & v)
 {
   assert(datas.size());
-  vcl_vector<value_weight> vals;
+  std::vector<value_weight> vals;
   double pos_weight_sum = 0.0;
   double neg_weight_sum = 0.0;
   double pos_weight_sum_lte_split = 0.0;
@@ -103,7 +105,7 @@ stump_weak_learner
 
   for(unsigned int i = 0; i < datas.size(); ++i)
   {
-    double v = datas(descriptor_,d,i);
+    double cv = datas(descriptor_,d,i);
     unsigned int loc = datas.get_location(descriptor_,d,i);
 
     double pos_w = 0;
@@ -118,14 +120,14 @@ stump_weak_learner
       neg_w = wgts[loc];
       neg_weight_sum += neg_w;
     }
-    if(vals.size() && vals[vals.size()-1].v == v)
+    if(vals.size() && vals[vals.size()-1].v == cv)
     {
       vals[vals.size()-1].pos_w += pos_w;
       vals[vals.size()-1].neg_w += neg_w;
     }
     else
     {
-      value_weight val(v,pos_w,neg_w);
+      value_weight val(cv,pos_w,neg_w);
       vals.push_back(val);
     }
   }
@@ -139,7 +141,7 @@ stump_weak_learner
   {
     if(!(vals[i].v < vals[i+1].v))
     {
-      vcl_cout << i << " " << name_ << " " << i+1 << " " << vals[i].v << " " << vals[i+1].v << "\t" << vals[i+1].v-vals[i].v << vcl_endl;
+      LOG_INFO( i << " " << name_ << " " << i+1 << " " << vals[i].v << " " << vals[i+1].v << "\t" << vals[i+1].v-vals[i].v );
     }
     assert(vals[i].v < vals[i+1].v);
     double temp_split = static_cast<double>(vals[i].v + vals[i+1].v)*static_cast<double>(0.5);
@@ -168,10 +170,10 @@ stump_weak_learner
     }
 //     if(!(temp_score <= 0.5))
 //     {
-//       vcl_cout << temp_score << " " << neg_weight_sum_lte_split+pos_weight_sum_gt_split << " "
-//                << pos_weight_sum_lte_split+neg_weight_sum_gt_split << " " << temp_score-0.5 << vcl_endl;
+//       LOG_INFO( temp_score << " " << neg_weight_sum_lte_split+pos_weight_sum_gt_split << " "
+//                << pos_weight_sum_lte_split+neg_weight_sum_gt_split << " " << temp_score-0.5 );
 //     }
-    if( vcl_abs(temp_score-0.5) < 1.e-10)
+    if( std::abs(temp_score-0.5) < 1.e-10)
     {
       temp_score = 0.5;
     }
@@ -192,20 +194,20 @@ stump_weak_learner
   if(!all_equal)
   {
     result = this->error_rate(&tmp, datas, wgts);
-    if(!(vcl_abs(result-best_score) < 1e-7))
+    if(!(std::abs(result-best_score) < 1e-7))
     {
-      vcl_cerr << " error " << result << "  " << best_score << vcl_endl;
+      LOG_ERROR( " error " << result << "  " << best_score );
     }
-    assert(vcl_abs(result-best_score) < 1e-7);
+    assert(std::abs(result-best_score) < 1e-7);
   }
-  if( vcl_abs(result-0.5) < 1.e-10)
+  if( std::abs(result-0.5) < 1.e-10)
   {
     result = 0.5;
   }
   if( !(result <= 0.5) )
   {
-    vcl_cerr << "\t\ts " << s << " d " << d << " " << v << "  " << name_ << " " << descriptor_
-             << " error " << result << "  " << best_score << "    " << vals.size() << vcl_endl;
+    LOG_ERROR( "\t\ts " << s << " d " << d << " " << v << "  " << name_ << " " << descriptor_
+             << " error " << result << "  " << best_score << "    " << vals.size() );
   }
   assert(result <= 0.5);
   assert(!vnl_math::isinf(result));
@@ -215,7 +217,7 @@ stump_weak_learner
 
 bool
 stump_weak_learner
-::read(vcl_istream & in)
+::read(std::istream & in)
 {
   bool r = weak_learner::read(in);
   assert( in );
@@ -229,10 +231,10 @@ stump_weak_learner
 
 bool
 stump_weak_learner
-::write(vcl_ostream & out) const
+::write(std::ostream & out) const
 {
   bool r = weak_learner::write(out);
-  out << sign_ << " " << dim_ << " " << value_ << vcl_endl;
+  out << sign_ << " " << dim_ << " " << value_ << std::endl;
   return r && out;
 }
 

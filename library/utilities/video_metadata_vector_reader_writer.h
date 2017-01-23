@@ -1,19 +1,20 @@
 /*ckwg +5
- * Copyright 2011 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2011-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
 
-#ifndef _VIDEO_METADATA_VECTOR_READER_WRITER_H_
-#define _VIDEO_METADATA_VECTOR_READER_WRITER_H_
-
+#ifndef vidtk_video_metadata_vector_reader_writer_h_
+#define vidtk_video_metadata_vector_reader_writer_h_
 
 #include <utilities/base_reader_writer.h>
 
 #include <utilities/video_metadata.h>
-#include <vcl_iomanip.h>
-#include <vcl_vector.h>
+#include <utilities/video_metadata_util.h>
+
+#include <iomanip>
+#include <vector>
 
 
 namespace vidtk
@@ -25,11 +26,11 @@ namespace vidtk
  * @todo need test for this class.
  */
 class video_metadata_vector_reader_writer
-  : public base_reader_writer_T < vcl_vector < video_metadata > >
+  : public base_reader_writer_T < std::vector < video_metadata > >
 {
 public:
-  video_metadata_vector_reader_writer(vcl_vector < video_metadata > * obj)
-    : base_reader_writer_T < vcl_vector < video_metadata > > ("VMDVEC", obj)
+  video_metadata_vector_reader_writer(std::vector < video_metadata > * obj)
+    : base_reader_writer_T < std::vector < video_metadata > > ("VMDVEC", obj)
   { }
 
   virtual base_reader_writer* clone() const { return new video_metadata_vector_reader_writer(*this); }
@@ -42,7 +43,7 @@ public:
  *
  * This header line indicates the data values in the line.
  */
-  virtual void write_header(vcl_ostream & str)
+  virtual void write_header(std::ostream & str)
   {
     str << "# " << this->entry_tag_string()
         << "  element-count timeUTC platform-loc-lat platform-loc-lon "
@@ -51,7 +52,7 @@ public:
         << " [corner points ul, ur, lr, ll / lat,lon]"
         << " slant-range sens-horiz-fov sens-vert-fov"
         << " frame center lat/lon"
-        << vcl_endl;
+        << std::endl;
   }
 
 
@@ -60,7 +61,7 @@ public:
  *
  *
  */
-  virtual void write_object(vcl_ostream& str)
+  virtual void write_object(std::ostream& str)
   {
     str << this->entry_tag_string() << " "
         << datum_addr()->size() << " ";
@@ -69,11 +70,11 @@ public:
     // total control over the format though.
     for (unsigned int i = 0; i < datum_addr()->size() ; ++i)
     {
-      (*datum_addr())[i].ascii_serialize (str);
+      ascii_serialize (str, (*datum_addr())[i]);
       str << " ";
     } // end for
 
-    str << vcl_endl;
+    str << std::endl;
   }
 
 
@@ -91,23 +92,27 @@ public:
  * @retval 0 - object read correctly
  * @retval 1 - object not recognized
  *
- * @TODO This really should be a more robust reader that can tell of
+ * @todo This really should be a more robust reader that can tell of
  * the input is in the expected format.
  */
- virtual int read_object(vcl_istream& str)
+ virtual int read_object(std::istream& str)
   {
-    vcl_string input_tag;
+    std::string input_tag;
     unsigned int count;
 
     set_valid_state (false);
 
     str >> input_tag // consume the tag
         >> count; // number of elements in vector
+    if(str.fail())
+    {
+      return 1;
+    }
 
     for (unsigned int i = 0; i < count; ++i)
     {
       vidtk::video_metadata vmd;
-      vmd.ascii_deserialize (str);
+      ascii_deserialize (str, vmd);
 
       datum_addr()->push_back(vmd);
 
@@ -127,4 +132,4 @@ public:
 
 } // end namespace
 
-#endif /* _VIDEO_METADATA_VECTOR_READER_WRITER_H_ */
+#endif /* vidtk_video_metadata_vector_reader_writer_h_ */

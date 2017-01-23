@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -17,7 +17,7 @@ class vectors_of_descriptors_learner_data : public learner_training_data
 {
   public:
     vectors_of_descriptors_learner_data() : learner_training_data(1) {}
-    vectors_of_descriptors_learner_data( vcl_vector< vnl_vector<double> > const & v, int l = 1 )
+    vectors_of_descriptors_learner_data( std::vector< vnl_vector<double> > const & v, int l = 1 )
       : learner_training_data(l), data_(v)
     {}
     virtual vnl_vector<double> get_value( int i ) const
@@ -46,8 +46,15 @@ class vectors_of_descriptors_learner_data : public learner_training_data
       }
       return result;
     }
+    virtual void write(std::ostream& os) const
+    {
+      for(unsigned int i = 0; i < data_.size(); ++i)
+      {
+        os << " ([" << i << "] " << data_[i] << ")";
+      }
+    }
   protected:
-    vcl_vector< vnl_vector<double> > data_;
+    std::vector< vnl_vector<double> > data_;
 };
 
 } //namespace vidtk

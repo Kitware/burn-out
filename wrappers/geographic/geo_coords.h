@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -12,14 +12,18 @@
  * \brief This a a wrapper around the Geographic_lib::Geo_coords class.
  */
 
-#include <vcl_string.h>
-
-#include "common.h"
+#include <string>
 
 namespace vidtk
 {
 namespace geographic
 {
+
+// Sentinal value for lat / lon
+static const double INVALID_LAT_LON = 444;
+
+// Lightweight static function to check lat/lon coords
+bool is_latlon_valid(const double latitude, const double longitude);
 
 struct geo_coords_impl;
 
@@ -49,7 +53,7 @@ struct geo_coords_impl;
    * of the formats, decimal degrees, degrees minutes seconds, MGRS, UTM/UPS.
    **********************************************************************/
 
-class VIDTK_GEOGRAPHIC_DLL geo_coords
+class geo_coords
 {
 public:
 
@@ -124,7 +128,7 @@ public:
    * - 38SMB4484       = 38N 444000 3684000
    * - 38SMB44148470   = 38N 444140 3684700
    **********************************************************************/
-  explicit geo_coords(const vcl_string &s);
+  explicit geo_coords(const std::string &s);
 
   /**
    * Specify the location in terms of \e latitude (degrees) and \e longitude
@@ -251,7 +255,7 @@ public:
    * - prec = 3, 10<sup>-8</sup>d
    * - prec = 9 (max), 10<sup>-14</sup>d
    **********************************************************************/
-  vcl_string geo_representation(int prec = 0) const;
+  std::string geo_representation(int prec = 0) const;
 
   /**
    * Return string with latitude and longitude as degrees, minutes, seconds,
@@ -266,7 +270,7 @@ public:
    * - prec = 1, 0.01"
    * - prec = 10 (max), 10<sup>-11</sup>"
    **********************************************************************/
-  vcl_string dms_representation(int prec = 0) const;
+  std::string dms_representation(int prec = 0) const;
 
   /**
    * Return MGRS string.  This gives the coordinates of the enclosing grid
@@ -283,7 +287,7 @@ public:
    * - prec = 1, 0.1m
    * - prec = 6 (max), 1um
    **********************************************************************/
-  vcl_string mgrs_representation(int prec = 0) const;
+  std::string mgrs_representation(int prec = 0) const;
 
   /**
    * Return string consisting of UTM/UPS zone designator, easting, and
@@ -296,20 +300,20 @@ public:
    * - prec = 6, 1um
    * - prec = 9 (max), 1nm
    **********************************************************************/
-  vcl_string utm_ups_representation(int prec = 0) const;
+  std::string utm_ups_representation(int prec = 0) const;
 
   /**
    * Return MGRS string using alternative zone.  See MGRSRepresentation for
    * the interpretation of \e prec.
    **********************************************************************/
-  vcl_string alt_mgrs_representation(int prec = 0) const;
+  std::string alt_mgrs_representation(int prec = 0) const;
 
   /**
    * Return string consisting of alternate UTM/UPS zone designator, easting,
    * and northing.  See UTMUPSRepresentation for the interpretation of \e
    * prec.
    **********************************************************************/
-  vcl_string alt_utm_ups_representation(int prec = 0) const;
+  std::string alt_utm_ups_representation(int prec = 0) const;
 
   /**
    * The major radius of the ellipsoid (meters).  This is the value for the

@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -23,7 +23,7 @@ class timestamp_image_writer_process
 public:
   typedef timestamp_image_writer_process self_type;
 
-  timestamp_image_process( const vcl_string& name );
+  timestamp_image_process( const std::string& name );
 
   ~timestamp_image_process();
 

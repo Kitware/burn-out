@@ -1,0 +1,7 @@
+${vidtk_tests_SOURCE_DIR}/data/smallframe010_06.7.pgm
+${vidtk_tests_SOURCE_DIR}/data/smallframe010_06.7.meta
+${vidtk_tests_SOURCE_DIR}/data/smallframe011_07.5.pgm
+${vidtk_tests_SOURCE_DIR}/data/smallframe011_07.5.meta
+${vidtk_tests_SOURCE_DIR}/data/smallframe012_08.6.pgm
+${vidtk_tests_SOURCE_DIR}/data/smallframe012_08.6.meta
+${vidtk_tests_SOURCE_DIR}/data/smallframe013_09.4.pgm

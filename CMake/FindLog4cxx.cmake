@@ -1,5 +1,5 @@
 #ckwg +4
-# Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+# Copyright 2010 2014 by Kitware, Inc. All Rights Reserved. Please refer to
 # KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
 # Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
 
@@ -13,11 +13,12 @@
 if( Log4cxx_DIR )
   find_package( Log4cxx NO_MODULE )
 elseif( NOT Log4cxx_FOUND )
-  message(STATUS "Searching for log4cxx/logger.h")
-  find_path( Log4cxx_INCLUDE_DIR log4cxx/logger.h )
+  include(CommonFindMacros)
 
-  message(STATUS "Searching for libLog4cxx")
-  find_library( Log4cxx_LIBRARY log4cxx )
+  setup_find_root_context(Log4cxx)
+  find_path( Log4cxx_INCLUDE_DIR log4cxx/logger.h ${Log4cxx_FIND_OPTS})
+  find_library( Log4cxx_LIBRARY log4cxx ${Log4cxx_FIND_OPTS})
+  restore_find_root_context(Log4cxx)
 
   include( FindPackageHandleStandardArgs )
   FIND_PACKAGE_HANDLE_STANDARD_ARGS( Log4cxx Log4cxx_INCLUDE_DIR Log4cxx_LIBRARY )

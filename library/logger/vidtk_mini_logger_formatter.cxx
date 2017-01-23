@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -10,17 +10,15 @@
 #include <logger/vidtk_mini_logger_formatter_int.h>
 #include <logger/vidtk_logger_mini_logger.h>
 #include <logger/location_info.h>
-#include <logger/logger_manager.h>
-#include <vcl_sstream.h>
+#include <logger/logger_factory.h>
+#include <sstream>
 #include <vpl/vpl.h>
-
+#include <boost/date_time.hpp>
 
 namespace vidtk {
 
-
-
 // ----------------------------------------------------------------
-/** Set mini logger formatter.
+/** \brief Set mini logger formatter.
  *
  * This function sets the specified formatter object as the current
  * formatter for the specified logger. Only one formatter can be
@@ -55,7 +53,7 @@ namespace logger_ns {
 
 
 // ----------------------------------------------------------------
-/** Constructor.
+/** \brief Constructor.
  *
  *
  */
@@ -75,7 +73,7 @@ vidtk_mini_logger_formatter
 
 
 // ----------------------------------------------------------------
-/** Get raw implementation pointer.
+/** \brief Get raw implementation pointer.
  *
  *
  */
@@ -87,11 +85,11 @@ formatter_impl * vidtk_mini_logger_formatter
 
 
 // ----------------------------------------------------------------
-/** Get application instance name.
+/** \brief Get application instance name.
  *
  *
  */
-vcl_string const& vidtk_mini_logger_formatter
+std::string const& vidtk_mini_logger_formatter
 ::get_application_instance_name() const
 {
   return m_impl->m_parent->get_application_instance_name();
@@ -99,11 +97,11 @@ vcl_string const& vidtk_mini_logger_formatter
 
 
 // ----------------------------------------------------------------
-/** Get application name.
+/** \brief Get application name.
  *
  *
  */
-vcl_string const& vidtk_mini_logger_formatter
+std::string const& vidtk_mini_logger_formatter
 ::get_application_name() const
 {
   return m_impl->m_parent->get_application_name();
@@ -111,12 +109,12 @@ vcl_string const& vidtk_mini_logger_formatter
 
 
 // ----------------------------------------------------------------
-/** Get system name.
+/** \brief Get system name.
  *
  * This metnod returns the name of the system this program is running
  * on.  It may be blank.
  */
-vcl_string const& vidtk_mini_logger_formatter
+std::string const& vidtk_mini_logger_formatter
 ::get_system_name() const
 {
   return m_impl->m_parent->get_system_name();
@@ -124,11 +122,11 @@ vcl_string const& vidtk_mini_logger_formatter
 
 
 // ----------------------------------------------------------------
-/** Get logger name.
+/** \brief Get logger name.
  *
  *
  */
-vcl_string const& vidtk_mini_logger_formatter
+std::string const& vidtk_mini_logger_formatter
 ::get_realm() const
 {
   return *m_impl->m_realm;
@@ -136,12 +134,12 @@ vcl_string const& vidtk_mini_logger_formatter
 
 
 // ----------------------------------------------------------------
-/** Get log level as a string.
+/** \brief Get log level as a string.
  *
  * This method returns the level or severity of this log message as a
  * string.
  */
-vcl_string vidtk_mini_logger_formatter
+std::string vidtk_mini_logger_formatter
 ::get_level() const
 {
   return m_impl->m_logger->get_level_string(m_impl->m_level);
@@ -149,26 +147,26 @@ vcl_string vidtk_mini_logger_formatter
 
 
 // ----------------------------------------------------------------
-/** Get current process ID as string.
+/** \brief Get current process ID as string.
  *
  *
  */
-vcl_string vidtk_mini_logger_formatter
+std::string vidtk_mini_logger_formatter
 ::get_pid() const
 {
-  vcl_stringstream buf;
+  std::stringstream buf;
   buf << vpl_getpid();
   return buf.str();
 }
 
 
 // ----------------------------------------------------------------
-/** Get file name.
+/** \brief Get file name.
  *
  * This method returns the file name associated with the location of
  * this log message.
  */
-vcl_string vidtk_mini_logger_formatter
+std::string vidtk_mini_logger_formatter
 ::get_file_name() const
 {
   if (m_impl->m_location)
@@ -181,12 +179,12 @@ vcl_string vidtk_mini_logger_formatter
 
 
 // ----------------------------------------------------------------
-/** Get file path.
+/** \brief Get file path.
  *
  * This method returns the file path associated with the location of
  * this log message.
  */
-vcl_string vidtk_mini_logger_formatter
+std::string vidtk_mini_logger_formatter
 ::get_file_path() const
 {
   if (m_impl->m_location)
@@ -199,15 +197,15 @@ vcl_string vidtk_mini_logger_formatter
 
 
 // ----------------------------------------------------------------
-/** Get line number.
+/** \brief Get line number.
  *
  * This emthnod returns the line number of location of this log
  * message as a string. It may be blank.
  */
-vcl_string vidtk_mini_logger_formatter
+std::string vidtk_mini_logger_formatter
 ::get_line_number() const
 {
-  vcl_stringstream buf;
+  std::stringstream buf;
   if (m_impl->m_location)
   {
     buf << m_impl->m_location->get_line_number();
@@ -218,12 +216,12 @@ vcl_string vidtk_mini_logger_formatter
 
 
 // ----------------------------------------------------------------
-/** Get class name.
+/** \brief Get class name.
  *
  * This method returns the name of the class that generated
  * this log message.
  */
-vcl_string vidtk_mini_logger_formatter
+std::string vidtk_mini_logger_formatter
 ::get_class_name() const
 {
   if (m_impl->m_location)
@@ -236,12 +234,12 @@ vcl_string vidtk_mini_logger_formatter
 
 
 // ----------------------------------------------------------------
-/** Get metnod name.
+/** \brief Get method name.
  *
  * This method returns the name of the method/function that generated
  * this log message.
  */
-vcl_string vidtk_mini_logger_formatter
+std::string vidtk_mini_logger_formatter
 ::get_method_name() const
 {
   if (m_impl->m_location)
@@ -254,16 +252,30 @@ vcl_string vidtk_mini_logger_formatter
 
 
 // ----------------------------------------------------------------
-/** Get log message.
+/** \brief Get log message.
  *
  * This method returns the user supplied text of the log message.
  */
-vcl_string const& vidtk_mini_logger_formatter
+std::string const& vidtk_mini_logger_formatter
 ::get_message() const
 {
   return *m_impl->m_message;
 }
 
+
+// ----------------------------------------------------------------
+/*! \brief Get timestamp.
+ *
+ * This method returns the time stamp for the current log message.
+ */
+std::string vidtk_mini_logger_formatter
+::get_time_stamp() const
+{
+  boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time();
+
+  std::string time_stamp(boost::posix_time::to_simple_string( now ) );
+  return time_stamp;
+}
 
 } // end namespace
 } // end namespace

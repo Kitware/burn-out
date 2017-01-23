@@ -41,46 +41,46 @@ typedef unsigned char KLT_PixelType;
 
 typedef struct  {
   /* Available to user */
-  int mindist;			/* min distance b/w features */
+  int mindist;               /* min distance b/w features */
   int window_width, window_height;
-  KLT_BOOL sequentialMode;	/* whether to save most recent image to save time */
+  KLT_BOOL sequentialMode;     /* whether to save most recent image to save time */
   /* can set to TRUE manually, but don't set to */
   /* FALSE manually */
-  KLT_BOOL smoothBeforeSelecting;	/* whether to smooth image before */
+  KLT_BOOL smoothBeforeSelecting;     /* whether to smooth image before */
   /* selecting features */
-  KLT_BOOL writeInternalImages;	/* whether to write internal images */
+  KLT_BOOL writeInternalImages;     /* whether to write internal images */
   /* tracking features */
   KLT_BOOL lighting_insensitive;  /* whether to normalize for gain and bias (not in original algorithm) */
-  
+
   /* Available, but hopefully can ignore */
-  int min_eigenvalue;		/* smallest eigenvalue allowed for selecting */
-  float min_determinant;	/* th for determining lost */
-  float min_displacement;	/* th for stopping tracking when pixel changes little */
-  int max_iterations;		/* th for stopping tracking when too many iterations */
-  float max_residue;		/* th for stopping tracking when residue is large */
+  int min_eigenvalue;          /* smallest eigenvalue allowed for selecting */
+  float min_determinant;       /* th for determining lost */
+  float min_displacement;      /* th for stopping tracking when pixel changes little */
+  int max_iterations;          /* th for stopping tracking when too many iterations */
+  float max_residue;           /* th for stopping tracking when residue is large */
   float grad_sigma;
   float smooth_sigma_fact;
   float pyramid_sigma_fact;
-  float step_factor;  /* size of Newton steps; 2.0 comes from equations, 1.0 seems to avoid overshooting */
-  int nSkippedPixels;		/* # of pixels skipped when finding features */
-  int borderx;			/* border in which features will not be found */
+  float step_factor;   /* size of Newton steps; 2.0 comes from equations, 1.0 seems to avoid overshooting */
+  int nSkippedPixels;          /* # of pixels skipped when finding features */
+  int borderx;                 /* border in which features will not be found */
   int bordery;
-  int nPyramidLevels;		/* computed from search_ranges */
-  int subsampling;		/* 		" */
+  int nPyramidLevels;          /* computed from search_ranges */
+  int subsampling;             /*           " */
 
-  
-  /* for affine mapping */ 
+
+  /* for affine mapping */
   int affine_window_width, affine_window_height;
-  int affineConsistencyCheck; /* whether to evaluates the consistency of features with affine mapping 
+  int affineConsistencyCheck; /* whether to evaluates the consistency of features with affine mapping
                               -1 = don't evaluates the consistency
                               0 = evaluates the consistency of features with translation mapping
                               1 = evaluates the consistency of features with similarity mapping
                               2 = evaluates the consistency of features with affine mapping
   */
-  int affine_max_iterations;  
+  int affine_max_iterations;
   float affine_max_residue;
-  float affine_min_displacement;        
-  float affine_max_displacement_differ; /* th for the difference between the displacement calculated 
+  float affine_min_displacement;
+  float affine_max_displacement_differ; /* th for the difference between the displacement calculated
   by the affine tracker and the frame to frame tracker in pel*/
 
   /* User must not touch these */
@@ -93,9 +93,9 @@ typedef struct  {
 typedef struct  {
   KLT_locType x;
   KLT_locType y;
-  int val;	
+  int val;
   /* for affine mapping */
-  _KLT_FloatImage aff_img; 
+  _KLT_FloatImage aff_img;
   _KLT_FloatImage aff_img_gradx;
   _KLT_FloatImage aff_img_grady;
   KLT_locType aff_x;
@@ -138,21 +138,29 @@ typedef struct  {
 KLT_TrackingContext KLTCreateTrackingContext(void);
 KLT_FeatureList KLTCreateFeatureList(
   int nFeatures);
+#ifdef BUILD_KLT_FEATURE_HISTORY
 KLT_FeatureHistory KLTCreateFeatureHistory(
   int nFrames);
+#endif
+#ifdef BUILD_KLT_FEATURE_TABLE
 KLT_FeatureTable KLTCreateFeatureTable(
   int nFrames,
   int nFeatures);
+#endif
 
 /* Free */
 void KLTFreeTrackingContext(
   KLT_TrackingContext tc);
 void KLTFreeFeatureList(
   KLT_FeatureList fl);
+#ifdef BUILD_KLT_FEATURE_HISTORY
 void KLTFreeFeatureHistory(
   KLT_FeatureHistory fh);
+#endif
+#ifdef BUILD_KLT_FEATURE_TABLE
 void KLTFreeFeatureTable(
   KLT_FeatureTable ft);
+#endif
 
 /* Processing */
 void KLTSelectGoodFeatures(
@@ -173,6 +181,7 @@ void KLTTrackFeatures(
   KLT_PixelType *img2,
   int ncols,
   int nrows,
+  const float *homog_initial,
   KLT_FeatureList fl);
 void KLTTrackFeaturesPyramid(
   KLT_TrackingContext tc,
@@ -180,6 +189,7 @@ void KLTTrackFeaturesPyramid(
   KLT_TrackingPyramid pyramid2,
   int ncols,
   int nrows,
+  const float *homog_initial,
   KLT_FeatureList fl);
 void KLTReplaceLostFeatures(
   KLT_TrackingContext tc,

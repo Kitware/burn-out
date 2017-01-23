@@ -1,12 +1,12 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
 #include <utilities/checked_bool.h>
 
-#include <vcl_iostream.h>
+#include <iostream>
 #include <utilities/unchecked_return_value.h>
 
 namespace vidtk
@@ -22,7 +22,7 @@ checked_bool
 
 
 checked_bool
-::checked_bool( vcl_string const& failure_msg )
+::checked_bool( std::string const& failure_msg )
   : value_( false ),
     checked_( false ),
     msg_( failure_msg )
@@ -79,11 +79,18 @@ operator bool() const
 }
 
 
-vcl_string const&
+std::string const&
 checked_bool
 ::message() const
 {
   return msg_;
+}
+
+bool
+checked_bool
+::to_bool()
+{
+  return value_;
 }
 
 

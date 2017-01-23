@@ -1,18 +1,19 @@
 /*ckwg +5
- * Copyright 2011 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2011-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
 
-#ifndef _VIDEO_METADATA_READER_WRITER_H_
-#define _VIDEO_METADATA_READER_WRITER_H_
-
+#ifndef vidtk_video_metadata_reader_writer_h_
+#define vidtk_video_metadata_reader_writer_h_
 
 #include <utilities/base_reader_writer.h>
 
 #include <utilities/video_metadata.h>
-#include <vcl_iomanip.h>
+#include <utilities/video_metadata_util.h>
+
+#include <iomanip>
 
 
 namespace vidtk
@@ -41,7 +42,7 @@ public:
  *
  * This header line indicates the data values in the line.
  */
-  virtual void write_header(vcl_ostream & str)
+  virtual void write_header(std::ostream & str)
   {
     str << "# " << this->entry_tag_string()
         << "  timeUTC platform-loc-lat platform-loc-lon "
@@ -50,7 +51,7 @@ public:
         << " [corner points ul, ur, lr, ll / lat,lon]"
         << " slant-range sens-horiz-fov sens-vert-fov"
         << " frame center lat/lon"
-        << vcl_endl;
+        << std::endl;
   }
 
 
@@ -59,15 +60,15 @@ public:
  *
  *
  */
-  virtual void write_object(vcl_ostream& str)
+  virtual void write_object(std::ostream& str)
   {
     str << this->entry_tag_string() << " ";
 
     // Use serialization method for now. this means we do not have
     // total control over the format though.
-    datum_addr()->ascii_serialize (str);
+    ascii_serialize (str, *datum_addr());
 
-    str << vcl_endl;
+    str << std::endl;
   }
 
 
@@ -85,17 +86,17 @@ public:
  * @retval 0 - object read correctly
  * @retval 1 - object not recognized
  *
- * @TODO This really should be a more robust reader that can tell of
+ * @todo This really should be a more robust reader that can tell of
  * the input is in the expected format.
  */
- virtual int read_object(vcl_istream& str)
+ virtual int read_object(std::istream& str)
   {
-    vcl_string input_tag;
+    std::string input_tag;
 
     set_valid_state (false);
 
     str >> input_tag; // consume the tag
-    datum_addr()->ascii_deserialize (str);
+    ascii_deserialize (str, *datum_addr());
 
     // Test for stream error
     if (str.fail())
@@ -112,4 +113,4 @@ public:
 
 } // end namespace
 
-#endif /* _VIDEO_METADATA_READER_WRITER_H_ */
+#endif /* vidtk_video_metadata_reader_writer_h_ */

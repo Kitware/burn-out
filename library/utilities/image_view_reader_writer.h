@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2011 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2011-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -12,8 +12,8 @@
 
 #include <logger/logger.h>
 #include <vbl/io/vbl_io_smart_ptr.h>
-#include <vcl_fstream.h>
-#include <vcl_iomanip.h>
+#include <fstream>
+#include <iomanip>
 #include <vil/io/vil_io_image_view.h>
 #include <vil/vil_image_view.h>
 #include <vsl/vsl_binary_io.h>
@@ -51,7 +51,7 @@ class image_view_reader_writer
 public:
   typedef vil_image_view < T > image_t;
 
-  image_view_reader_writer(image_t * obj, vcl_string const& filename)
+  image_view_reader_writer(image_t * obj, std::string const& filename)
     : base_reader_writer_T < image_t > ("VIVIEW", obj),
       m_archive_stream(0),
       m_archive(0),
@@ -92,7 +92,7 @@ public:
  * This method returns the name of the file where the image data is
  * written.
  */
-  vcl_string const& get_image_file_name() const { return m_image_filename; }
+  std::string const& get_image_file_name() const { return m_image_filename; }
 
 
 // ----------------------------------------------------------------
@@ -103,7 +103,7 @@ public:
  *
  * @param[in] name - base name for the image data file
  */
-  void set_image_file_name (vcl_string const & name)
+  void set_image_file_name (std::string const & name)
   {
     m_image_filename =  vul_file::basename (name);
     m_image_filename = vul_file::strip_extension (m_image_filename);
@@ -115,11 +115,11 @@ public:
  *
  * This header line indicates the data values in the line.
  */
-  virtual void write_header(vcl_ostream & str)
+  virtual void write_header(std::ostream & str)
   {
     str << "# " << this->entry_tag_string()
         << "  offset  file-name"
-        << vcl_endl;
+        << std::endl;
   }
 
 
@@ -128,7 +128,7 @@ public:
  *
  *
  */
-  virtual void write_object(vcl_ostream& str)
+  virtual void write_object(std::ostream& str)
   {
     // Open file and create binary stream on first write.  This is
     // delayed until this point so that we will not create a new file
@@ -141,7 +141,7 @@ public:
       m_first_write = false;
     }
 
-    const vcl_streampos pos ( this->m_archive_stream->tellp() );
+    const std::streampos pos ( this->m_archive_stream->tellp() );
 
     this->m_archive->clear_serialisation_records();
     vsl_b_write( *this->m_archive, *this->datum_addr() );
@@ -149,7 +149,7 @@ public:
     // Write index of binary image
     str << this->entry_tag_string() << " "
         << pos << " " << m_image_filename
-        << vcl_endl;
+        << std::endl;
 
     this->m_archive_stream->flush();
   }
@@ -168,12 +168,12 @@ public:
  *
  * @retval 0 - object read correctly
  * @retval 1 - object not recognized
- * @throws vcl_runtime_error - if format error.
+ * @throws std::runtime_error - if format error.
  */
- virtual int read_object(vcl_istream& str)
+ virtual int read_object(std::istream& str)
   {
-    vcl_string input_tag;
-    vcl_string filename;
+    std::string input_tag;
+    std::string filename;
     vxl_int_64 offset;
 
     this->set_valid_state (false);
@@ -197,7 +197,7 @@ public:
     //
     // The latter is safer, but more time consuming.
     //
-    vcl_ifstream file_stream (filename.c_str(), vcl_ifstream::binary);
+    std::ifstream file_stream (filename.c_str(), std::ifstream::binary);
     if ( ! file_stream )
     {
       // throw ??
@@ -233,7 +233,7 @@ protected:
   bool open_file_for_output()
   {
     // Open file
-    m_archive_stream = new vcl_ofstream;
+    m_archive_stream = new std::ofstream;
 
     // Create file name
     if ( ! this->get_instance_name().empty())
@@ -243,9 +243,9 @@ protected:
 
     m_image_filename += ".imgdata"; // add extension
 
-    m_archive_stream->open(m_image_filename.c_str(), vcl_ofstream::out
-                           | vcl_ofstream::binary
-                           | vcl_ofstream::trunc);
+    m_archive_stream->open(m_image_filename.c_str(), std::ofstream::out
+                           | std::ofstream::binary
+                           | std::ofstream::trunc);
 
     if ( ! m_archive_stream )
     {
@@ -261,8 +261,8 @@ protected:
 
 
 private:
-  vcl_string m_image_filename;
-  vcl_ofstream* m_archive_stream;
+  std::string m_image_filename;
+  std::ofstream* m_archive_stream;
   vsl_b_ostream* m_archive;
 
   bool m_first_write;

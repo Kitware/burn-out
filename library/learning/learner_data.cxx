@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -11,7 +11,14 @@ VBL_SMART_PTR_INSTANTIATE( vidtk::learner_training_data );
 
 VBL_SMART_PTR_INSTANTIATE( vidtk::learner_data );
 
-vcl_ostream& operator<< (vcl_ostream& os, const vidtk::learner_training_data &p)
+std::ostream& operator<< (std::ostream& os, const vidtk::learner_data &p)
+{
+  os << " ";
+  p.write(os);
+  return os;
+}
+
+std::ostream& operator<< (std::ostream& os, const vidtk::learner_training_data &p)
 {
   os << p.label() << " " << p.vectorize();
   return os;

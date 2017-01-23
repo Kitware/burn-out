@@ -1,13 +1,19 @@
 /*ckwg +5
- * Copyright 2011 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2011-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
 #include "paired_buffer.h"
 
-#include <utilities/log.h>
-#include <vcl_algorithm.h>
+
+#include <algorithm>
+
+#include <logger/logger.h>
+#undef VIDTK_DEFAULT_LOGGER
+#define VIDTK_DEFAULT_LOGGER __vidtk_logger_auto_paired_buffer_txx__
+VIDTK_LOGGER("paired_buffer_txx");
+
 
 namespace vidtk
 {
@@ -39,6 +45,15 @@ paired_buffer< keyT, datumT >
   unsigned min_capacity = length_ / 3;
   typename buffer_t::capacity_type capacity_cntl( length_, min_capacity );
   buffer_.set_capacity( capacity_cntl );
+  return true;
+}
+
+template< class keyT, class datumT >
+bool
+paired_buffer< keyT, datumT >
+::reset()
+{
+  buffer_.clear();
   return true;
 }
 
@@ -100,16 +115,16 @@ paired_buffer< keyT, datumT >
 
   if( is_sorted )
   {
-    vcl_pair< typename buffer_t::const_iterator,
+    std::pair< typename buffer_t::const_iterator,
               typename buffer_t::const_iterator > res_range;
-    res_range = vcl_equal_range( buffer_.begin(), buffer_.end(), search_pair );
+    res_range = std::equal_range( buffer_.begin(), buffer_.end(), search_pair );
     if( res_range.first == res_range.second )
     {
       found = false;
     }
     else if( res_range.first+1 != res_range.second )
     {
-      //log_error( "Found duplicate entry in the buffer.\n" );
+      //LOG_ERROR( "Found duplicate entry in the buffer." );
       found = false;
     }
     else
@@ -121,7 +136,7 @@ paired_buffer< keyT, datumT >
   else
   {
     typename buffer_t::const_iterator res;
-    res = vcl_find( buffer_.begin(), buffer_.end(), search_pair );
+    res = std::find( buffer_.begin(), buffer_.end(), search_pair );
     if( res != buffer_.end() )
     {
       found = true;
@@ -135,10 +150,10 @@ paired_buffer< keyT, datumT >
 template< class keyT, class datumT >
 bool
 paired_buffer< keyT, datumT >
-::replace_items( vcl_vector< typename paired_buffer< keyT, datumT >::key_datum_t > const& replacements )
+::replace_items( std::vector< typename paired_buffer< keyT, datumT >::key_datum_t > const& /*replacements*/ )
 {
   // TODO: *Replace* buffer_ with entries in uis.
-  log_error("set_updated_items() not implemented yet.\n");
+  LOG_ERROR("set_updated_items() not implemented yet." );
   return false;
 }
 

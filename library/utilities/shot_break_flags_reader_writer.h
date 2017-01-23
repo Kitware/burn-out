@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2011 by Kitware, Inc. All Rights Reserved. Please refer to
+g * Copyright 2011-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -9,9 +9,9 @@
 
 #include <utilities/base_reader_writer.h>
 
-#include <tracking/shot_break_flags.h>
-#include <vcl_cstdio.h>
-#include <vcl_iomanip.h>
+#include <tracking_data/shot_break_flags.h>
+#include <cstdio>
+#include <iomanip>
 
 
 
@@ -49,12 +49,12 @@ namespace vidtk
  *
  * @param[in] str - stream to format on
  */
-  virtual void write_object(vcl_ostream& str)
+  virtual void write_object(std::ostream& str)
   {
     str << this->entry_tag_string() << " "
         << datum_addr()->is_shot_end() << " "
         << datum_addr()->is_frame_usable() << " "
-        << datum_addr()->is_frame_not_processed() << vcl_endl;
+        << datum_addr()->is_frame_not_processed() << std::endl;
   }
 
 
@@ -63,10 +63,10 @@ namespace vidtk
  *
  * This header line indicates the data values in the line.
  */
-  virtual void write_header(vcl_ostream & str)
+  virtual void write_header(std::ostream & str)
   {
     str << "# " << this->entry_tag_string()
-        << "  is-shot-end  is-frame-usable  is-frame-not-processed" << vcl_endl;
+        << "  is-shot-end  is-frame-usable  is-frame-not-processed" << std::endl;
   }
 
 
@@ -84,9 +84,9 @@ namespace vidtk
  * @retval 0 - object read correctly
  * @retval 1 - object not recognized
  */
-  virtual int read_object(vcl_istream& str)
+  virtual int read_object(std::istream& str)
   {
-    vcl_string input_tag;
+    std::string input_tag;
     bool shot_end;
     bool frame_usable;
     bool frame_not_proc;

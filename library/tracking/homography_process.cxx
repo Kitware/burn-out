@@ -1,15 +1,14 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2016 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
 #include "homography_process.h"
-#include <utilities/unchecked_return_value.h>
-#include <utilities/log.h>
-#include <vcl_cassert.h>
-#include <vcl_fstream.h>
-#include <vcl_algorithm.h>
+#include <utilities/homography_util.h>
+#include <cassert>
+#include <fstream>
+#include <algorithm>
 
 #include <vgl/algo/vgl_h_matrix_2d.h>
 #include <vgl/algo/vgl_h_matrix_2d_optimize_lmq.h>
@@ -38,19 +37,20 @@ VIDTK_LOGGER ("homography_process");
 
 //NOTE: Use initialize() for all variable initializations.
 homography_process
-::homography_process( vcl_string const& name )
-  : process( name, "homography_process" ),
+::homography_process( std::string const& _name )
+  : process( _name, "homography_process" ),
     refine_geometric_error_( false ),
     use_good_flag_( false ),
     good_thresh_sqr_( 3*3 ),
     current_ts_(NULL),
     ransam_( NULL ),
     initialized_( false ),
-    unusable_frame_( false )
+    unusable_frame_( false ),
+    track_tail_length_( 0 )
 {
   img0_to_world_H_.set_identity(false);
-  config_.add( "refine_with_geometric_error", "false" );
-  config_.add( "use_good_flag", "false" );
+  config_.add_parameter( "refine_with_geometric_error", "false", "UNDOCUMENTED" );
+  config_.add_parameter( "use_good_flag", "false", "UNDOCUMENTED" );
 
   config_.add_parameter( "good_threshold",
     "3",
@@ -58,7 +58,16 @@ homography_process
     "frame is projected to the ref frame and error is measured against the known "
     "location there." );
 
-  config_.add( "image0_to_world", "1 0 0 0 1 0 0 0 1" );
+  config_.add_parameter( "image0_to_world", "1 0 0 0 1 0 0 0 1", "UNDOCUMENTED" );
+
+  config_.add_parameter( "trim_track_tail_size", "3",
+    "Trim the KLT track tail to the specified number of "
+    "elements. A value of 0 disables track tail trimming and lets the tails grow without bound. "
+    "The reason to trim track tails is to limit process memory growth. Track tails grow by one "
+    "element per frame in a shot. The tracks are reset/deleted when a stabilization break occurs. "
+    "When the tails are not trimmed, process memory growth is unbounded and becomes a problem with "
+    "extremely long shots. The only reason to keep track tails at all is to allow the GUI to "
+    "display them." );
 }
 
 
@@ -83,19 +92,21 @@ homography_process
 {
   try
   {
-    blk.get( "refine_with_geometric_error", refine_geometric_error_ );
-    blk.get( "use_good_flag", use_good_flag_ );
-    double thr;
-    blk.get( "good_threshold", thr );
+    refine_geometric_error_ = blk.get< bool > ( "refine_with_geometric_error" );
+    use_good_flag_ = blk.get< bool > ( "use_good_flag" );
+    double thr = blk.get< double > ( "good_threshold" );
     good_thresh_sqr_ = thr * thr;
-    vnl_double_3x3 m;
-    blk.get( "image0_to_world", m );
-    img0_to_world_H_.set_transform( homography::transform_t(m));
+    vnl_double_3x3 m = blk.get< vnl_double_3x3 > ( "image0_to_world" );
+    this->track_tail_length_ = blk.get< int > ( "trim_track_tail_size" );
+    if ( (this->track_tail_length_ > 0) && (this->track_tail_length_ < 3) ) // assure minimum length
+    {
+      this->track_tail_length_ = 3;
+    }
+    img0_to_world_H_.set_transform( homography::transform_t( m ) );
   }
-  catch( unchecked_return_value& )
+  catch ( config_block_parse_error const& e )
   {
-    // reset to old values
-    this->set_params( this->config_ );
+    LOG_ERROR( this->name() << ": set_params failed: " << e.what() );
     return false;
   }
 
@@ -160,8 +171,14 @@ homography_process
 {
   if( unusable_frame_ )
   {
-    LOG_WARN( this->name() << ": Not computing homography because frame is"
-              << " marked as unusable at " << *current_ts_ );
+    if( current_ts_ )
+    {
+      LOG_TRACE( "frametrace: homography_process: " << current_ts_->frame_number() << " marked-unusable" );
+    }
+    else
+    {
+      LOG_TRACE( "frametrace: homography_process: mystery-frame marked-unusable" );
+    }
     img_to_world_H_.set_identity( false );
     world_to_img_H_.set_identity( false );
     return true;
@@ -182,8 +199,10 @@ homography_process
   // points that we have tracked, and whose (estimated) location on
   // the first image is known.
 
-  vcl_vector< vnl_vector<double> > from_pts;
-  vcl_vector< vnl_vector<double> > to_pts;
+  std::vector< vnl_vector<double> > from_pts;
+  std::vector< vnl_vector<double> > to_pts;
+  int drop_count(0);
+  int total_count(0);
 
   vnl_vector<double> p(3);
   p[2] = 1.0;
@@ -192,6 +211,7 @@ homography_process
   {
     if( it->good_ )
     {
+      total_count++;
       klt_track::point_t pt = it->track_->point();
 
       // If the tracked point is on the mask, then mark the track as a
@@ -204,19 +224,25 @@ homography_process
           mask_( img_i, img_j ) == true )
       {
         it->good_ = false;
+        drop_count++;           // count points dropped by masking
       }
       else if( it->have_img0_loc_ )
       {
-        p[0] = pt.x; p[1] = pt.y;
+        p[0] = pt.x;
+        p[1] = pt.y;
         from_pts.push_back( p );
 
         vnl_vector_fixed<double,3> const& wld = it->img0_loc_;
-        p[0] = wld[0]; p[1] = wld[1];
+        p[0] = wld[0];
+        p[1] = wld[1];
         to_pts.push_back( p );
       }
     }
   }
 
+  LOG_DEBUG ("Dropped " << drop_count << " points from "
+             <<  total_count << " due to masking, saved "
+             << from_pts.size() << " points.");
 
   // This will typically happen only on the first frame, because none
   // of the points will have img0 locations.  Of course, we set the
@@ -248,6 +274,12 @@ homography_process
 
     set_img0_locations();
 
+    if( IS_TRACE_ENABLED() )
+    {
+      int fn = (current_ts_ == 0) ? -1 : current_ts_->frame_number();
+      LOG_TRACE( "frametrace: homography_process: " << fn << " new-reference" );
+    }
+
     return true;
   }
 
@@ -263,7 +295,7 @@ homography_process
 
   if ( ! result )
   {
-    vcl_cout << name() << ": MSAC failed!!\n";
+    LOG_ERROR( name() << ": MSAC failed!!");
   }
   else
   {
@@ -278,7 +310,7 @@ homography_process
     if( ! result2 )
     {
       // if the IRLS fails, fall back to the ransam estimate.
-      vcl_cout << name() << ": IRLS failed\n";
+      LOG_WARN( name() << ": IRLS failed");
       vnl_double_3x3 m;
       hg.params_to_homog( ransam_->params(), m.as_ref().non_const() );
       img_to_img0_H_.set_transform( homography::transform_t(m) );
@@ -348,7 +380,7 @@ homography_process
   }
   if ( ! all_are_finite )
   {
-    vcl_cout << name() << ": Non-finite values generated!!\n";
+    LOG_INFO( name() << ": Non-finite values generated!!");
     result = false;
   }
 
@@ -363,7 +395,16 @@ homography_process
     }
   }
 
+  if( IS_TRACE_ENABLED() )
+  {
+    int fn = (current_ts_ == 0) ? -1 : current_ts_->frame_number();
+    LOG_TRACE( "frametrace: homography_process: " << fn << " carrying-on ; result " << result );
+  }
   current_ts_ = NULL;
+
+  img_to_img0_H_.normalize();
+  img_to_world_H_.normalize();
+  img0_to_world_H_.normalize();
 
   return result;
 }
@@ -379,7 +420,7 @@ homography_process
 
 void
 homography_process
-::set_new_tracks( vcl_vector< klt_track_ptr > const& trks )
+::set_new_tracks( std::vector< klt_track_ptr > const& trks )
 {
   new_tracks_ = trks;
 }
@@ -387,7 +428,7 @@ homography_process
 
 void
 homography_process
-::set_updated_tracks( vcl_vector< klt_track_ptr > const& trks )
+::set_updated_tracks( std::vector< klt_track_ptr > const& trks )
 {
   updated_tracks_ = trks;
 }
@@ -410,7 +451,7 @@ homography_process
 }
 
 
-vgl_h_matrix_2d<double> const&
+vgl_h_matrix_2d<double>
 homography_process
 ::image_to_world_homography() const
 {
@@ -418,21 +459,21 @@ homography_process
 }
 
 
-vgl_h_matrix_2d<double> const&
+vgl_h_matrix_2d<double>
 homography_process
 ::world_to_image_homography() const
 {
   return world_to_img_H_.get_transform();
 }
 
-image_to_image_homography const&
+image_to_image_homography
 homography_process
 ::image_to_world_vidtk_homography_image() const
 {
   return img_to_world_H_;
 }
 
-image_to_image_homography const&
+image_to_image_homography
 homography_process
 ::world_to_image_vidtk_homography_image() const
 {
@@ -483,8 +524,8 @@ homography_process
   //state_map_type::const_iterator it = tracks_.find( t );
   //return it != tracks_.end() && it->second.good_;
 
-  vcl_vector< track_extra_info_type >::const_iterator it_teis = tracks_.begin();
-  vcl_vector< track_extra_info_type >::const_iterator end_teis = tracks_.end();
+  std::vector< track_extra_info_type >::const_iterator it_teis = tracks_.begin();
+  std::vector< track_extra_info_type >::const_iterator end_teis = tracks_.end();
 
   for( ; it_teis != end_teis; ++it_teis )
   {
@@ -507,8 +548,8 @@ homography_process
   // outliers have been eliminated.  Refine the homography based on
   // geometric error.
 
-  vcl_vector<vgl_homg_point_2d<double> > from_pts;
-  vcl_vector<vgl_homg_point_2d<double> > to_pts;
+  std::vector<vgl_homg_point_2d<double> > from_pts;
+  std::vector<vgl_homg_point_2d<double> > to_pts;
 
   track_eit_iter end = tracks_.end();
   for( track_eit_iter it = tracks_.begin();
@@ -614,20 +655,29 @@ void
 homography_process
 ::update_track_states()
 {
-  vcl_vector< klt_track_ptr >::const_iterator it = updated_tracks_.begin();
-  vcl_vector< klt_track_ptr >::const_iterator t_end = updated_tracks_.end();
+  std::vector< klt_track_ptr >::const_iterator it = updated_tracks_.begin();
+  std::vector< klt_track_ptr >::const_iterator t_end = updated_tracks_.end();
 
-  vcl_vector< track_extra_info_type > live_tracks;
+  std::vector< track_extra_info_type > live_tracks;
 
+  // check updated tracks against our last set of tracks to see if we
+  // have seen the track before.
   for( ; it != t_end; ++it )
   {
-    track_eit_iter end_teis = vcl_find_if( tracks_.begin(), tracks_.end(),
+    track_eit_iter end_teis = std::find_if( tracks_.begin(), tracks_.end(),
             boost::bind( &is_same, _1, (*it)->tail() ));
 
+    // If we already have an entry for this track.
     if (end_teis != tracks_.end())
     {
-      live_tracks.push_back( *end_teis );
-      live_tracks.rbegin()->track_ = *it;
+      live_tracks.push_back( *end_teis ); // add this track to the list
+      live_tracks.rbegin()->track_ = *it; // update
+
+      // Trim tracks here so they do not grow too long
+      if ( this->track_tail_length_ > 0 ) // do not trim if length set to zero
+      {
+        (*it)->trim_track( this->track_tail_length_ );
+      }
     }
   }
 
@@ -644,6 +694,7 @@ homography_process
     live_tracks.push_back( tei );
   }
 
+  // Replace list of tracks with list of currently active tracks.
   tracks_ = live_tracks;
 }
 

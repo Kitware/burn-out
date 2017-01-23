@@ -1,16 +1,17 @@
 /*ckwg +5
- * Copyright 2011 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2011-2014 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
-#include <vcl_iostream.h>
-#include <vcl_sstream.h>
+#include <iostream>
+#include <sstream>
+#include <string>
 
 #include <vil/vil_image_view.h>
 #include <vil/vil_load.h>
 
-#include <pipeline/async_pipeline.h>
+#include <pipeline_framework/async_pipeline.h>
 
 #include <tracking/shot_stitching_process.h>
 
@@ -23,9 +24,9 @@
 // Be sure to set TEST_NAME to the name of the test.
 #define SBTEST(TXT, V1, V2)                     \
 do {                                            \
-    vcl_ostringstream oss;                      \
-    oss << TEST_NAME << ": " << TXT;            \
-    TEST(oss.str().c_str(), V1, V2);            \
+    std::ostringstream sboss;                    \
+    sboss << TEST_NAME << ": " << TXT;          \
+    TEST(sboss.str().c_str(), V1, V2);          \
 } while(0)
 
 
@@ -66,16 +67,17 @@ struct proc_data_type
 
   void copy_to_proc_inputs( vidtk::shot_stitching_process<vxl_byte>& proc )
   {
-    proc.input_image( img );
-    proc.input_timestamp( ts );
-    proc.input_shot_break_flags( sb_flags );
-    proc.input_src2ref_h( src2ref );
+    proc.set_input_source_image( img );
+    proc.set_input_rescaled_image( img );
+    proc.set_input_timestamp( ts );
+    proc.set_input_shot_break_flags( sb_flags );
+    proc.set_input_src2ref_h( src2ref );
   }
 
 
   void set_from_proc_outputs( const vidtk::shot_stitching_process<vxl_byte>& proc )
   {
-    img = proc.output_image();
+    img = proc.output_source_image();
     ts = proc.output_timestamp();
     sb_flags = proc.output_shot_break_flags();
     src2ref = proc.output_src2ref_h();
@@ -110,9 +112,9 @@ struct proc_data_source_process
   // and allow the user to load it.  Call data_list().push_back(foo)
   // to load up the source before the pipeline executes.
 
-  vcl_vector< proc_data_type> d;
-  vcl_vector< proc_data_type>::iterator d_index;
-  vcl_vector< proc_data_type >& data_list() { return d; }
+  std::vector< proc_data_type> d;
+  std::vector< proc_data_type>::iterator d_index;
+  std::vector< proc_data_type >& data_list() { return d; }
 
   // inside the pipeline, read data off the list at each step
   // until we hit the end.
@@ -121,8 +123,8 @@ struct proc_data_source_process
 
   typedef proc_data_source_process self_type;
 
-  proc_data_source_process( const vcl_string& name )
-    : vidtk::process( name, "proc_data_source")
+  proc_data_source_process( const std::string& _name )
+    : vidtk::process( _name, "proc_data_source")
   {
     d_index = d.end();
   }
@@ -148,30 +150,25 @@ struct proc_data_source_process
   // needs to have output ports to match the shot_stitching_process
   // input ports
 
-  const vil_image_view<vxl_byte>& output_image() const { return v.img; }
-  VIDTK_OUTPUT_PORT( const vil_image_view<vxl_byte>&, output_image );
+  vil_image_view<vxl_byte> output_image() const { return v.img; }
+  VIDTK_OUTPUT_PORT( vil_image_view<vxl_byte>, output_image );
 
-  const vidtk::image_to_image_homography& output_src2ref_h() const { return v.src2ref; }
-  VIDTK_OUTPUT_PORT( const vidtk::image_to_image_homography&, output_src2ref_h );
+  vidtk::image_to_image_homography output_src2ref_h() const { return v.src2ref; }
+  VIDTK_OUTPUT_PORT( vidtk::image_to_image_homography, output_src2ref_h );
 
-  const vidtk::timestamp& output_timestamp() const { return v.ts; }
-  VIDTK_OUTPUT_PORT( const vidtk::timestamp&, output_timestamp );
+  vidtk::timestamp output_timestamp() const { return v.ts; }
+  VIDTK_OUTPUT_PORT( vidtk::timestamp, output_timestamp );
 
-  const vidtk::shot_break_flags& output_shot_break_flags() const { return v.sb_flags; }
-  VIDTK_OUTPUT_PORT( const vidtk::shot_break_flags&, output_shot_break_flags );
+  vidtk::shot_break_flags output_shot_break_flags() const { return v.sb_flags; }
+  VIDTK_OUTPUT_PORT( vidtk::shot_break_flags, output_shot_break_flags );
 
-  const vidtk::video_metadata::vector_t& output_metadata_vector() const { return v.m; }
-  VIDTK_OUTPUT_PORT( const vidtk::video_metadata::vector_t&, output_metadata_vector );
+  vidtk::video_metadata::vector_t output_metadata_vector() const { return v.m; }
+  VIDTK_OUTPUT_PORT( vidtk::video_metadata::vector_t, output_metadata_vector );
 
   // klt_tracks
-  vcl_vector< vidtk::klt_track_ptr > klt_tracks_output;
-  const vcl_vector< vidtk::klt_track_ptr >& output_klt_tracks() const { return klt_tracks_output; }
-  VIDTK_OUTPUT_PORT( const vcl_vector < vidtk::klt_track_ptr >&, output_klt_tracks );
-
-  // timestamp vector
-  vidtk::timestamp::vector_t timestamp_vector;
-  const vidtk::timestamp::vector_t& output_timestamp_vector() const { return timestamp_vector; }
-  VIDTK_OUTPUT_PORT( const vidtk::timestamp::vector_t&, output_timestamp_vector );
+  std::vector< vidtk::klt_track_ptr > klt_tracks_output;
+  std::vector< vidtk::klt_track_ptr > output_klt_tracks() const { return klt_tracks_output; }
+  VIDTK_OUTPUT_PORT( std::vector < vidtk::klt_track_ptr >, output_klt_tracks );
 };
 
 
@@ -182,8 +179,8 @@ struct proc_data_sink_process
   // and allow the user to access it.  Call data_list() to examine
   // values after the pipeline has executed.
 
-  vcl_vector< proc_data_type> d;
-  const vcl_vector< proc_data_type >& data_list() { return d; }
+  std::vector< proc_data_type> d;
+  const std::vector< proc_data_type >& data_list() { return d; }
 
   // inside the pipeline, accept and store outputs at each step.
 
@@ -191,8 +188,8 @@ struct proc_data_sink_process
 
   typedef proc_data_sink_process self_type;
 
-  proc_data_sink_process( const vcl_string& name )
-    : vidtk::process( name, "proc_data_sink")
+  proc_data_sink_process( const std::string& _name )
+    : vidtk::process( _name, "proc_data_sink")
   {
   }
 
@@ -243,16 +240,16 @@ struct ssp_test_pipeline
     p.add( src );
     p.add( ssp );
 
-    p.connect( src->output_image_port(),            ssp->input_image_port() );
-    p.connect( src->output_src2ref_h_port(),        ssp->input_src2ref_h_port() );
-    p.connect( src->output_timestamp_port(),        ssp->input_timestamp_port() );
-    p.connect( src->output_shot_break_flags_port(), ssp->input_shot_break_flags_port() );
-    p.connect( src->output_metadata_vector_port(),  ssp->input_metadata_vector_port() );
-    p.connect( src->output_klt_tracks_port(),       ssp->input_klt_tracks_port() );
-    p.connect( src->output_timestamp_vector_port(), ssp->input_timestamp_vector_port() );
+    p.connect( src->output_image_port(),            ssp->set_input_source_image_port() );
+    p.connect( src->output_image_port(),            ssp->set_input_rescaled_image_port() );
+    p.connect( src->output_src2ref_h_port(),        ssp->set_input_src2ref_h_port() );
+    p.connect( src->output_timestamp_port(),        ssp->set_input_timestamp_port() );
+    p.connect( src->output_shot_break_flags_port(), ssp->set_input_shot_break_flags_port() );
+    p.connect( src->output_metadata_vector_port(),  ssp->set_input_metadata_vector_port() );
+    p.connect( src->output_klt_tracks_port(),       ssp->set_input_klt_tracks_port() );
 
     p.add( dst );
-    p.connect( ssp->output_image_port(),            dst->input_image_port() );
+    p.connect( ssp->output_source_image_port(),     dst->input_image_port() );
     p.connect( ssp->output_timestamp_port(),        dst->input_timestamp_port() );
     p.connect( ssp->output_shot_break_flags_port(), dst->input_shot_break_flags_port() );
     p.connect( ssp->output_src2ref_h_port(),        dst->input_src2ref_h_port() );
@@ -260,8 +257,7 @@ struct ssp_test_pipeline
 
   bool set_params_and_init( const vidtk::config_block& cfg )
   {
-    p.set_params( cfg );
-    return p.initialize();
+    return p.set_params( cfg ) && p.initialize();
   }
 
   vidtk::config_block params() const
@@ -275,19 +271,17 @@ struct ssp_test_pipeline
 enum {IMG_SQUARE, IMG_SQUARE_TRANS_7_4, IMG_SQUARE_TRANS_13_1, IMG_BLANK };
 struct GLOBALS
 {
-  vgl_h_matrix_2d< double > identity;
   vil_image_view< vxl_byte > imgs[4];
-  bool init(const vcl_string& data_dir)
+  bool init(const std::string& data_dir)
   {
-    identity.set_identity();
-    vcl_string img_fns[3] = { "square.png", "square_trans+7+4.png", "square_trans+13-1.png" };
+    std::string img_fns[3] = { "square.png", "square_trans+7+4.png", "square_trans+13-1.png" };
     for (unsigned i = 0; i < 3; ++i)
     {
-      vcl_string full_path = data_dir + "/" + img_fns[i];
+      std::string full_path = data_dir + "/" + img_fns[i];
       imgs[i] = vil_load( full_path.c_str() );
       if ( !imgs[i] )
       {
-        vcl_ostringstream oss;
+        std::ostringstream oss;
         oss << "Failed to load '" << full_path << "'";
         TEST(oss.str().c_str(), false, true);
         return ( false );
@@ -325,11 +319,11 @@ matrices_match(const vgl_h_matrix_2d< double >&  a,
     {
       double atmp = ( a.get(2, 2) == 0 ) ? 0 : a.get(r, c) / a.get(2, 2);
       double btmp = ( b.get(2, 2) == 0 ) ? 0 : b.get(r, c) / b.get(2, 2);
-      if (vcl_abs(atmp - btmp) > fuzz)
+      if (std::abs(atmp - btmp) > fuzz)
       {
         std::cout << "\nMismatch at [" << r << "," << c << "] = "
                   << atmp << " - " << btmp << " = "
-                  << vcl_abs(atmp - btmp) << "(" << fuzz << ")"
+                  << std::abs(atmp - btmp) << "(" << fuzz << ")"
                   << std::endl;
         return false;
       }
@@ -341,19 +335,35 @@ matrices_match(const vgl_h_matrix_2d< double >&  a,
 
 
 void
-test_param_sets()
+test_param_sets(std::string algo_type)
 {
   vidtk::shot_stitching_process<vxl_byte> proc( "s" );
   {
     vidtk::config_block blk = proc.params();
-    blk.set( "algo:ssp_klt_tracking:feature_count", "10" );
-    TEST( "Process: setting params does not trap", proc.set_params( blk ), true );
+    blk.set( "algo:type", algo_type );
+    blk.set( "algo:klt:ssp_klt_tracking:feature_count", "10" );
+    blk.set( "algo:klt:threshold", "0.3" );
+#ifdef WITH_MAPTK_ENABLED
+    blk.set( "algo:maptk:min_inliers", "4" );
+#endif
+
+    std::stringstream ss;
+    ss << "Process: setting " << algo_type << " params does not trap";
+    TEST( ss.str().c_str(), proc.set_params( blk ), true );
   }
   {
     ssp_test_pipeline p;
     vidtk::config_block blk = p.params();
-    blk.set( "stitch:algo:ssp_klt_tracking:feature_count", "10" );
-    TEST( "Test pipeline: setting params does not trap", p.set_params_and_init( blk ), true );
+    blk.set( "stitch:algo:type", algo_type );
+    blk.set( "stitch:algo:klt:ssp_klt_tracking:feature_count", "10" );
+    blk.set( "stitch:algo:klt:threshold", "0.3" );
+#ifdef WITH_MAPTK_ENABLED
+    blk.set( "stitch:algo:maptk:min_inliers", "4" );
+#endif
+
+    std::stringstream ss;
+    ss << "Test pipeline: setting " << algo_type << " params does not trap";
+    TEST( ss.str().c_str(), p.set_params_and_init( blk ), true );
   }
 }
 
@@ -388,7 +398,7 @@ test_process_disabled()
   TEST("Disable: pipeline runs", run_status, true);
   bool all_outputs_present = ( p.dst->d.size() == N );
   {
-    vcl_ostringstream oss;
+    std::ostringstream oss;
     oss << "Disable: pipeline output has " << p.dst->d.size() << " (should be " << N << ")";
     TEST(oss.str().c_str(), all_outputs_present, true);
   }
@@ -399,7 +409,7 @@ test_process_disabled()
 
   for (unsigned i = 0; i < N; ++i)
   {
-    vcl_ostringstream oss;
+    std::ostringstream oss;
     oss << "Disabled: output " << i << " of " << N << ": output matches input";
     TEST(oss.str().c_str(), p.src->d[i], p.dst->d[i]);
   }
@@ -411,8 +421,8 @@ test_process_disabled()
 // For "inputs==outputs", no stitching should be triggered
 
 void
-test_process_enabled_no_stitching( const vcl_string& conf_str,
-                                   const vcl_string& max_n_glitch_frames_str = "1" )
+test_process_enabled_no_stitching( const std::string& conf_str,
+                                   const std::string& max_n_glitch_frames_str = "1" )
 {
   ssp_test_pipeline p;
 
@@ -437,20 +447,20 @@ test_process_enabled_no_stitching( const vcl_string& conf_str,
   blk.set( "stitch:max_n_glitch_frames", max_n_glitch_frames_str );
   blk.set( "stitch:verbose", "1" );
   {
-    vcl_ostringstream oss;
+    std::ostringstream oss;
     oss << "Enabled, no stitch: '" << conf_str << "': param set & init succeeds";
     TEST( oss.str().c_str(), p.set_params_and_init( blk ), true );
   }
 
   bool run_status = p.p.run();
   {
-    vcl_ostringstream oss;
+    std::ostringstream oss;
     oss << "Enabled, no stitch: '" << conf_str << "': pipeline runs";
     TEST( oss.str().c_str(), run_status, true );
   }
   bool all_outputs_present = (p.dst->d.size() == N);
   {
-    vcl_ostringstream oss;
+    std::ostringstream oss;
     oss << "Enabled, no stitch: '" << conf_str << "': pipeline output has "
         << p.dst->d.size() << " (should be " << N << ")";
     TEST( oss.str().c_str(), all_outputs_present, true );
@@ -459,7 +469,7 @@ test_process_enabled_no_stitching( const vcl_string& conf_str,
 
   for (unsigned i=0; i<N; ++i)
   {
-    vcl_ostringstream oss;
+    std::ostringstream oss;
     oss << "Enabled, no stitch: '" << conf_str << "': "
         << i << " of " << N << ": output matches input";
     TEST( oss.str().c_str(), p.src->d[i], p.dst->d[i] );
@@ -472,7 +482,7 @@ test_process_enabled_no_stitching( const vcl_string& conf_str,
  *
  *
  */
-void test_stitch_identity_across_single_bad_frame()
+void test_stitch_identity_across_single_bad_frame(std::string algo_type)
 {
   // three frames, all the square, middle one "bad";
   // stitching should jump the gap and return identity
@@ -504,9 +514,14 @@ void test_stitch_identity_across_single_bad_frame()
 
   vidtk::config_block blk = p.params();
   blk.set( "stitch:enabled", "1" );
-  blk.set( "stitch:algo:ssp_klt_tracking:feature_count", "10" );
+  blk.set( "stitch:algo:type", algo_type );
+  blk.set( "stitch:algo:klt:ssp_klt_tracking:feature_count", "10" );
+  blk.set( "stitch:algo:klt:threshold", "0.3" );
   blk.set( "stitch:max_n_glitch_frames", "1" );
   blk.set( "stitch:verbose", "1" );
+#ifdef WITH_MAPTK_ENABLED
+  blk.set( "stitch:algo:maptk:min_inliers", "4" );
+#endif
 
   TEST( "Identity-one-bad-frame: param set & init succeeds",
         p.set_params_and_init( blk ), true );
@@ -516,7 +531,7 @@ void test_stitch_identity_across_single_bad_frame()
 
   bool all_outputs_present = (p.dst->d.size() == N);
   {
-    vcl_ostringstream oss;
+    std::ostringstream oss;
     oss << "Identity-one-bad-frame: pipeline output has "
         << p.dst->d.size() << " (should be " << N << ")";
     TEST( oss.str().c_str(), all_outputs_present, true );
@@ -541,7 +556,7 @@ void test_stitch_identity_across_single_bad_frame()
  *
  *
  */
-void test_stitch_motion_across_single_bad_frame()
+void test_stitch_motion_across_single_bad_frame(std::string algo_type)
 {
 #define TEST_NAME "Motion-one-bad-frame"
 
@@ -568,28 +583,42 @@ void test_stitch_motion_across_single_bad_frame()
     p.src->d[i].src2ref.set_transform( xform );
   }
 
-  p.src->d[2].img = G.imgs[IMG_SQUARE_TRANS_13_1];
-
-  // index 0: anchor
+  // index 0:
   // -- no change
 
-  // index 1: shot break
-  p.src->d[1].sb_flags.set_frame_usable( false );
-  p.src->d[1].sb_flags.set_shot_end( true );
-  p.src->d[1].src2ref.set_valid (false);
+  // index 1: anchor
+  p.src->d[1].img = G.imgs[IMG_SQUARE_TRANS_7_4];
 
-  // index 2: new-ref
-  p.src->d[2].src2ref.set_new_reference(true);
+  vgl_h_matrix_2d<double> truth_1to0;
+  truth_1to0.set_identity();
+  // This transformation doesn't need to exactly match the image. This is mainly
+  // used to ensure that this transformation is preserved as-is after stitching.
+  truth_1to0.set_translation( -7, -4 );
+  p.src->d[1].src2ref.set_transform( truth_1to0 );
 
-  // index 3: not new ref
+  // index 2: shot break
+  p.src->d[2].sb_flags.set_frame_usable( false );
+  p.src->d[2].sb_flags.set_shot_end( true );
+  p.src->d[2].src2ref.set_valid (false);
+
+  // index 3: new-ref
+  p.src->d[3].src2ref.set_new_reference(true);
+  p.src->d[3].img = G.imgs[IMG_SQUARE_TRANS_13_1];
+
+  // index 4: not new ref
   // -- no change - start of shot
 
   // configure stitcher
   vidtk::config_block blk = p.params();
   blk.set( "stitch:enabled", "1" );
-  blk.set( "stitch:algo:ssp_klt_tracking:feature_count", "10" );
+  blk.set( "stitch:algo:type", algo_type );
+  blk.set( "stitch:algo:klt:ssp_klt_tracking:feature_count", "10" );
+  blk.set( "stitch:algo:klt:threshold", "0.3" );
   blk.set( "stitch:max_n_glitch_frames", "12" );
   blk.set( "stitch:verbose", "1" );
+#ifdef WITH_MAPTK_ENABLED
+  blk.set( "stitch:algo:maptk:min_inliers", "4" );
+#endif
 
   SBTEST( "param set & init succeeds",
         p.set_params_and_init( blk ), true );
@@ -600,7 +629,7 @@ void test_stitch_motion_across_single_bad_frame()
 
   bool all_outputs_present = (p.dst->d.size() == N-1);
   {
-    vcl_ostringstream oss;
+    std::ostringstream oss;
     oss << "pipeline output has "
         << p.dst->d.size() << " (should be " << N-1 << ")";
     SBTEST( oss.str().c_str(), all_outputs_present, true );
@@ -610,18 +639,25 @@ void test_stitch_motion_across_single_bad_frame()
   SBTEST( "Frame 0 output matches",
         p.src->d[0], p.dst->d[0] );
 
-  // did we actually interpolate?
-  SBTEST( "Frame 1 processed",
-        p.dst->d[1].sb_flags.is_shot_end(), false );
+  SBTEST( "Frame 1 output matches",
+        p.src->d[1], p.dst->d[1] );
 
-  SBTEST( "Frame 1 homography is (roughly) identity",
+  // did we actually interpolate?
+  SBTEST( "Frame 2 processed",
+        p.dst->d[2].sb_flags.is_shot_end(), false );
+
+  SBTEST( "Frame 0 homography is (roughly) identity",
         matrices_match( p.dst->d[0].src2ref.get_transform(), xform), true );
 
   SBTEST( "Frame 3 reference",
         p.dst->d[3].src2ref.get_dest_reference(), p.dst->d[0].src2ref.get_dest_reference());
 
-  // since frame 0 = (0,0), and frame 2 is (+13,-1), src2ref (aka frame 2 to
-  // frame 0) should be (-13, +1)
+  SBTEST( "Frame 4 reference",
+        p.dst->d[4].src2ref.get_dest_reference(), p.dst->d[0].src2ref.get_dest_reference());
+
+  // since frame 0 = (0,0), frame 1 = (+7,+4), and frame 3 is (+13,-1), src2ref (aka frame 2 to
+  // frame 0) should be (-13, +1). This will be computed after the stitch of
+  // (-5,+5) from frame 3 to 1, is added to (-7,-4) from frame 1 to 0.
   vgl_h_matrix_2d<double> truth;
   truth.set_identity();
   truth.set_translation( -13.0, 1.0 );
@@ -649,7 +685,7 @@ void test_stitch_motion_across_single_bad_frame()
  *  -, sb, nr, sb, nr, -, -, -, -, sb, nr, -, -, -, - (15 frames)
  *
  */
-void test_stitch_motion_across_multi_break()
+void test_stitch_motion_across_multi_break(std::string algo_type)
 {
 #define TEST_NAME "multi-break"
 
@@ -694,9 +730,14 @@ void test_stitch_motion_across_multi_break()
   // configure stitcher
   vidtk::config_block blk = p.params();
   blk.set( "stitch:enabled", "1" );
-  blk.set( "stitch:algo:ssp_klt_tracking:feature_count", "10" );
+  blk.set( "stitch:algo:type", algo_type );
+  blk.set( "stitch:algo:klt:ssp_klt_tracking:feature_count", "10" );
+  blk.set( "stitch:algo:klt:threshold", "0.3" );
   blk.set( "stitch:max_n_glitch_frames", "12" );
   blk.set( "stitch:verbose", "1" );
+#ifdef WITH_MAPTK_ENABLED
+  blk.set( "stitch:algo:maptk:min_inliers", "4" );
+#endif
 
   SBTEST( "param set & init succeeds", p.set_params_and_init( blk ), true );
 
@@ -706,7 +747,7 @@ void test_stitch_motion_across_multi_break()
 
   bool all_outputs_present = (p.dst->d.size() == N-4);
   {
-    vcl_ostringstream oss;
+    std::ostringstream oss;
     oss << "pipeline output has "
         << p.dst->d.size() << " (should be " << N-4 << ")";
     SBTEST( *(oss.str().c_str()), all_outputs_present, true );
@@ -753,7 +794,7 @@ int test_shot_stitching_process( int argc, char* argv[] )
     if (data_ready)
     {
       // basic sanity tests
-      test_param_sets();
+      test_param_sets("klt");
       test_process_disabled();
 
       // Configure a sequence of (G)ood or (B)ad frames
@@ -784,9 +825,16 @@ int test_shot_stitching_process( int argc, char* argv[] )
       test_process_enabled_no_stitching( "GBBBG" );
 
       // test actual stitching
-      test_stitch_identity_across_single_bad_frame();
-      test_stitch_motion_across_single_bad_frame();
-      test_stitch_motion_across_multi_break();
+      test_stitch_identity_across_single_bad_frame("klt");
+      test_stitch_motion_across_single_bad_frame("klt");
+      test_stitch_motion_across_multi_break("klt");
+
+#ifdef WITH_MAPTK_ENABLED
+      test_param_sets("maptk");
+      test_stitch_identity_across_single_bad_frame("maptk");
+      test_stitch_motion_across_single_bad_frame("maptk");
+      test_stitch_motion_across_multi_break("maptk");
+#endif
     }
   }
   return testlib_test_summary();

@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2011 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2011-2014 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -29,8 +29,8 @@ namespace vidtk
  *
  */
 tagged_data_writer_process::
-tagged_data_writer_process(vcl_string const& name)
-  : base_writer_process(name, "tagged_data_writer_process"),
+tagged_data_writer_process(std::string const& _name)
+  : base_writer_process(_name, "tagged_data_writer_process"),
 
 #define MDRW_INPUT(N,T,W,I)                     \
     m_ ## N ## _enabled (false),                \
@@ -73,10 +73,10 @@ set_params(config_block const& blk)
 
   // Get config values
 #define MDRW_INPUT(N,T,W,I)                                     \
-  blk.get ( #N, m_ ## N ## _enabled);                           \
+  m_ ## N ## _enabled = blk.get<bool>( #N );                    \
   if (m_ ## N ## _enabled && ! m_ ## N ## _connected)           \
   {                                                             \
-    LOG_ERROR( #N " is enabled by config but not connected");   \
+    LOG_WARN( #N " is enabled by config but not connected");   \
     m_ ## N ## _enabled = false;                                \
   }
 
@@ -88,7 +88,7 @@ set_params(config_block const& blk)
 
 
 bool tagged_data_writer_process::
-initialize(base_io_process::internal_t)
+initialize_internal()
 {
   if (! m_enabled)
   {
@@ -122,7 +122,7 @@ initialize(base_io_process::internal_t)
 #undef MDRW_INPUT
 
   // initialize the base class
-  if (base_writer_process::initialize(INTERNAL) != true)
+  if (base_writer_process::initialize_internal() != true)
   {
     return (false);
   }

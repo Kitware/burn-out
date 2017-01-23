@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010,2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -7,19 +7,16 @@
 
 #include <logger/vidtk_logger_log4cxx.h>
 
-#include <logger/logger_manager.h>
+#include <logger/logger_factory.h>
 #include <logger/location_info.h>
-#include <vcl_sstream.h>
-
+#include <sstream>
 
 namespace vidtk {
 namespace logger_ns {
 
-
-
 vidtk_logger_log4cxx
-::vidtk_logger_log4cxx(const char * const realm)
-  : vidtk_logger(realm),
+::vidtk_logger_log4cxx( logger_factory* p, const char * const realm )
+  : vidtk_logger( p, realm ),
    m_loggerImpl(0)
 {
   this->m_loggerImpl = ::log4cxx::Logger::getLogger(realm);
@@ -28,9 +25,7 @@ vidtk_logger_log4cxx
 
 vidtk_logger_log4cxx
 ::~vidtk_logger_log4cxx()
-{
-
-}
+{ }
 
 
 bool vidtk_logger_log4cxx
@@ -130,18 +125,17 @@ vidtk_logger::log_level_t vidtk_logger_log4cxx
   if (lvl == ::log4cxx::Level::getError()) return LEVEL_ERROR;
   if (lvl == ::log4cxx::Level::getFatal()) return LEVEL_FATAL;
   return LEVEL_NONE;
-
 }
 
 void vidtk_logger_log4cxx
-::log_fatal (vcl_string const & msg)
+::log_fatal (std::string const & msg)
 {
   this->m_loggerImpl->fatal(msg);
 }
 
 
 void vidtk_logger_log4cxx
-::log_fatal (vcl_string const & msg, ::vidtk::logger_ns::location_info const & location)
+::log_fatal (std::string const & msg, ::vidtk::logger_ns::location_info const & location)
 {
   log4cxx::spi::LocationInfo cxx_location (location.get_file_name_ptr(),
                                            location.get_method_name_ptr(),
@@ -151,14 +145,14 @@ void vidtk_logger_log4cxx
 
 
 void vidtk_logger_log4cxx
-::log_error (vcl_string const & msg)
+::log_error (std::string const & msg)
 {
   this->m_loggerImpl->error(msg);
 }
 
 
 void vidtk_logger_log4cxx
-::log_error (vcl_string const & msg, ::vidtk::logger_ns::location_info const & location)
+::log_error (std::string const & msg, ::vidtk::logger_ns::location_info const & location)
 {
   log4cxx::spi::LocationInfo cxx_location (location.get_file_name_ptr(),
                                            location.get_method_name_ptr(),
@@ -168,14 +162,14 @@ void vidtk_logger_log4cxx
 
 
 void vidtk_logger_log4cxx
-::log_warn (vcl_string const & msg)
+::log_warn (std::string const & msg)
 {
   this->m_loggerImpl->warn(msg);
 }
 
 
 void vidtk_logger_log4cxx
-::log_warn (vcl_string const & msg, ::vidtk::logger_ns::location_info const & location)
+::log_warn (std::string const & msg, ::vidtk::logger_ns::location_info const & location)
 {
   log4cxx::spi::LocationInfo cxx_location (location.get_file_name_ptr(),
                                            location.get_method_name_ptr(),
@@ -186,14 +180,14 @@ void vidtk_logger_log4cxx
 
 
 void vidtk_logger_log4cxx
-::log_info (vcl_string const & msg)
+::log_info (std::string const & msg)
 {
   this->m_loggerImpl->info(msg);
 }
 
 
 void vidtk_logger_log4cxx
-::log_info (vcl_string const & msg, ::vidtk::logger_ns::location_info const & location)
+::log_info (std::string const & msg, ::vidtk::logger_ns::location_info const & location)
 {
   log4cxx::spi::LocationInfo cxx_location (location.get_file_name_ptr(),
                                            location.get_method_name_ptr(),
@@ -204,14 +198,14 @@ void vidtk_logger_log4cxx
 
 
 void vidtk_logger_log4cxx
-::log_debug (vcl_string const & msg)
+::log_debug (std::string const & msg)
 {
   this->m_loggerImpl->debug(msg);
 }
 
 
 void vidtk_logger_log4cxx
-::log_debug (vcl_string const & msg, ::vidtk::logger_ns::location_info const & location)
+::log_debug (std::string const & msg, ::vidtk::logger_ns::location_info const & location)
 {
   log4cxx::spi::LocationInfo cxx_location (location.get_file_name_ptr(),
                                            location.get_method_name_ptr(),
@@ -222,14 +216,14 @@ void vidtk_logger_log4cxx
 
 
 void vidtk_logger_log4cxx
-::log_trace (vcl_string const & msg)
+::log_trace (std::string const & msg)
 {
   this->m_loggerImpl->trace(msg);
 }
 
 
 void vidtk_logger_log4cxx
-::log_trace (vcl_string const & msg, ::vidtk::logger_ns::location_info const & location)
+::log_trace (std::string const & msg, ::vidtk::logger_ns::location_info const & location)
 {
   log4cxx::spi::LocationInfo cxx_location (location.get_file_name_ptr(),
                                            location.get_method_name_ptr(),
@@ -239,7 +233,7 @@ void vidtk_logger_log4cxx
 
 
 void vidtk_logger_log4cxx
-::log_message ( vidtk_logger::log_level_t level, vcl_string const& msg)
+::log_message ( vidtk_logger::log_level_t level, std::string const& msg)
 {
   log4cxx::LevelPtr lvl;
   switch (level)
@@ -277,7 +271,7 @@ void vidtk_logger_log4cxx
 
 
 void vidtk_logger_log4cxx
-::log_message ( vidtk_logger::log_level_t level, vcl_string const& msg,
+::log_message ( vidtk_logger::log_level_t level, std::string const& msg,
               ::vidtk::logger_ns::location_info const & location)
 {
   log4cxx::spi::LocationInfo cxx_location (location.get_file_name_ptr(),
@@ -346,9 +340,9 @@ void vidtk_logger_log4cxx
  * message is deferred.
  */
 void vidtk_logger_log4cxx
-::add_application_info(vcl_string & msg)
+::add_application_info(std::string & msg)
 {
-  vcl_stringstream loc;
+  std::stringstream loc;
   loc << "[";
 
   if ( ! m_parent->get_application_instance_name().empty() )
@@ -371,4 +365,3 @@ void vidtk_logger_log4cxx
 
 } // end namespace
 } // end namespace
-

@@ -1,0 +1,9 @@
+<!-- This is a reduced VIRAT scenario file for testing file I/O.
+Note that although the VIRAT Phase 2 Creech image data is ITAR, the
+ground truth is not. -->
+
+<VIRATScenario name="adhoc">
+<GroundTruth name="adhoc" start="2009-03-19T19:09:00.000Z" uri="/nonexistent/path/to/test/truth-path/parameter/20090319_1115_I2_10.xgtf" />
+<GroundTruth name="adhoc" start="2009-03-19T19:14:59.999Z" uri="/nonexistent/path/to/test/truth-path/parameter/20090319_1115_I2_11.xgtf" />
+<GroundTruth name="adhoc" start="2009-03-19T19:20:59.999Z" uri="/nonexistent/path/to/test/truth-path/parameter/20090319_1115_I2_12.xgtf" />
+</VIRATScenario>

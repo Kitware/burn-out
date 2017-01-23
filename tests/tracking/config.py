@@ -203,7 +203,7 @@ class ConfigBlock(object):
                     block = ConfigBlock()
                     self.blocks[block_name] = block
                 if not block.parse_stream(s) :
-                    print "Error: failure parsing block", block_name
+                    print( "Error: failure parsing block: %s" % block_name)
                     return False
                 continue
 
@@ -219,7 +219,7 @@ class ConfigBlock(object):
                 self[param_name] = param_value
                 continue
 
-            print "Warning: unable to parse '" + line + "'"
+            print("Warning: unable to parse '%s'" % line)
         return True
 
     def __iter__(self):

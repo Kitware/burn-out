@@ -1,4 +1,4 @@
-include_directories(${KWSYS_INCLUDE_DIR})
+include_directories(SYSTEM ${KWSYS_INCLUDE_DIR})
 
 set( vidtk_process_framework_SOURCES
   pipeline_aid.h
@@ -7,6 +7,9 @@ set( vidtk_process_framework_SOURCES
   external_proxy_process.h       external_proxy_process.cxx
   external_base_process.h        external_base_process.cxx
   vbl_smart_ptr_instances.cxx
+  function_caller_helper.h
+  function_caller_process.h      function_caller_process.txx
+  function_caller_2_process.h    function_caller_2_process.txx
 )
 
 add_library( vidtk_process_framework ${vidtk_process_framework_SOURCES} )
@@ -15,16 +18,16 @@ set_target_properties( vidtk_process_framework PROPERTIES
 )
 target_link_libraries( vidtk_process_framework
   vidtksys
-  vidtk_utilities_no_process 
-  vcl 
-)
+  vidtk_utilities_no_process
+  )
 install( TARGETS vidtk_process_framework EXPORT vidtk
   RUNTIME DESTINATION bin LIBRARY DESTINATION lib ARCHIVE DESTINATION lib
 )
 install( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} DESTINATION include
   FILES_MATCHING PATTERN "*.h"
 )
-install( FILES 
+install( FILES
+  function_caller_process.txx
   function_caller_2_process.txx
   DESTINATION include/process_framework
 )
@@ -41,6 +44,6 @@ if( VIDTK_EVENT_SDK_INSTALL )
 endif( VIDTK_EVENT_SDK_INSTALL )
 
 if( VIDTK_COMMON_SDK_INSTALL )
-   install( TARGETS vidtk_process_framework
-     EXPORT common-sdk-targets DESTINATION common_sdk/lib )
+  install( TARGETS vidtk_process_framework
+    EXPORT common-sdk-targets DESTINATION common_sdk/lib )
 endif( VIDTK_COMMON_SDK_INSTALL )

@@ -47,6 +47,12 @@ do.
 
 */
 
+#if defined(__CYGWIN__)
+/* Increase the file descriptor limit for select() before including
+   related system headers. (Default: 64) */
+# define FD_SETSIZE 16384
+#endif
+
 #include <stddef.h>    /* ptrdiff_t */
 #include <stdio.h>     /* snprintf */
 #include <stdlib.h>    /* malloc, free */
@@ -62,10 +68,7 @@ do.
 #include <signal.h>    /* sigaction */
 #include <dirent.h>    /* DIR, dirent */
 #include <ctype.h>     /* isspace */
-
-#ifdef __HAIKU__
-#undef __BEOS__
-#endif
+#include <assert.h>    /* assert */
 
 #if defined(__VMS)
 # define KWSYSPE_VMS_NONBLOCK , O_NONBLOCK
@@ -106,7 +109,7 @@ static inline void kwsysProcess_usleep(unsigned int msec)
  * pipes' file handles to be non-blocking and just poll them directly
  * without select().
  */
-#if !defined(__BEOS__) && !defined(__VMS)
+#if !defined(__BEOS__) && !defined(__VMS) && !defined(__MINT__)
 # define KWSYSPE_USE_SELECT 1
 #endif
 
@@ -422,9 +425,10 @@ int kwsysProcess_AddCommand(kwsysProcess* cp, char const* const* command)
        parse it.  */
     newCommands[cp->NumberOfCommands] =
       kwsysSystem_Parse_CommandForUnix(*command, 0);
-    if(!newCommands[cp->NumberOfCommands])
+    if(!newCommands[cp->NumberOfCommands] ||
+       !newCommands[cp->NumberOfCommands][0])
       {
-      /* Out of memory.  */
+      /* Out of memory or no command parsed.  */
       free(newCommands);
       return 0;
       }
@@ -447,6 +451,7 @@ int kwsysProcess_AddCommand(kwsysProcess* cp, char const* const* command)
       }
     for(i=0; i < n; ++i)
       {
+      assert(command[i]); /* Quiet Clang scan-build. */
       newCommands[cp->NumberOfCommands][i] = strdup(command[i]);
       if(!newCommands[cp->NumberOfCommands][i])
         {
@@ -542,7 +547,7 @@ int kwsysProcess_SetPipeFile(kwsysProcess* cp, int prPipe, const char* file)
     }
   if(file)
     {
-    *pfile = malloc(strlen(file)+1);
+    *pfile = (char*)malloc(strlen(file)+1);
     if(!*pfile)
       {
       return 0;
@@ -1463,7 +1468,7 @@ static int kwsysProcessInitialize(kwsysProcess* cp)
     cp->RealWorkingDirectoryLength = 4096;
 #endif
     cp->RealWorkingDirectory =
-      malloc((size_t)(cp->RealWorkingDirectoryLength));
+      (char*)malloc((size_t)(cp->RealWorkingDirectoryLength));
     if(!cp->RealWorkingDirectory)
       {
       return 0;
@@ -2410,6 +2415,12 @@ static void kwsysProcessKill(pid_t process_id)
   /* Suspend the process to be sure it will not create more children.  */
   kill(process_id, SIGSTOP);
 
+#if defined(__CYGWIN__)
+  /* Some Cygwin versions seem to need help here.  Give up our time slice
+     so that the child can process SIGSTOP before we send SIGKILL.  */
+  usleep(1);
+#endif
+
   /* Kill all children if we can find them.  */
 #if defined(__linux__) || defined(__CYGWIN__)
   /* First try using the /proc filesystem.  */
@@ -2446,6 +2457,7 @@ static void kwsysProcessKill(pid_t process_id)
           if(f)
             {
             size_t nread = fread(buffer, 1, KWSYSPE_PIPE_BUFFER_SIZE, f);
+            fclose(f);
             buffer[nread] = '\0';
             if(nread > 0)
               {
@@ -2460,7 +2472,6 @@ static void kwsysProcessKill(pid_t process_id)
                   }
                 }
               }
-            fclose(f);
             }
           }
         }
@@ -2732,6 +2743,7 @@ static void kwsysProcessesSignalHandler(int signum
     kwsysProcess* cp = kwsysProcesses.Processes[i];
     kwsysProcess_ssize_t status=
       read(cp->PipeReadEnds[KWSYSPE_PIPE_SIGNAL], &buf, 1);
+    (void)status;
     status=write(cp->SignalPipe, &buf, 1);
     (void)status;
     }

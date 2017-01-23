@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -18,7 +18,7 @@
 #ifndef __TOKEN_EXPANSION_H__
 #define __TOKEN_EXPANSION_H__
 
-#include <vcl_string.h>
+#include <string>
 
 namespace vidtk
 {
@@ -28,7 +28,7 @@ class token_expansion
 
 public:
   ///Expands a string, replacing magic tokens with full value
-  static vcl_string expand_token( const vcl_string initial_string );
+  static std::string expand_token( const std::string initial_string );
 
 };
 

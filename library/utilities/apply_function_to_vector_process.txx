@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2014 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -11,8 +11,8 @@ namespace vidtk
 
 template<typename IN_T, typename OUT_T, OUT_T Function(const IN_T&)>
 apply_function_to_vector_process<IN_T, OUT_T, Function>
-::apply_function_to_vector_process( const vcl_string &name )
-: process(name, "apply_function_to_vector_process"), in_(NULL)
+::apply_function_to_vector_process( const std::string &_name )
+: process(_name, "apply_function_to_vector_process"), in_(NULL)
 {
 }
 
@@ -62,7 +62,7 @@ apply_function_to_vector_process<IN_T, OUT_T, Function>
   }
 
   this->out_.clear();
-  for( typename vcl_vector<IN_T>::const_iterator i = this->in_->begin();
+  for( typename std::vector<IN_T>::const_iterator i = this->in_->begin();
        i != this->in_->end();
        ++i )
   {
@@ -77,14 +77,14 @@ apply_function_to_vector_process<IN_T, OUT_T, Function>
 template<typename IN_T, typename OUT_T, OUT_T Function(const IN_T&)>
 void
 apply_function_to_vector_process<IN_T, OUT_T, Function>
-::set_input( const vcl_vector<IN_T> &in )
+::set_input( const std::vector<IN_T> &in )
 {
   this->in_ = &in;
 }
 
 
 template<typename IN_T, typename OUT_T, OUT_T Function(const IN_T&)>
-vcl_vector<OUT_T>&
+std::vector<OUT_T>
 apply_function_to_vector_process<IN_T, OUT_T, Function>
 ::get_output(void)
 {

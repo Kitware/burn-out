@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -28,7 +28,7 @@
 /// It would be cool to integrate this somehow into vsl.
 ///
 
-#include <vcl_vector.h>
+#include <vector>
 #include <vil/vil_image_view.h>
 
 namespace vidtk
@@ -39,27 +39,27 @@ class barcode_factory
 public:
 
   barcode_factory( int block_h = 4,          // height in pixels of bit block
-		   int block_w = 4,          // width in pixels of bit block
-		   int check_c = 2,          // columns of check pattern bits
-		   double off_val = 0.2,     // "off" value (% of max value)
-		   double on_val = 0.8 ):    // "on" value (% of max value)
+                   int block_w = 4,          // width in pixels of bit block
+                   int check_c = 2,          // columns of check pattern bits
+                   double off_val = 0.2,     // "off" value (% of max value)
+                   double on_val = 0.8 ):    // "on" value (% of max value)
     block_h_( block_h ), block_w_( block_w ), check_columns_( check_c ),
     off_val_( off_val ), on_val_( on_val )
   {}
   ~barcode_factory() {}
 
   template< typename T >
-  bool encode( const vcl_vector<unsigned char>& data,
-	       vil_image_view<T> img,
-	       int start_row = -1,          // -1 defaults to first row
-	       int end_row = -1 ) const;    // -1 defaults to last row
+  bool encode( const std::vector<unsigned char>& data,
+               vil_image_view<T> img,
+               int start_row = -1,          // -1 defaults to first row
+               int end_row = -1 ) const;    // -1 defaults to last row
 
 
   template< typename T >
   bool decode( const vil_image_view<T> img,
-	       vcl_vector<unsigned char>& data,
-	       int start_row = -1,          // -1 defaults to first row
-	       int end_row = -1 ) const;    // -1 defaults to last row
+               std::vector<unsigned char>& data,
+               int start_row = -1,          // -1 defaults to first row
+               int end_row = -1 ) const;    // -1 defaults to last row
 
 
 private:

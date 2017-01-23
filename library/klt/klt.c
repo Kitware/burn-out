@@ -43,7 +43,7 @@ static const KLT_BOOL writeInternalImages = FALSE;
 static const int search_range = 15;
 static const int nSkippedPixels = 0;
 
-extern int KLT_verbose;
+int KLT_verbose = 0;
 
 
 /*********************************************************************
@@ -64,6 +64,7 @@ extern int KLT_verbose;
  * ar = (char **) createArray2D(8, 5, sizeof(char));
  */
 
+#ifdef BUILD_KLT_FEATURE_TABLE
 static void** _createArray2D(int ncols, int nrows, int nbytes)
 {
   char **tt;
@@ -80,6 +81,7 @@ static void** _createArray2D(int ncols, int nrows, int nbytes)
 
   return((void **) tt);
 }
+#endif
 
 
 /*********************************************************************
@@ -126,7 +128,7 @@ KLT_TrackingContext KLTCreateTrackingContext()
 
   /* Change nPyramidLevels and subsampling */
   KLTChangeTCPyramid(tc, search_range);
-	
+
   /* Update border, which is dependent upon  */
   /* smooth_sigma_fact, pyramid_sigma_fact, window_size, and subsampling */
   KLTUpdateTCBorder(tc);
@@ -149,18 +151,20 @@ KLT_FeatureList KLTCreateFeatureList(
     nFeatures * sizeof(KLT_Feature) +
     nFeatures * sizeof(KLT_FeatureRec);
   int i;
-	
+
   /* Allocate memory for feature list */
   fl = (KLT_FeatureList)  malloc((unsigned int)nbytes);
-	
+
   /* Set parameters */
-  fl->nFeatures = nFeatures; 
+  fl->nFeatures = nFeatures;
 
   /* Set pointers */
   fl->feature = (KLT_Feature *) (fl + 1);
   first = (KLT_Feature) (fl->feature + nFeatures);
   for (i = 0 ; i < nFeatures ; i++) {
     fl->feature[i] = first + i;
+    fl->feature[i]->x = -1.0;
+    fl->feature[i]->y = -1.0;
     fl->feature[i]->aff_img = NULL;           /* initialization fixed by Sinisa Segvic */
     fl->feature[i]->aff_img_gradx = NULL;
     fl->feature[i]->aff_img_grady = NULL;
@@ -174,7 +178,7 @@ KLT_FeatureList KLTCreateFeatureList(
  * KLTCreateFeatureHistory
  *
  */
-
+#ifdef BUILD_KLT_FEATURE_HISTORY
 KLT_FeatureHistory KLTCreateFeatureHistory(
   int nFrames)
 {
@@ -184,13 +188,13 @@ KLT_FeatureHistory KLTCreateFeatureHistory(
     nFrames * sizeof(KLT_Feature) +
     nFrames * sizeof(KLT_FeatureRec);
   int i;
-	
+
   /* Allocate memory for feature history */
   fh = (KLT_FeatureHistory)  malloc((unsigned int)nbytes);
-	
+
   /* Set parameters */
-  fh->nFrames = nFrames; 
-	
+  fh->nFrames = nFrames;
+
   /* Set pointers */
   fh->feature = (KLT_Feature *) (fh + 1);
   first = (KLT_Feature) (fh->feature + nFrames);
@@ -200,13 +204,14 @@ KLT_FeatureHistory KLTCreateFeatureHistory(
   /* Return feature history */
   return(fh);
 }
-
+#endif
 
 /*********************************************************************
  * KLTCreateFeatureTable
  *
  */
 
+#ifdef BUILD_KLT_FEATURE_TABLE
 KLT_FeatureTable KLTCreateFeatureTable(
   int nFrames,
   int nFeatures)
@@ -215,16 +220,16 @@ KLT_FeatureTable KLTCreateFeatureTable(
   KLT_Feature first;
   int nbytes = sizeof(KLT_FeatureTableRec);
   int i, j;
-	
+
   /* Allocate memory for feature history */
   ft = (KLT_FeatureTable)  malloc((unsigned int)nbytes);
-	
+
   /* Set parameters */
-  ft->nFrames = nFrames; 
-  ft->nFeatures = nFeatures; 
-	
+  ft->nFrames = nFrames;
+  ft->nFeatures = nFeatures;
+
   /* Set pointers */
-  ft->feature = (KLT_Feature **) 
+  ft->feature = (KLT_Feature **)
     _createArray2D(nFrames, nFeatures, sizeof(KLT_Feature));
   first = (KLT_Feature) malloc(nFrames * nFeatures * sizeof(KLT_FeatureRec));
   for (j = 0 ; j < nFeatures ; j++)
@@ -234,7 +239,7 @@ KLT_FeatureTable KLTCreateFeatureTable(
   /* Return feature table */
   return(ft);
 }
-
+#endif
 
 /*********************************************************************
  * KLTPrintTrackingContext
@@ -270,7 +275,7 @@ void KLTPrintTrackingContext(
 
   fprintf(stderr, "\n\tpyramid_last = %s\n", (tc->pyramid_last!=NULL) ?
           "points to old image" : "NULL");
-  fprintf(stderr, "\tpyramid_last_gradx = %s\n", 
+  fprintf(stderr, "\tpyramid_last_gradx = %s\n",
           (tc->pyramid_last_gradx!=NULL) ?
           "points to old image" : "NULL");
   fprintf(stderr, "\tpyramid_last_grady = %s\n",
@@ -317,23 +322,23 @@ void KLTChangeTCPyramid(
 
   subsampling = ((float) search_range) / window_halfwidth;
 
-  if (subsampling < 1.0)  {		/* 1.0 = 0+1 */
+  if (subsampling < 1.0)  {          /* 1.0 = 0+1 */
     tc->nPyramidLevels = 1;
-  } else if (subsampling <= 3.0)  {	/* 3.0 = 2+1 */
+  } else if (subsampling <= 3.0)  {     /* 3.0 = 2+1 */
     tc->nPyramidLevels = 2;
     tc->subsampling = 2;
-  } else if (subsampling <= 5.0)  {	/* 5.0 = 4+1 */
+  } else if (subsampling <= 5.0)  {     /* 5.0 = 4+1 */
     tc->nPyramidLevels = 2;
     tc->subsampling = 4;
-  } else if (subsampling <= 9.0)  {	/* 9.0 = 8+1 */
+  } else if (subsampling <= 9.0)  {     /* 9.0 = 8+1 */
     tc->nPyramidLevels = 2;
     tc->subsampling = 8;
   } else {
     /* The following lines are derived from the formula:
-       search_range = 
+       search_range =
        window_halfwidth * \sum_{i=0}^{nPyramidLevels-1} 8^i,
        which is the same as:
-       search_range = 
+       search_range =
        window_halfwidth * (8^nPyramidLevels - 1)/(8 - 1).
        Then, the value is rounded up to the nearest integer. */
     float val = (float) (log(7.0*subsampling+1.0)/log(8.0));
@@ -346,7 +351,7 @@ void KLTChangeTCPyramid(
 /*********************************************************************
  * NOTE:  Manually must ensure consistency with _KLTComputePyramid()
  */
- 
+
 static float _pyramidSigma(
   KLT_TrackingContext tc)
 {
@@ -355,7 +360,7 @@ static float _pyramidSigma(
 
 
 /*********************************************************************
- * Updates border, which is dependent upon 
+ * Updates border, which is dependent upon
  * smooth_sigma_fact, pyramid_sigma_fact, window_size, and subsampling
  */
 
@@ -406,10 +411,10 @@ void KLTUpdateTCBorder(
   pyramid_gauss_hw = gauss_width/2;
 
   /* Compute the # of invalid pixels at each level of the pyramid.
-     n_invalid_pixels is computed with respect to the ith level   
-     of the pyramid.  So, e.g., if n_invalid_pixels = 5 after   
-     the first iteration, then there are 5 invalid pixels in   
-     level 1, which translated means 5*subsampling invalid pixels   
+     n_invalid_pixels is computed with respect to the ith level
+     of the pyramid.  So, e.g., if n_invalid_pixels = 5 after
+     the first iteration, then there are 5 invalid pixels in
+     level 1, which translated means 5*subsampling invalid pixels
      in the original level 0. */
   n_invalid_pixels = smooth_gauss_hw;
   for (i = 1 ; i < num_levels ; i++)  {
@@ -477,12 +482,15 @@ void KLTFreeFeatureList(
   }
 }
 
+#ifdef BUILD_KLT_FEATURE_HISTORY
 void KLTFreeFeatureHistory(
   KLT_FeatureHistory fh)
 {
   free(fh);
 }
+#endif
 
+#ifdef BUILD_KLT_FEATURE_TABLE
 void KLTFreeFeatureTable(
   KLT_FeatureTable ft)
 {
@@ -490,6 +498,7 @@ void KLTFreeFeatureTable(
   free(ft->feature);
   free(ft);
 }
+#endif
 
 
 /*********************************************************************

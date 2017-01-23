@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2013 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -10,7 +10,7 @@
 #include <vil/vil_image_view.h>
 #include <vcl_fstream.h>
 #include <vil/vil_save.h>
-#include <video/gauss_filter.h>
+#include <video_transforms/gauss_filter.h>
 
 #include <utilities/checked_bool.h>
 #include <ctime>
@@ -114,9 +114,8 @@ int test_vil_convolve_2d_performance(
 
   vcl_vector<vcl_string> image_paths;
   vcl_string line;
-  while( !file.eof() )
+  while( vcl_getline(file, line) )
   {
-    vcl_getline(file, line);
     image_paths.push_back( line );
   }
   file.close();
@@ -124,7 +123,7 @@ int test_vil_convolve_2d_performance(
   vcl_vector< iter_results > orig_results;
   vcl_vector< iter_results > new_results;
 
-  for (int iters = 0; iters < iterations.size(); iters++)
+  for (size_t iters = 0; iters < iterations.size(); iters++)
   {
     int run_length = iterations[iters];
     iter_results oldresults;
@@ -169,14 +168,15 @@ int test_vil_convolve_2d_performance(
     new_results.push_back( newresults );
   }
 
-  for ( int r = 0; r < orig_results.size(); r++)
+  for ( size_t r = 0; r < orig_results.size(); r++)
   {
 
     iter_results oldresults = orig_results[r];
     iter_results newresults = new_results[r];
 
-    vcl_cout << "double multiplication runtime over " << oldresults.iterations << " images took " << (double)oldresults.runtime/CLOCKS_PER_SEC << " seconds"  << vcl_endl;
-    vcl_cout << "integer multiplication runtime over " << newresults.iterations << " images took " << (double)newresults.runtime/CLOCKS_PER_SEC << " seconds " << vcl_endl;
+    vcl_cout << "double multiplication runtime over " << oldresults.iterations << " images took " << static_cast<double>(oldresults.runtime)/CLOCKS_PER_SEC << " seconds"  << vcl_endl;
+    vcl_cout << "integer multiplication runtime over " << newresults.iterations << " images took " << static_cast<double>(newresults.runtime)/CLOCKS_PER_SEC << " seconds " << vcl_endl;
   }
 
+  return true;
 }

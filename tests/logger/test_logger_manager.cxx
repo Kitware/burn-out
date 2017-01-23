@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2014 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -16,9 +16,9 @@ namespace {
 void test_manager()
 {
   char * argv[] = {
-    (char *) "test_program_name",
-    (char *) "--logger-app-instance", (char *) "instance-one",
-    (char *) "app-arg", 0
+    const_cast<char*>("test_program_name"),
+    const_cast<char*>("--logger-app-instance"), const_cast<char*>("instance-one"),
+    const_cast<char*>("app-arg"), 0
   };
 
 
@@ -31,9 +31,6 @@ void test_manager()
 
   TEST ("Application instance name", vidtk::logger_manager::instance()->get_application_instance_name(),
         "instance-one" );
-
-  TEST ("Factory name", vidtk::logger_manager::instance()->get_factory_name(),
-        "mini logger" );
 
   the_one->set_system_name("my system");
   TEST ("System name", vidtk::logger_manager::instance()->get_system_name(),

@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -9,7 +9,7 @@
 #include <learning/learner_base.h>
 #include <learning/weak_learner.h>
 
-#include <vcl_sstream.h>
+#include <sstream>
 
 namespace vidtk
 {
@@ -19,13 +19,13 @@ namespace vidtk
 class stump_weak_learner : public weak_learner
 {
   public:
-    stump_weak_learner( vcl_string const & name, int desc )
-      : weak_learner(name, desc), sign_(1), value_(0)
+    stump_weak_learner( std::string const & _name, int desc )
+      : weak_learner(_name, desc), sign_(1), value_(0)
     {}
     stump_weak_learner( )
     {}
     stump_weak_learner( int s, unsigned int d, double v,
-                        vcl_string const & name, int desc );
+                        std::string const & name, int desc );
     virtual weak_learner_sptr clone() const
     { return new stump_weak_learner(*this); }
     virtual weak_learner_sptr
@@ -33,16 +33,16 @@ class stump_weak_learner : public weak_learner
              vnl_vector<double> const & weights );
 
     virtual int classify(learner_data const & data);
-/*    virtual vcl_string gplot_command() const;*/
+/*    virtual std::string gplot_command() const;*/
     virtual weak_learners::learner get_id() const
     { return weak_learners::stump_weak_learner; }
-    virtual bool read(vcl_istream & in);
-    virtual bool write(vcl_ostream & out) const;
-    virtual vcl_string unique_id() const
+    virtual bool read(std::istream & in);
+    virtual bool write(std::ostream & out) const;
+    virtual std::string unique_id() const
     {
-      vcl_stringstream ss;
+      std::stringstream ss;
       ss << name_ << "_dem_" << dim_;
-      vcl_string r;
+      std::string r;
       ss >> r;
       return r;
     }

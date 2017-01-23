@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2011 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2011-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -7,7 +7,7 @@
 #ifndef INCL_IMAGE_HISTOGRAM_H
 #define INCL_IMAGE_HISTOGRAM_H
 
-#include <vcl_vector.h>
+#include <vector>
 #include <vil/vil_image_view.h>
 
 namespace vidtk
@@ -15,29 +15,46 @@ namespace vidtk
 
 enum Image_Histogram_Type { VIDTK_AUTO, VIDTK_RGB, VIDTK_YUV, VIDTK_GRAYSCALE };
 
-/// \brief Class to compute color and grayscale image histogram.
-///
-/// 
-template < class imT, class maskT >
-class image_histogram
+class image_histogram;
+
+template< class imT, class maskT >
+class image_histogram_functions
 {
 public:
-  image_histogram();
+  static image_histogram generate(vil_image_view<imT> const & image,
+                                  std::vector<unsigned> const & n_bins,
+                                  bool skip_zero = false,
+                                  Image_Histogram_Type histType = VIDTK_AUTO);
+  static image_histogram generate(vil_image_view<imT> const & image,
+                                  vil_image_view<maskT> const & mask,
+                                  std::vector<unsigned> const & n_bins,
+                                  bool skip_zero = false,
+                                  Image_Histogram_Type histType = VIDTK_AUTO);
+  static void init( image_histogram & hist,
+                    vil_image_view<imT> const & image,
+                    std::vector<unsigned> const & n_bins );
+  static void add( image_histogram & hist,
+                   vil_image_view<imT> const & image,
+                   vil_image_view<maskT> const * mask = NULL );
+  static void rgb2yuv_wrapper( imT R, imT G, imT B,
+                               std::vector<double> & yuv );
+};
+
+
+
+/// \brief Class to compute color and grayscale image histogram.
+///
+///
+class image_histogram
+{
+  template<class imT, class maskT > friend class image_histogram_functions;
+public:
+   image_histogram( bool skip_zero = false,
+                    Image_Histogram_Type histType = VIDTK_AUTO);
 
   image_histogram( image_histogram const & );
 
   image_histogram & operator=( image_histogram const & );
-
-  image_histogram( vil_image_view<imT> const & image,
-                   vcl_vector<unsigned> const & n_bins,
-                   bool skip_zero = false,
-                   Image_Histogram_Type histType = VIDTK_AUTO);
-
-  image_histogram( vil_image_view<imT> const & image,
-                   vil_image_view<maskT> const & mask,
-                   vcl_vector<unsigned> const & n_bins,
-                   bool skip_zero = false,
-                   Image_Histogram_Type histType = VIDTK_AUTO );
 
   ~image_histogram();
 
@@ -51,24 +68,22 @@ public:
 
   double mass() const { return n_; }
 
-  void set_mass(double mass) { n_ = mass; }
-
-  void add( vil_image_view<imT> const & image,
-            vil_image_view<maskT> const * mask = NULL );
+  void set_mass(double _mass) { n_ = _mass; }
 
   double compare( const vil_image_view<double> & others_h ) const;
 
   double compare( const image_histogram & other ) const;
 
-  void init( vil_image_view<imT> const & image,
-             vcl_vector<unsigned> const & n_bins,
-             vil_image_view<maskT> const * mask = NULL );
 private:
 
-  void get_bin_location( vcl_vector<unsigned char> const & channels,
-                         vcl_vector<unsigned> & bins ) const;
+  void get_bin_location( std::vector<double> const & channels,
+                         unsigned * bins ) const;
 
-  void rgb2yuv_wrapper( imT R, imT G, imT B, vcl_vector<unsigned char> & yuv ) const;
+  void init_bins(unsigned int number_of_planes, std::vector<unsigned> const & n_bins);
+
+  void update(std::vector<double> const & channels, double weight);
+
+  void normalize();
 
   /// Mass in the histogram
   double n_;

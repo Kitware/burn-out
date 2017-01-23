@@ -1,10 +1,10 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
-#include <vcl_iostream.h>
+#include <iostream>
 #include <vnl/vnl_matrix.h>
 #include <vnl/vnl_random.h>
 #include <testlib/testlib_test.h>
@@ -18,23 +18,23 @@ namespace {
 void
 test_output_structure()
 {
-  vcl_cout << "Testing output for 10x5 cost matrix\n";
+  std::cout << "Testing output for 10x5 cost matrix\n";
 
   vnl_matrix<double> cost1( 10, 5 );
-  vcl_vector<unsigned> assn1 = vidtk::greedy_assignment( cost1 );
+  std::vector<unsigned> assn1 = vidtk::greedy_assignment( cost1 );
   TEST( "Assignment vector length", assn1.size(), 10 );
 
-  vcl_cout << "Testing output for 5x10 cost matrix\n";
+  std::cout << "Testing output for 5x10 cost matrix\n";
 
   vnl_matrix<double> cost2( 5, 10 );
-  vcl_vector<unsigned> assn2 = vidtk::greedy_assignment( cost2 );
+  std::vector<unsigned> assn2 = vidtk::greedy_assignment( cost2 );
   TEST( "Assignment vector length", assn2.size(), 5 );
 }
 
 void
 test_valid_assignment()
 {
-  vcl_cout << "Testing that the output is valid\n";
+  std::cout << "Testing that the output is valid\n";
 
   vnl_random rand;
   unsigned M = rand.lrand32( 5, 15 );
@@ -49,19 +49,19 @@ test_valid_assignment()
     }
   }
 
-  vcl_vector<unsigned> assn = vidtk::greedy_assignment( cost );
+  std::vector<unsigned> assn = vidtk::greedy_assignment( cost );
 
   TEST( "Assignment vector length", assn.size(), M );
 
   bool good = true;
-  vcl_vector<bool> used_tgt( N, false );
+  std::vector<bool> used_tgt( N, false );
   for( unsigned i = 0; i < M; ++i )
   {
     if( assn[i] != unsigned(-1) )
     {
       if( used_tgt[ assn[i] ] )
       {
-        vcl_cout << "ERROR: target " << assn[i]
+        std::cout << "ERROR: target " << assn[i]
                  << " reused with src " << i << "\n";
         good = false;
       }
@@ -73,11 +73,11 @@ test_valid_assignment()
   }
   if( ! good )
   {
-    vcl_cout << "Cost =\n" << cost << "\n";
-    vcl_cout << "Assignment=\n";
+    std::cout << "Cost =\n" << cost << "\n";
+    std::cout << "Assignment=\n";
     for( unsigned i = 0; i < M; ++i )
     {
-      vcl_cout << "   " << i << " -> " << assn[i] << "\n";
+      std::cout << "   " << i << " -> " << assn[i] << "\n";
     }
   }
   TEST( "Assignment is valid", good, true );

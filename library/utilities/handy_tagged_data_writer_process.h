@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2011 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2011-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -48,7 +48,7 @@ class handy_tagged_data_writer_process
 public:
   //typedef handy_tagged_data_writer_process self_type;
 
-  handy_tagged_data_writer_process(vcl_string const& name)
+  handy_tagged_data_writer_process(std::string const& name)
     : tagged_data_writer_process (name),
       m_localEnable(false) { }
 
@@ -69,10 +69,10 @@ public:
   }
 
 
-  void set_filename (vcl_string const& name) { m_localFilename = name; }
+  void set_filename (std::string const& name) { m_localFilename = name; }
   void set_enable (bool v) { m_localEnable = v; }
   virtual bool set_params(config_block const& blk)
-  { 
+  {
      this->m_enabled = m_localEnable;
 
     // Overwrite default file name if one has been specified.
@@ -81,7 +81,7 @@ public:
       m_filename = m_localFilename;
       //base_io_process::initialize(); // start initialization at the base class
     }
-    return true; 
+    return true;
   }
 
 #define MDRW_INPUT(N,T,W,I)                     \
@@ -89,7 +89,7 @@ public:                                         \
   void set_ ## N ## _connected ()               \
   {                                             \
     tagged_data_writer_process::set_ ## N ## _connected (true);             \
-    set_ ## N ## _force_enabled ();             \
+    set_force_ ## N ## _enabled ();             \
   }
 
   MDRW_SET  // apply macro over inputs
@@ -97,7 +97,7 @@ public:                                         \
 
 
 private:
-  vcl_string m_localFilename;
+  std::string m_localFilename;
   bool m_localEnable;
 
 }; // end class handy_tagged_data_writer_process

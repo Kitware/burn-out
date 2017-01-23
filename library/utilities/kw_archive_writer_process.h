@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2011 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2013-2016 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -10,13 +10,14 @@
 #include <process_framework/process.h>
 #include <process_framework/pipeline_aid.h>
 
-#include "kw_archive_writer.h"
+#include "kw_archive_index_writer.h"
 
 
 
 namespace vidtk
 {
 
+template< class PixType >
 class kw_archive_writer;
 
 
@@ -25,12 +26,13 @@ class kw_archive_writer;
  *
  *
  */
+template<class PixType>
 class kw_archive_writer_process
   : public process
 {
 public:
   typedef kw_archive_writer_process self_type;
-  kw_archive_writer_process(vcl_string const& name);
+  kw_archive_writer_process(std::string const& name);
   virtual ~kw_archive_writer_process();
 
   // -- process interface --
@@ -44,35 +46,36 @@ public:
 #define IN_PORT_OPT(N,T) void set_input_ ## N (T val); VIDTK_OPTIONAL_INPUT_PORT ( set_input_ ## N, T )
 
   IN_PORT     (timestamp,             vidtk::timestamp const&);
-  IN_PORT     (image,                 vil_image_view < vxl_byte > const&);
+  IN_PORT     (image,                 vil_image_view < PixType > const&);
   IN_PORT_OPT (src_to_ref_homography, vidtk::image_to_image_homography const&);
-  IN_PORT_OPT (src_to_utm_homography, vidtk::image_to_utm_homography const&);
-  IN_PORT_OPT (src_to_wld_homography, vidtk::image_to_plane_homography const&);
-  IN_PORT     (wld_to_utm_homography, vidtk::plane_to_utm_homography const&);
+  IN_PORT     (corner_points, vidtk::video_metadata const&);
   IN_PORT     (world_units_per_pixel, double);
 
 #undef IN_PORT
+#undef IN_PORT_OPT
 
 
 private:
-  config_block m_config;
+  config_block config_;
 
   // Config data
-  bool m_enable;
-  vcl_string m_file_path;
-  vcl_string m_file_name;
-  bool m_allow_overwrite;
+  bool disable_;
+  std::string output_directory_;
+  std::string base_filename_;
+  bool separate_meta_;
+  std::string mission_id_;
+  std::string stream_id_;
+  bool compress_image_;
 
   // input data areas
-  vidtk::image_to_plane_homography  m_src_to_wld_h;
-  vidtk::plane_to_utm_homography   m_wld_to_utm_h;
+  vidtk::timestamp timestamp_;
+  vidtk::video_metadata corner_points_;
+  vil_image_view< PixType > image_;
+  vidtk::image_to_image_homography frame_to_ref_;
+  double gsd_;
 
   // Archive writer object
-  vidtk::kw_archive_writer * m_archive_writer;
-
-  // Archive writer data set
-  vidtk::kw_archive_writer::data_set_homog m_data_set;
-
+  vidtk::kw_archive_index_writer< PixType > * archive_writer_;
 }; // end class kw_archive_writer_process
 
 } // end namespace

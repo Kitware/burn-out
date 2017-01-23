@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -9,7 +9,7 @@
 
 #include <kwklt/klt_track.h>
 
-#include <vcl_vector.h>
+#include <vector>
 #include <vil/vil_image_view.h>
 #include <vgl/algo/vgl_h_matrix_2d.h>
 #include <process_framework/process.h>
@@ -46,9 +46,9 @@ public:
     klt_track_ptr track_;
   };
 
-  homography_process( vcl_string const& name );
+  homography_process( std::string const& name );
 
-  ~homography_process();
+  virtual ~homography_process();
 
   virtual config_block params() const;
 
@@ -62,16 +62,14 @@ public:
 
   virtual bool step();
 
-  bool is_same_track( track_extra_info_type const& tei, 
+  bool is_same_track( track_extra_info_type const& tei,
                       klt_track_ptr const& trks ) const;
 
-  void set_new_tracks( vcl_vector< klt_track_ptr > const& trks );
+  void set_new_tracks( std::vector< klt_track_ptr > const& trks );
+  VIDTK_INPUT_PORT( set_new_tracks, std::vector< klt_track_ptr > const& );
 
-  VIDTK_INPUT_PORT( set_new_tracks, vcl_vector< klt_track_ptr > const& );
-
-  void set_updated_tracks( vcl_vector< klt_track_ptr > const& trks );
-
-  VIDTK_INPUT_PORT( set_updated_tracks, vcl_vector< klt_track_ptr > const& );
+  void set_updated_tracks( std::vector< klt_track_ptr > const& trks );
+  VIDTK_INPUT_PORT( set_updated_tracks, std::vector< klt_track_ptr > const& );
 
   /// \brief Mask out features that fall in the mask.
   ///
@@ -82,7 +80,6 @@ public:
   /// need to call this again with a null image if you want to remove the
   /// mask.
   void set_mask_image( vil_image_view<bool> const& mask );
-
   VIDTK_OPTIONAL_INPUT_PORT( set_mask_image, vil_image_view<bool> const& );
 
   void set_timestamp( timestamp const & ts );
@@ -92,19 +89,17 @@ public:
   void set_unusable_frame( bool flag );
   VIDTK_OPTIONAL_INPUT_PORT( set_unusable_frame, bool );
 
-  vgl_h_matrix_2d<double> const& image_to_world_homography() const;
+  vgl_h_matrix_2d<double> image_to_world_homography() const;
+  VIDTK_OUTPUT_PORT( vgl_h_matrix_2d<double>, image_to_world_homography );
 
-  VIDTK_OUTPUT_PORT( vgl_h_matrix_2d<double> const&, image_to_world_homography );
+  vgl_h_matrix_2d<double> world_to_image_homography() const;
+  VIDTK_OUTPUT_PORT( vgl_h_matrix_2d<double>, world_to_image_homography );
 
-  vgl_h_matrix_2d<double> const& world_to_image_homography() const;
+  image_to_image_homography image_to_world_vidtk_homography_image() const;
+  VIDTK_OUTPUT_PORT( image_to_image_homography, image_to_world_vidtk_homography_image );
 
-  VIDTK_OUTPUT_PORT( vgl_h_matrix_2d<double> const&, world_to_image_homography );
-
-  image_to_image_homography const& image_to_world_vidtk_homography_image() const;
-  VIDTK_OUTPUT_PORT( image_to_image_homography const&, image_to_world_vidtk_homography_image );
-
-  image_to_image_homography const& world_to_image_vidtk_homography_image() const;
-  VIDTK_OUTPUT_PORT( image_to_image_homography const&, world_to_image_vidtk_homography_image );
+  image_to_image_homography world_to_image_vidtk_homography_image() const;
+  VIDTK_OUTPUT_PORT( image_to_image_homography, world_to_image_vidtk_homography_image );
 
   /// Project to the world plane from the image plane.
   ///
@@ -130,12 +125,12 @@ public:
   bool is_good( klt_track_ptr const& ) const;
 
 private:
-  typedef vcl_vector< track_extra_info_type >::iterator track_eit_iter;
+  typedef std::vector< track_extra_info_type >::iterator track_eit_iter;
 
   void update_track_states();
 
-  vcl_vector< klt_track_ptr > new_tracks_;
-  vcl_vector< klt_track_ptr > updated_tracks_;
+  std::vector< klt_track_ptr > new_tracks_;
+  std::vector< klt_track_ptr > updated_tracks_;
 
   /// Refine the estimate to minimize the geometric error.
   void lmq_refine_homography();
@@ -156,9 +151,9 @@ private:
 
   // state
 
-  // Replacing map with vector for deterministic output of the 
+  // Replacing map with vector for deterministic output of the
   // tracker.
-  vcl_vector<track_extra_info_type> tracks_;
+  std::vector<track_extra_info_type> tracks_;
 
   vil_image_view<bool> mask_;
 
@@ -173,12 +168,15 @@ private:
   // we only want to "initialize" only the first time.
   bool initialized_;
 
-  // TODO: This is a temporary hack due to an assert in vnl. Logically there 
-  // should be enough algorithmic checks for degenerate cases so you don't 
-  // impossible numerical (NAN) values. 
-  // This flag marks the current frame as not usable because we already know that 
-  // the correspondences are not good enough. 
+  // TODO: This is a temporary hack due to an assert in vnl. Logically there
+  // should be enough algorithmic checks for degenerate cases so you don't
+  // impossible numerical (NAN) values.
+  // This flag marks the current frame as not usable because we already know that
+  // the correspondences are not good enough.
   bool unusable_frame_;
+
+  // Trim size for track tails.
+  int track_tail_length_;
 };
 
 

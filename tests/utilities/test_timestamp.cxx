@@ -1,10 +1,10 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
-#include <vcl_iostream.h>
+#include <iostream>
 #include <vul/vul_temp_filename.h>
 #include <vpl/vpl.h>
 #include <vsl/vsl_binary_io.h>
@@ -20,7 +20,7 @@ namespace {
 void
 test_lessthan()
 {
-  vcl_cout << "Test operator<\n";
+  std::cout << "Test operator<\n";
 
   {
     vidtk::timestamp t1, t2;
@@ -75,7 +75,7 @@ test_lessthan()
 void
 test_equality()
 {
-  vcl_cout << "Test operator==\n";
+  std::cout << "Test operator==\n";
 
   {
     vidtk::timestamp t1, t2;
@@ -134,10 +134,10 @@ test_equality()
 void
 test_vsl_io()
 {
-  vcl_cout << "Test vsl io\n";
+  std::cout << "Test vsl io\n";
 
-  vcl_string fn = vul_temp_filename();
-  vcl_cout << "Using temp file " << fn << "\n";
+  std::string fn = vul_temp_filename();
+  std::cout << "Using temp file " << fn << "\n";
 
   {
     vsl_b_ofstream bfstr( fn );

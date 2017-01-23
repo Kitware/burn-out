@@ -35,6 +35,12 @@ _KLT_FloatImage _KLTCreateFloatImage(
   _KLT_FloatImage floatimg;
   int nbytes = sizeof(_KLT_FloatImageRec) +
     ncols * nrows * sizeof(float);
+#if VIDTK_SSE2
+   /* Used to simplify the code a bit on
+    * boundry cases.  This buffer makes sure
+    * we never read off the end of the image*/
+  nbytes += 4*sizeof(float);
+#endif
 
   floatimg = (_KLT_FloatImage)  malloc((unsigned int)nbytes);
   if (floatimg == NULL)
@@ -57,7 +63,9 @@ void _KLTFreeFloatImage(
   free(floatimg);
 }
 
-
+//commented out this code because it is not used anywhere and is untested
+//might be useful in the future for debugging
+#if 0
 /*********************************************************************
  * _KLTPrintSubFloatImage
  */
@@ -86,7 +94,8 @@ void _KLTPrintSubFloatImage(
   }
   fprintf(stderr, "\n");
 }
-	
+#endif
+
 
 #if 0
 /*********************************************************************
@@ -111,7 +120,7 @@ void _KLTWriteFloatImageToPGM(
     mmin = min(mmin, *ptr);
     ptr++;
   }
-	
+
   /* Allocate memory to hold converted image */
   byteimg = (uchar *) malloc(npixs * sizeof(uchar));
 
@@ -144,7 +153,7 @@ void _KLTWriteAbsFloatImageToPGM(
   uchar *byteimg, *ptrout;
   int i;
   float tmp;
-	
+
   /* Allocate memory to hold converted image */
   byteimg = (uchar *) malloc(npixs * sizeof(uchar));
 
@@ -166,3 +175,28 @@ void _KLTWriteAbsFloatImageToPGM(
 }
 /* Copyright: public domain */
 #endif
+
+/*********************************************************************
+ * _KLTApply3x3HomogToXY
+ */
+void _KLTApply3x3HomogToXY(
+  float x0, float y0, const float *h,
+  float *x1, float *y1)
+{
+  float x1_, y1_, w1_;
+
+  /* A NULL homography implies identity */
+  if(!h)
+  {
+    *x1 = x0;
+    *y1 = y0;
+    return;
+  }
+
+  x1_ = h[0]*x0 + h[1]*y0 + h[2];
+  y1_ = h[3]*x0 + h[4]*y0 + h[5];
+  w1_ = h[6]*x0 + h[7]*y0 + h[8];
+
+  *x1 = x1_/w1_;
+  *y1 = y1_/w1_;
+}

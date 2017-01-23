@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2011 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2011-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -7,7 +7,7 @@
 
 #include "base_reader_writer.h"
 
-#include <vcl_iostream.h>
+#include <iostream>
 
 
 
@@ -20,16 +20,17 @@ namespace vidtk
 // ================================================================
 
 base_reader_writer::
-base_reader_writer ( vcl_string const& tag )
-  : m_entryTag (tag)
+base_reader_writer ( std::string const& tag )
+  : m_entryTag (tag),
+    m_validEntry( false )
 {
   // Add delimeter/ending char
   m_entryTag += ":";
 }
 
 
-vcl_string const& base_reader_writer::
-add_instance_name (vcl_string const& name)
+std::string const& base_reader_writer::
+add_instance_name (std::string const& name)
 {
   m_instanceName = name;
   m_entryTag += name + ":";
@@ -37,7 +38,7 @@ add_instance_name (vcl_string const& name)
 }
 
 
-vcl_string const& base_reader_writer::
+std::string const& base_reader_writer::
 entry_tag_string() const
 {
   return m_entryTag;
@@ -45,10 +46,10 @@ entry_tag_string() const
 
 
 bool base_reader_writer::
-verify_tag(vcl_istream& str) const
+verify_tag(std::istream& str) const
 {
-  vcl_streampos pos = str.tellg();
-  vcl_string tag;
+  std::streampos pos = str.tellg();
+  std::string tag;
 
   str >> tag;                   // read tag
   str.seekg(pos);               // rewind file
@@ -61,4 +62,3 @@ verify_tag(vcl_istream& str) const
 }
 
 } // end namespace
-

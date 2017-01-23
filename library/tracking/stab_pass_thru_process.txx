@@ -1,22 +1,20 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2016 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
 #include <tracking/stab_pass_thru_process.h>
-#include <utilities/log.h>
-#include <utilities/unchecked_return_value.h>
-#include <vcl_cassert.h>
-#include <vcl_algorithm.h>
+#include <cassert>
+#include <algorithm>
 
 namespace vidtk
 {
 
 template <class PixType>
 stab_pass_thru_process<PixType>
-::stab_pass_thru_process( vcl_string const& name )
-  : process( name, "stab_pass_thru_process" )
+::stab_pass_thru_process( std::string const& _name )
+  : process( _name, "stab_pass_thru_process" )
 {
 
 }

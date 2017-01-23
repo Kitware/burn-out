@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2011 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2011-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -13,6 +13,7 @@
 
 #include <utilities/config_block.h>
 #include <utilities/timestamp.h>
+#include <vgl/algo/vgl_h_matrix_2d.h>
 
 namespace vidtk
 {
@@ -43,6 +44,7 @@ public:
   virtual void set_image_pyramid_gradx(vil_pyramid_image_view<float> const&) = 0;
   virtual void set_image_pyramid_grady(vil_pyramid_image_view<float> const&) = 0;
   virtual void set_timestamp(timestamp const&) = 0;
+  virtual void set_homog_predict(vgl_h_matrix_2d<double> const&) = 0;
 
   bool disabled_;
 
@@ -52,11 +54,10 @@ public:
   int window_height_;
   int min_distance_;
   int num_skipped_pixels_;
-  int search_range_;
 
-  vcl_vector<klt_track_ptr> active_;
-  vcl_vector<klt_track_ptr> terminated_;
-  vcl_vector<klt_track_ptr> created_;
+  std::vector<klt_track_ptr> active_;
+  std::vector<klt_track_ptr> terminated_;
+  std::vector<klt_track_ptr> created_;
 };
 
 

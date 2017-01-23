@@ -1,13 +1,16 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2016 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
 #include <utilities/queue_process.h>
-#include <utilities/log.h>
-#include <utilities/unchecked_return_value.h>
-#include <vcl_cassert.h>
+
+#include <cassert>
+
+#include <logger/logger.h>
+VIDTK_LOGGER("queue_process_txx");
+
 
 namespace vidtk
 {
@@ -15,8 +18,8 @@ namespace vidtk
 
 template <class TData>
 queue_process<TData>
-::queue_process( vcl_string const& name )
-  : process( name, "queue_process" ),
+::queue_process( std::string const& _name )
+  : process( _name, "queue_process" ),
     disable_read_( false ),
     input_datum_( NULL ),
     output_datum_()
@@ -63,10 +66,10 @@ queue_process<TData>
     disable_read_ = blk.get<bool>( "disable_read" );
     max_length_ = blk.get<unsigned>( "max_length" );
   }
-  catch( unchecked_return_value& )
+  catch( config_block_parse_error const& e)
   {
-    // reset to old values
-    this->set_params( this->config_ );
+    LOG_ERROR( this->name() << ": set_params failed: "
+               << e.what() );
     return false;
   }
 
@@ -103,7 +106,7 @@ queue_process<TData>
 ::step()
 {
 #ifdef DEBUG
-  vcl_cout << this->name() << ": length: " << queue_.size() << "\n";
+  LOG_INFO( this->name() << ": length: " << queue_.size());
 #endif
 
   // If there is new data, push onto back of queue
@@ -116,7 +119,7 @@ queue_process<TData>
     if ( ( max_length_ > 0 ) && ( queue_.size() > max_length_ ) )
     {
 #ifdef DEBUG
-      vcl_cout << this->name() << ": flushing frame, length: " << queue_.size() << "\n";
+      LOG_DEBUG( this->name() << ": flushing frame, length: " << queue_.size());
 #endif
       queue_.erase( queue_.begin() );
     }
@@ -124,7 +127,7 @@ queue_process<TData>
 
   if ( queue_.empty() )
   {
-    vcl_cout << this->name() << ": queue is empty, process failed.\n";
+    LOG_WARN( this->name() << ": queue is empty, process failed.");
     return ( false );
   }
 
@@ -195,7 +198,7 @@ queue_process<TData>
  * This method returns the current output datum.
  */
 template <class TData>
-TData &
+TData
 queue_process<TData>
 ::get_output_datum()
 {
@@ -213,7 +216,7 @@ unsigned
 queue_process<TData>
 ::length()
 {
-  return queue_.size();
+  return static_cast<unsigned>(queue_.size());
 }
 
 
@@ -227,7 +230,7 @@ void
 queue_process<TData>
 ::clear()
 {
-  queue_ = vcl_vector<TData>();
+  queue_ = std::vector<TData>();
 }
 
 

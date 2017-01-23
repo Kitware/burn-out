@@ -1,24 +1,50 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010,2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
-
 #include <logger/logger_factory_log4cxx.h>
 
 #include <logger/vidtk_logger_log4cxx.h>
+#include <logger/vidtk_logger_log4cxx_export.h>
+
 #include <log4cxx/propertyconfigurator.h>
 #include <log4cxx/basicconfigurator.h>
 
 #include <logger/logger.h>
 #include <vul/vul_file.h>
-#include <vcl_cstdlib.h>
+#include <cstdlib>
+#include <typeinfo>
 
 
+#if defined LOADABLE_MODULE
+// ------------------------------------------------------------------
+/*
+ * Shared object bootstrap function
+ */
+extern "C"
+{
+  VIDTK_LOGGER_LOG4CXX_EXPORT
+  void* class_bootstrap()
+  {
+    vidtk::logger_ns::logger_factory_log4cxx* ptr =  new vidtk::logger_ns::logger_factory_log4cxx;
+    return ptr;
+  }
+
+  // Return type of interface we are implementing
+  VIDTK_LOGGER_LOG4CXX_EXPORT
+  const char* class_bootstrap_type()
+  {
+    return typeid( vidtk::logger_ns::logger_factory ).name();
+  }
+}
+#endif
+
+
+// ==================================================================
 namespace vidtk {
 namespace logger_ns {
-
 
 // ----------------------------------------------------------------
 /**
@@ -29,16 +55,13 @@ logger_factory_log4cxx
 ::logger_factory_log4cxx()
  : logger_factory("log4cxx")
 {
-
 }
 
 
 logger_factory_log4cxx
 ::~logger_factory_log4cxx()
 {
-
 }
-
 
 
 // ----------------------------------------------------------------
@@ -51,15 +74,15 @@ logger_factory_log4cxx
  * @retval 1 - error initializing
  */
 int logger_factory_log4cxx
-::initialize(vcl_string const & cfg)
+::initialize(std::string const & cfg)
 {
-  vcl_string config_file (cfg);
+  std::string config_file (cfg);
 
   // If no file, then look in environment
   if (config_file.empty())
   {
     // Try the environemnt variable if no config file yet
-    const char * cfg_file_p = vcl_getenv("LOG4CXX_CONFIGURATION");
+    const char * cfg_file_p = std::getenv("LOG4CXX_CONFIGURATION");
     if (0 != cfg_file_p)
     {
       config_file = cfg_file_p;
@@ -97,7 +120,7 @@ int logger_factory_log4cxx
 vidtk_logger_sptr logger_factory_log4cxx
 ::get_logger( char const* name )
 {
-  return new vidtk_logger_log4cxx(name);
+  return new vidtk_logger_log4cxx( this, name );
 }
 
 

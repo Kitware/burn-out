@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2014 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -13,7 +13,7 @@
 #include <vgl/algo/vgl_h_matrix_2d.h>
 #include <utilities/timestamp.h>
 
-#include <vcl_fstream.h>
+#include <fstream>
 
 namespace vidtk
 {
@@ -22,8 +22,8 @@ namespace vidtk
 ///
 /// This process will output homographies, timestamps, etc.
 /// on frame by frame basis. The CSV file is currently being
-/// being produced by MAASProxy2Tool. 
-/// 
+/// being produced by MAASProxy2Tool.
+///
 /// First line of the input file will contain comment explaining
 /// contents of each column.
 
@@ -33,7 +33,7 @@ class metadata_reader_process
 public:
   typedef metadata_reader_process self_type;
 
-  metadata_reader_process( vcl_string const& name );
+  metadata_reader_process( std::string const& name );
 
   ~metadata_reader_process();
 
@@ -49,31 +49,28 @@ public:
 
   // Output ports
 
-  vgl_h_matrix_2d< double > const& image_to_world_homography() const;
-  
-  VIDTK_OUTPUT_PORT( vgl_h_matrix_2d< double > const &,
+  vgl_h_matrix_2d< double > image_to_world_homography() const;
+  VIDTK_OUTPUT_PORT( vgl_h_matrix_2d< double >,
                      image_to_world_homography );
 
-  vgl_h_matrix_2d< double > const& world_to_image_homography() const;
-  
-  VIDTK_OUTPUT_PORT( vgl_h_matrix_2d< double > const &,
+  vgl_h_matrix_2d< double > world_to_image_homography() const;
+  VIDTK_OUTPUT_PORT( vgl_h_matrix_2d< double >,
                      world_to_image_homography );
 
-  vidtk::timestamp const& timestamp() const;
-  
-  VIDTK_OUTPUT_PORT( vidtk::timestamp const &,
+  vidtk::timestamp timestamp() const;
+  VIDTK_OUTPUT_PORT( vidtk::timestamp,
                      timestamp );
 
 protected:
   config_block config_;
 
-  vcl_string input_filename_;
+  std::string input_filename_;
 
-  vcl_ifstream input_file_;
+  std::ifstream input_file_;
 
-  vgl_h_matrix_2d<double> H_img_to_wld_;  
+  vgl_h_matrix_2d<double> H_img_to_wld_;
 
-  vgl_h_matrix_2d<double> H_wld_to_img_;  
+  vgl_h_matrix_2d<double> H_wld_to_img_;
 
   vidtk::timestamp ts_;
 };

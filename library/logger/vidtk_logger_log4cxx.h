@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010,2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -11,10 +11,10 @@
 
 #include <log4cxx/logger.h>
 
-
 namespace vidtk {
 namespace logger_ns {
 
+class logger_factory;
 
 // ----------------------------------------------------------------
 /** Logging class.
@@ -25,11 +25,11 @@ namespace logger_ns {
  * handling.
  *
  */
-class vidtk_logger_log4cxx
-  : public vidtk_logger
+class vidtk_logger_log4cxx :
+  public vidtk_logger
 {
 public:
-  vidtk_logger_log4cxx(const char * const realm);
+  vidtk_logger_log4cxx( logger_factory* p, const char* const realm );
   virtual ~vidtk_logger_log4cxx();
 
   // Check to see if level is enabled
@@ -40,46 +40,47 @@ public:
   virtual bool is_debug_enabled() const;
   virtual bool is_trace_enabled() const;
 
-  virtual void set_level( log_level_t lev);
+  virtual void set_level( log_level_t lev );
   virtual log_level_t get_level() const;
 
-  virtual void log_fatal (vcl_string const & msg);
-  virtual void log_fatal (vcl_string const & msg,
-                          ::vidtk::logger_ns::location_info const & location);
+  virtual void log_fatal( std::string const& msg );
+  virtual void log_fatal( std::string const&                      msg,
+                          vidtk::logger_ns::location_info const&  location );
 
-  virtual void log_error (vcl_string const & msg);
-  virtual void log_error (vcl_string const & msg,
-                          ::vidtk::logger_ns::location_info const & location);
+  virtual void log_error( std::string const& msg );
+  virtual void log_error( std::string const&                      msg,
+                          vidtk::logger_ns::location_info const&  location );
 
-  virtual void log_warn (vcl_string const & msg);
-  virtual void log_warn (vcl_string const & msg,
-                         ::vidtk::logger_ns::location_info const & location);
+  virtual void log_warn( std::string const& msg );
+  virtual void log_warn( std::string const&                     msg,
+                         vidtk::logger_ns::location_info const& location );
 
-  virtual void log_info (vcl_string const & msg);
-  virtual void log_info (vcl_string const & msg,
-                         ::vidtk::logger_ns::location_info const & location);
+  virtual void log_info( std::string const& msg );
+  virtual void log_info( std::string const&                     msg,
+                         vidtk::logger_ns::location_info const& location );
 
-  virtual void log_debug (vcl_string const & msg);
-  virtual void log_debug (vcl_string const & msg,
-                          ::vidtk::logger_ns::location_info const & location);
+  virtual void log_debug( std::string const& msg );
+  virtual void log_debug( std::string const&                      msg,
+                          vidtk::logger_ns::location_info const&  location );
 
-  virtual void log_trace (vcl_string const & msg);
-  virtual void log_trace (vcl_string const & msg,
-                          ::vidtk::logger_ns::location_info const & location);
+  virtual void log_trace( std::string const& msg );
+  virtual void log_trace( std::string const&                      msg,
+                          vidtk::logger_ns::location_info const&  location );
 
-  virtual void log_message (log_level_t level, vcl_string const& msg);
-  virtual void log_message (log_level_t level, vcl_string const& msg,
-                            ::vidtk::logger_ns::location_info const & location);
+  virtual void log_message( log_level_t level, std::string const& msg );
+  virtual void log_message( log_level_t level, std::string const& msg,
+                            vidtk::logger_ns::location_info const& location );
 
   // -- extended interface --
-  ::log4cxx::LoggerPtr get_logger_impl();
+  log4cxx::LoggerPtr get_logger_impl();
+
 
 protected:
-  ::log4cxx::LoggerPtr m_loggerImpl;
+  log4cxx::LoggerPtr m_loggerImpl;
 
 
 private:
-  void add_application_info(vcl_string & msg);
+  void add_application_info( std::string& msg );
 
 }; // end class
 

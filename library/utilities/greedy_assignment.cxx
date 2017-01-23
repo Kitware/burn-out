@@ -1,12 +1,12 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
 #include "greedy_assignment.h"
 
-#include <vcl_algorithm.h>
+#include <algorithm>
 
 namespace
 {
@@ -21,7 +21,7 @@ struct cost_sorter
   {
     return this->cost_mat_->data_block()[idx1] < this->cost_mat_->data_block()[idx2];
   }
-  
+
 };
 
 
@@ -31,7 +31,7 @@ struct cost_sorter
 namespace vidtk
 {
 
-vcl_vector< unsigned >
+std::vector< unsigned >
 greedy_assignment( vnl_matrix<double> const& cost )
 {
   // The implementation of the algorithm is pretty simple: sort the
@@ -48,7 +48,7 @@ greedy_assignment( vnl_matrix<double> const& cost )
   // of the matrix (so that one integer can represent both the row and
   // the column), thus saving memory.
 
-  vcl_vector< unsigned int > cost_ind;
+  std::vector< unsigned int > cost_ind;
   cost_ind.reserve( cost.rows() * cost.cols() );
   for( unsigned i = 0; i < cost.rows() * cost.cols(); ++i )
   {
@@ -57,11 +57,11 @@ greedy_assignment( vnl_matrix<double> const& cost )
 
   cost_sorter sort;
   sort.cost_mat_ = &cost;
-  vcl_sort( cost_ind.begin(), cost_ind.end(), sort );
+  std::sort( cost_ind.begin(), cost_ind.end(), sort );
 
-  vcl_vector<bool> used_src( cost.rows(), false );
-  vcl_vector<bool> used_tgt( cost.cols(), false );
-  vcl_vector<unsigned> assn( cost.rows(), unsigned(-1) );
+  std::vector<bool> used_src( cost.rows(), false );
+  std::vector<bool> used_tgt( cost.cols(), false );
+  std::vector<unsigned> assn( cost.rows(), unsigned(-1) );
 
   for( unsigned idx = 0; idx < cost_ind.size(); ++idx )
   {

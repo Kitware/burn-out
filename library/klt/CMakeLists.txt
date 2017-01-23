@@ -18,6 +18,13 @@ set( source_files
 )
 
 add_library( vidtk_klt ${source_files} )
+if( UNIX )
+  target_link_libraries( vidtk_klt -lm )
+endif()
+if(VIDTK_CONFIG_ENABLE_SSE2)
+  set_source_files_properties( convolve.c convolve.h klt_util.c klt_util.h
+                               PROPERTIES COMPILE_FLAGS "-DVIDTK_SSE2=1")
+endif()
 set_target_properties( vidtk_klt PROPERTIES
   VERSION ${vidtk_klt_VERSION} SOVERSION ${vidtk_klt_VERSION}
 )

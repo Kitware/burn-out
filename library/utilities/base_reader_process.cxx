@@ -1,14 +1,12 @@
 /*ckwg +5
- * Copyright 2011 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2011-2016 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
 #include "base_reader_process.h"
 
-#include <utilities/unchecked_return_value.h>
 #include <logger/logger.h>
-
 
 namespace vidtk
 {
@@ -17,8 +15,8 @@ namespace vidtk
   VIDTK_LOGGER("base_reader_process");
 
 base_reader_process::
-  base_reader_process(vcl_string const& name,  vcl_string const& type)
-    : base_io_process(name, type)
+  base_reader_process(std::string const& _name,  std::string const& type)
+    : base_io_process(_name, type)
 {
 }
 
@@ -34,7 +32,7 @@ base_reader_process::~base_reader_process()
  *
  */
 bool base_reader_process::
-initialize(base_io_process::internal_t)
+initialize_internal()
 {
   return true;
 }
@@ -49,7 +47,7 @@ initialize(base_io_process::internal_t)
 void base_reader_process::
   open_file()
 {
-  file_stream().open(this->m_filename.c_str(), vcl_ofstream::in);
+  file_stream().open(this->m_filename.c_str(), std::ofstream::in);
 }
 
 

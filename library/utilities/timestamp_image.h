@@ -35,7 +35,7 @@ namespace vidtk
   template< typename T>
   timestamp
   get_timestamp( const vil_image_view<T> src_img,
-		 int timestamp_rows_from_bottom = 16 );
+                 int timestamp_rows_from_bottom = 16 );
 
 
   // Get the timestamp from the image.  If no timestamp is found, return
@@ -45,9 +45,9 @@ namespace vidtk
   template< typename T>
   timestamp
   get_timestamp( const vil_image_view<T> src_img,
-		 vil_image_view<T>& dst_img,
-		 int timestamp_rows_from_bottom = 16,
-		 bool strip_timestamp = true );
+                 vil_image_view<T>& dst_img,
+                 int timestamp_rows_from_bottom = 16,
+                 bool strip_timestamp = true );
 
 
   // Add the current time to the image; return the timestamped image
@@ -56,9 +56,9 @@ namespace vidtk
   template< typename T>
   bool
   add_timestamp( const vil_image_view<T> src_img,
-		 vil_image_view<T>& dst_img,
-		 bool add_padding = true,
-		 int timestamp_rows_from_bottom = 16 );
+                 vil_image_view<T>& dst_img,
+                 bool add_padding = true,
+                 int timestamp_rows_from_bottom = 16 );
 
 
   // Add the given timestamp to the image; returned the timestamped image
@@ -67,10 +67,10 @@ namespace vidtk
   template< typename T>
   bool
   add_timestamp( const vil_image_view<T> src_img,
-		 vil_image_view<T>& dst_img,
-		 const timestamp& ts,
-		 bool add_padding = true,
-		 int timestamp_rows_from_bottom = 16 );
+                 vil_image_view<T>& dst_img,
+                 const timestamp& ts,
+                 bool add_padding = true,
+                 int timestamp_rows_from_bottom = 16 );
 }
 
 #endif

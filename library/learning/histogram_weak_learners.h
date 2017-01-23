@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -18,8 +18,8 @@ namespace vidtk
 class histogram_weak_learner : public weak_learner
 {
   public:
-    histogram_weak_learner( unsigned int axis, vcl_string const & name, int desc )
-      : weak_learner(name, desc), axis_(axis)
+    histogram_weak_learner( unsigned int axis, std::string const & _name, int desc )
+      : weak_learner(_name, desc), axis_(axis)
     {}
     histogram_weak_learner( )
     {}
@@ -31,10 +31,10 @@ class histogram_weak_learner : public weak_learner
     virtual void debug(unsigned int i) const;
     virtual weak_learners::learner get_id() const
     { return  weak_learners::histogram_weak_learner; }
-    virtual bool read(vcl_istream & in);
-    virtual bool write(vcl_ostream & out) const;
+    virtual bool read(std::istream & in);
+    virtual bool write(std::ostream & out) const;
   protected:
-    vcl_vector<char> bin_class_;
+    std::vector<char> bin_class_;
 //     vnl_vector<double> histogram_positive_, histogram_negative_;
     double min_, max_;
     unsigned int axis_;
@@ -42,7 +42,7 @@ class histogram_weak_learner : public weak_learner
     {
       if(v<min_) return 0;
       if(v>=max_) return 999;
-      return (unsigned int)((v-min_)/(max_-min_)*1000);
+      return static_cast<unsigned int>((v-min_)/(max_-min_)*1000);
     }
     double smoothed_value(int at, vnl_vector<double> & hist);
 };
@@ -51,8 +51,8 @@ class histogram_weak_learner : public weak_learner
 class histogram_weak_learner_inSTD : public histogram_weak_learner
 {
   public:
-    histogram_weak_learner_inSTD( unsigned int axis, vcl_string const & name, int desc )
-      : histogram_weak_learner( axis, name, desc)
+    histogram_weak_learner_inSTD( unsigned int axis, std::string const & _name, int desc )
+      : histogram_weak_learner( axis, _name, desc)
     {}
     histogram_weak_learner_inSTD( )
     {}

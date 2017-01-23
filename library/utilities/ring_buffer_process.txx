@@ -1,13 +1,18 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2016 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
 #include <utilities/ring_buffer_process.h>
-#include <utilities/log.h>
-#include <utilities/unchecked_return_value.h>
-#include <vcl_cassert.h>
+
+#include <cassert>
+
+#include <logger/logger.h>
+#undef VIDTK_DEFAULT_LOGGER
+#define VIDTK_DEFAULT_LOGGER __vidtk_logger_auto_ring_buffer_process_txx__
+VIDTK_LOGGER("ring_buffer_process_txx");
+
 
 namespace vidtk
 {
@@ -15,8 +20,8 @@ namespace vidtk
 
 template <class Data>
 ring_buffer_process<Data>
-::ring_buffer_process( vcl_string const& name )
-  : process( name, "ring_buffer_process" ),
+::ring_buffer_process( std::string const& _name )
+  : process( _name, "ring_buffer_process" ),
     disable_capacity_error_( false ),
     next_datum_( NULL ),
     disabled_(false)
@@ -65,22 +70,24 @@ ring_buffer_process<Data>
 {
   try
   {
-    unsigned length = blk.get<unsigned>( "length" );
-    if( length == 0 )
+    disabled_ = blk.get<bool>( "disabled" );
+    if(!disabled_)
     {
-      throw unchecked_return_value( "length is 0" );
+      unsigned length = blk.get<unsigned>( "length" );
+      if( length == 0 )
+      {
+        throw config_block_parse_error( "length is 0" );
+      }
+
+      disable_capacity_error_ = blk.get<bool>( "disable_capacity_error" );
+
+      this->buffer_.resize( length );
     }
-
-    blk.get( "disabled", disabled_ );
-
-    blk.get( "disable_capacity_error", disable_capacity_error_ );
-
-    this->buffer_.resize( length );
   }
-  catch( unchecked_return_value& )
+  catch( config_block_parse_error const& e)
   {
-    // reset to old values
-    this->set_params( this->config_ );
+    LOG_ERROR( this->name() << ": set_params failed: "
+               << e.what() );
     return false;
   }
 
@@ -106,7 +113,7 @@ ring_buffer_process<Data>
 {
   return this->initialize();
 }
- 
+
 template <class Data>
 bool
 ring_buffer_process<Data>
@@ -124,7 +131,7 @@ ring_buffer_process<Data>
     return false;
   }
 
-  this->insert( *next_datum_ );
+  ring_buffer<Data>::insert( *next_datum_ );
 
   next_datum_ = NULL;
 
@@ -142,7 +149,7 @@ ring_buffer_process<Data>
 
 
 template <class Data>
-Data const&
+Data
 ring_buffer_process<Data>
 ::datum_nearest_to( unsigned offset ) const
 {
@@ -154,11 +161,11 @@ ring_buffer_process<Data>
   if( ! disable_capacity_error_ &&
       offset >= this->capacity() )
   {
-    log_fatal_error( name() << ": request for offset " << offset
-                     << ", but capacity is " << this->capacity()
-                     << ", so the requirement will never be met. Set "
-                     << "disable_capacity_error to \"true\" to disable "
-                     << "this check\n" );
+    LOG_AND_DIE( name() << ": request for offset " << offset
+                 << ", but capacity is " << this->capacity()
+                 << ", so the requirement will never be met. Set "
+                 << "disable_capacity_error to \"true\" to disable "
+                 << "this check" );
   }
 
   // if beyond the bounds, return the last item.

@@ -1,10 +1,10 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
-#include <vcl_iostream.h>
+#include <iostream>
 #include <testlib/testlib_test.h>
 
 #include <utilities/property_map.h>
@@ -16,7 +16,7 @@ namespace {
 void
 test_get_ref()
 {
-  vcl_cout << "Test get ref\n";
+  std::cout << "Test get ref\n";
 
   vidtk::property_map p;
 
@@ -36,7 +36,7 @@ test_get_ref()
 void
 test_is_set()
 {
-  vcl_cout << "Test is_set\n";
+  std::cout << "Test is_set\n";
 
   vidtk::property_map p;
 
@@ -52,7 +52,7 @@ test_is_set()
 void
 test_get_if_avail()
 {
-  vcl_cout << "Test get_if_avail\n";
+  std::cout << "Test get_if_avail\n";
 
   vidtk::property_map p;
 

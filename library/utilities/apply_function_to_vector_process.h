@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2014 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -7,9 +7,9 @@
 #ifndef vidtk_apply_function_to_vector_process_h_
 #define vidtk_apply_function_to_vector_process_h_
 
-#include <vcl_string.h>
-#include <vcl_functional.h>
-#include <vcl_vector.h>
+#include <string>
+#include <functional>
+#include <vector>
 
 #include <boost/function.hpp>
 
@@ -26,9 +26,9 @@ class apply_function_to_vector_process : public process
 public:
   typedef apply_function_to_vector_process self_type;
 
-  apply_function_to_vector_process( const vcl_string &name);
+  apply_function_to_vector_process( const std::string &name);
 
-  ~apply_function_to_vector_process();
+  virtual ~apply_function_to_vector_process();
 
   virtual config_block params() const;
 
@@ -38,17 +38,17 @@ public:
 
   virtual bool step();
 
-  void set_input( const vcl_vector<IN_T> &in );
-  VIDTK_INPUT_PORT( set_input, const vcl_vector<IN_T>& );
+  void set_input( const std::vector<IN_T> &in );
+  VIDTK_INPUT_PORT( set_input, const std::vector<IN_T>& );
 
-  vcl_vector<OUT_T>& get_output(void);
-  VIDTK_OUTPUT_PORT( vcl_vector<OUT_T>&, get_output );
+  std::vector<OUT_T> get_output(void);
+  VIDTK_OUTPUT_PORT( std::vector<OUT_T>, get_output );
 
 private:
   config_block config_;
 
-  const vcl_vector<IN_T> *in_;
-  vcl_vector<OUT_T> out_;
+  const std::vector<IN_T> *in_;
+  std::vector<OUT_T> out_;
 };
 
 }

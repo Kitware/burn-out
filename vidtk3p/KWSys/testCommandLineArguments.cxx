@@ -24,9 +24,9 @@
 #include <stddef.h> /* size_t */
 #include <string.h> /* strcmp */
 
-void* random_ptr = reinterpret_cast<void*>(0x123);
+static void* random_ptr = reinterpret_cast<void*>(0x123);
 
-int argument(const char* arg, const char* value, void* call_data)
+static int argument(const char* arg, const char* value, void* call_data)
 {
   kwsys_ios::cout << "Got argument: \"" << arg << "\" value: \"" << (value?value:"(null)") << "\"" << kwsys_ios::endl;
   if ( call_data != random_ptr )
@@ -37,7 +37,7 @@ int argument(const char* arg, const char* value, void* call_data)
   return 1;
 }
 
-int unknown_argument(const char* argument, void* call_data)
+static int unknown_argument(const char* argument, void* call_data)
 {
   kwsys_ios::cout << "Got unknown argument: \"" << argument << "\"" << kwsys_ios::endl;
   if ( call_data != random_ptr )
@@ -48,12 +48,12 @@ int unknown_argument(const char* argument, void* call_data)
   return 1;
 }
 
-bool CompareTwoItemsOnList(bool i1, bool i2) { return i1 == i2; }
-bool CompareTwoItemsOnList(int i1, int i2) { return i1 == i2; }
-bool CompareTwoItemsOnList(double i1, double i2) { return i1 == i2; }
-bool CompareTwoItemsOnList(const char* i1,
+static bool CompareTwoItemsOnList(bool i1, bool i2) { return i1 == i2; }
+static bool CompareTwoItemsOnList(int i1, int i2) { return i1 == i2; }
+static bool CompareTwoItemsOnList(double i1, double i2) { return i1 == i2; }
+static bool CompareTwoItemsOnList(const char* i1,
   const char* i2) { return strcmp(i1, i2) == 0; }
-bool CompareTwoItemsOnList(const kwsys_stl::string& i1,
+static bool CompareTwoItemsOnList(const kwsys_stl::string& i1,
   const kwsys_stl::string& i2) { return i1 == i2; }
 
 int testCommandLineArguments(int argc, char* argv[])
@@ -171,7 +171,7 @@ int testCommandLineArguments(int argc, char* argv[])
   CompareTwoLists(strings_argument, valid_strings, 4);
   CompareTwoLists(stl_strings_argument, valid_stl_strings, 4);
 
-  kwsys_ios::cout << "Some STL String variable was set to: " << some_stl_string_variable.c_str() << kwsys_ios::endl;
+  kwsys_ios::cout << "Some STL String variable was set to: " << some_stl_string_variable << kwsys_ios::endl;
   kwsys_ios::cout << "Some bool variable was set to: " << some_bool_variable << kwsys_ios::endl;
   kwsys_ios::cout << "Some bool variable was set to: " << some_bool_variable1 << kwsys_ios::endl;
   kwsys_ios::cout << "bool_arg1 variable was set to: " << bool_arg1 << kwsys_ios::endl;

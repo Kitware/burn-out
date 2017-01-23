@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2011 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2011-2016 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -12,17 +12,21 @@
 
 #include <klt/pyramid.h>
 
-#include <utilities/log.h>
 #include <utilities/timestamp.h>
-#include <utilities/unchecked_return_value.h>
 
 #include <boost/none.hpp>
+
+#include <logger/logger.h>
+#undef VIDTK_DEFAULT_LOGGER
+#define VIDTK_DEFAULT_LOGGER __vidtk_logger_auto_klt_tracking_process_cxx__
+VIDTK_LOGGER("klt_tracking_process_cxx");
+
 
 namespace vidtk
 {
 
-klt_tracking_process::klt_tracking_process(vcl_string const& name)
-  : process(name, "klt_tracking_process")
+klt_tracking_process::klt_tracking_process(std::string const& _name)
+  : process(_name, "klt_tracking_process")
   , impl_(NULL)
   , has_first_frame_(false)
 {
@@ -30,14 +34,13 @@ klt_tracking_process::klt_tracking_process(vcl_string const& name)
 
 klt_tracking_process::~klt_tracking_process()
 {
-  delete impl_;
 }
 
 config_block klt_tracking_process::params() const
 {
   config_block config_ = klt_tracking_process_impl::params();
 
-  config_.add("impl", "klt");
+  config_.add_parameter("impl", "klt", "UNDOCUMENTED");
 
   return config_;
 }
@@ -46,18 +49,15 @@ bool klt_tracking_process::set_params(config_block const& blk)
 {
   try
   {
-    vcl_string impl_type;
-    blk.get("impl", impl_type);
+    std::string impl_type = blk.get<std::string>("impl");
 
     if (impl_type == "klt")
     {
-      impl_ = new klt_tracking_process_impl_klt;
+      impl_.reset(new klt_tracking_process_impl_klt);
     }
     else
     {
-      log_error( this->name() << ": Unknown klt implementation: "<< impl_type <<"\n" );
-
-      return false;
+      throw config_block_parse_error( " Unknown klt implementation: " + impl_type );
     }
 
     if (impl_)
@@ -65,10 +65,9 @@ bool klt_tracking_process::set_params(config_block const& blk)
       impl_->set_params(blk);
     }
   }
-  catch(unchecked_return_value& e)
+  catch(config_block_parse_error& e)
   {
-    log_error( this->name() << ": couldn't set parameters: "<< e.what() <<"\n" );
-
+    LOG_ERROR( this->name() << ": couldn't set parameters: "<< e.what() );
     return false;
   }
 
@@ -77,6 +76,11 @@ bool klt_tracking_process::set_params(config_block const& blk)
 
 bool klt_tracking_process::initialize()
 {
+  if (impl_->disabled_)
+  {
+    return true;
+  }
+
   const bool init = impl_->initialize();
 
   if (!init)
@@ -84,12 +88,17 @@ bool klt_tracking_process::initialize()
     return false;
   }
 
-  return reinitialize();
+  return this->reset();
 }
 
-bool klt_tracking_process::reinitialize()
+bool klt_tracking_process::reset()
 {
   has_first_frame_ = false;
+
+  if (impl_->disabled_)
+  {
+    return true;
+  }
 
   return impl_->reinitialize();
 }
@@ -127,13 +136,6 @@ bool klt_tracking_process::step()
   return true;
 }
 
-bool klt_tracking_process::reset()
-{
-  this->reinitialize();
-
-  return true;
-}
-
 void klt_tracking_process::set_image_pyramid(vil_pyramid_image_view<float> const& img)
 {
   impl_->set_image_pyramid(img);
@@ -154,17 +156,22 @@ void klt_tracking_process::set_timestamp(vidtk::timestamp const& ts)
   impl_->set_timestamp(ts);
 }
 
-vcl_vector<klt_track_ptr> const& klt_tracking_process::active_tracks() const
+void klt_tracking_process::set_homog_predict(vgl_h_matrix_2d<double> const& h)
+{
+  impl_->set_homog_predict(h);
+}
+
+std::vector<klt_track_ptr> klt_tracking_process::active_tracks() const
 {
   return impl_->active_;
 }
 
-vcl_vector<klt_track_ptr> const& klt_tracking_process::terminated_tracks() const
+std::vector<klt_track_ptr> klt_tracking_process::terminated_tracks() const
 {
   return impl_->terminated_;
 }
 
-vcl_vector<klt_track_ptr> const& klt_tracking_process::created_tracks() const
+std::vector<klt_track_ptr> klt_tracking_process::created_tracks() const
 {
   return impl_->created_;
 }

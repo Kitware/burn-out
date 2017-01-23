@@ -1,19 +1,18 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
 #include <utilities/timestamp_image.h>
-#include <utilities/barcode_factory.h>
-#include <utilities/log.h>
 
+#include <utilities/barcode_factory.h>
 #include <vil/vil_image_view.h>
 #include <vil/vil_crop.h>
-
-#include <vcl_cstring.h> // memcpy
-#include <vcl_cassert.h>
+#include <cstring> // memcpy
+#include <cassert>
 #include <vxl_config.h>
+#include <logger/logger.h>
 
 // implementation 0 means unimplemented.
 // implementation 1 uses Unix style time.h and sys/time.h
@@ -25,19 +24,21 @@
 # define IMPLEMENTATION 1
 #endif
 
+VIDTK_LOGGER("timestamp_image_txx");
+
 using vidtk::timestamp;
 
 template< typename T>
 timestamp
 vidtk::get_timestamp( const vil_image_view<T> src_img,
-		      int n_ts_rows )
+                      int n_ts_rows )
 {
   // bail for now on different architectures
   assert( sizeof(double)==8 );
   assert( VXL_LITTLE_ENDIAN );
 
   barcode_factory b;
-  vcl_vector< unsigned char > td;
+  std::vector< unsigned char > td;
 
   // is there any data at all in the image?
 
@@ -49,7 +50,7 @@ vidtk::get_timestamp( const vil_image_view<T> src_img,
 
   if (td.size() == sizeof(double)) {
     double t;
-    vcl_memcpy( &t, &(td[0]), sizeof( t ) );
+    std::memcpy( &t, &(td[0]), sizeof( t ) );
     return timestamp( t );
   }
 
@@ -64,12 +65,12 @@ vidtk::get_timestamp( const vil_image_view<T> src_img,
   timeval tv;
   if (td.size() == sizeof(tv.tv_sec)+sizeof(tv.tv_usec)) {
     int index = 0;
-    vcl_memcpy( &tv.tv_sec, &(td[index]), sizeof(tv.tv_sec) );
+    std::memcpy( &tv.tv_sec, &(td[index]), sizeof(tv.tv_sec) );
     index += sizeof(tv.tv_sec);
-    vcl_memcpy( &tv.tv_usec, &(td[index]), sizeof(tv.tv_usec) );
+    std::memcpy( &tv.tv_usec, &(td[index]), sizeof(tv.tv_usec) );
     static bool emit_msg = true;
     if (emit_msg) {
-      vcl_cerr << "get_timestamp: old-style timestamp detected\n";
+      LOG_INFO( "get_timestamp: old-style timestamp detected");
       emit_msg = false;
     }
 
@@ -87,9 +88,9 @@ vidtk::get_timestamp( const vil_image_view<T> src_img,
 template< typename T>
 timestamp
 vidtk::get_timestamp( const vil_image_view<T> src_img,
-		      vil_image_view<T>& dst_img,
-		      int n_ts_rows,
-		      bool strip_timestamp )
+                      vil_image_view<T>& dst_img,
+                      int n_ts_rows,
+                      bool strip_timestamp )
 {
 
   // get the timestamp, exit without setting dst_img if no timestamp found
@@ -102,8 +103,8 @@ vidtk::get_timestamp( const vil_image_view<T> src_img,
   if (strip_timestamp) {
     if (dst_img.nj() != dst_img.ni() - n_ts_rows) {
       dst_img.set_size( src_img.ni(),
-			src_img.nj()-n_ts_rows,
-			src_img.nplanes() );
+                        src_img.nj()-n_ts_rows,
+                        src_img.nplanes() );
     }
     dst_img = vil_crop( src_img, 0, dst_img.ni(), 0, dst_img.nj() );
   } else {
@@ -119,9 +120,9 @@ vidtk::get_timestamp( const vil_image_view<T> src_img,
 template< typename T>
 bool
 vidtk::add_timestamp( const vil_image_view<T> src_img,
-		      vil_image_view<T>& dst_img,
-		      bool add_padding,
-		      int n_ts_rows )
+                      vil_image_view<T>& dst_img,
+                      bool add_padding,
+                      int n_ts_rows )
 {
 #if IMPLEMENTATION == 1
 
@@ -135,7 +136,7 @@ vidtk::add_timestamp( const vil_image_view<T> src_img,
 
 #else
 
-  log_error( "Not implemented for this platform\n" );
+  LOG_ERROR( "Not implemented for this platform" );
   return false;
 
 #endif
@@ -145,10 +146,10 @@ vidtk::add_timestamp( const vil_image_view<T> src_img,
 template< typename T>
 bool
 vidtk::add_timestamp( const vil_image_view<T> src_img,
-		      vil_image_view<T>& dst_img,
-		      const timestamp& ts,
-		      bool add_padding,
-		      int n_ts_rows )
+                      vil_image_view<T>& dst_img,
+                      const timestamp& ts,
+                      bool add_padding,
+                      int n_ts_rows )
 {
   // bail for now on different architectures
   assert( sizeof(double)==8 );
@@ -159,8 +160,8 @@ vidtk::add_timestamp( const vil_image_view<T> src_img,
   if (add_padding) {
     if (dst_img.nj() != src_img.nj()+n_ts_rows) {
       dst_img.set_size( src_img.ni(),
-			src_img.nj()+n_ts_rows,
-			src_img.nplanes() );
+                        src_img.nj()+n_ts_rows,
+                        src_img.nplanes() );
       dst_img.fill(0);
     }
     vil_image_view<T> dst_crop =
@@ -174,8 +175,8 @@ vidtk::add_timestamp( const vil_image_view<T> src_img,
 
   double t = ts.time();
 
-  vcl_vector<unsigned char> td( sizeof(t) );
-  vcl_memcpy( &(td[0]), &t, sizeof(t) );
+  std::vector<unsigned char> td( sizeof(t) );
+  std::memcpy( &(td[0]), &t, sizeof(t) );
 
   // encode and return
 

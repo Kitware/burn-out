@@ -1,20 +1,17 @@
 /*ckwg +5
- * Copyright 2011 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2011-2016 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
 #include <utilities/base_writer_process.h>
 
-#include <utilities/unchecked_return_value.h>
-#include <utilities/log.h>
-
 namespace vidtk
 {
 
 base_writer_process::
-  base_writer_process(vcl_string const& name,  vcl_string const& type)
-    : base_io_process(name, type)
+  base_writer_process(std::string const& _name,  std::string const& type)
+    : base_io_process(_name, type)
 {
 }
 
@@ -31,7 +28,7 @@ base_writer_process::
  *
  */
 bool base_writer_process::
-initialize(base_io_process::internal_t)
+initialize_internal()
 {
   m_dataGroup.write_header (file_stream());
 
@@ -52,11 +49,11 @@ void base_writer_process::
 
   if ( this->m_appendFile )
   {
-    file_stream().open(this->m_filename.c_str(), vcl_ofstream::out | vcl_ofstream::app);
+    file_stream().open(this->m_filename.c_str(), std::ofstream::out | std::ofstream::app);
   }
   else
   {
-    file_stream().open(this->m_filename.c_str(), vcl_ofstream::out | vcl_ofstream::trunc);
+    file_stream().open(this->m_filename.c_str(), std::ofstream::out | std::ofstream::trunc);
   }
 }
 

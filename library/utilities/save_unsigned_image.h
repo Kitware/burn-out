@@ -1,11 +1,11 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
-#ifndef vidtk_save_unsigned_image_h_ 
-#define vidtk_save_unsigned_image_h_ 
+#ifndef vidtk_save_unsigned_image_h_
+#define vidtk_save_unsigned_image_h_
 
 #include <vil/vil_save.h>
 #include <vil/vil_image_view.h>
@@ -14,7 +14,7 @@ namespace vidtk
 {
 
 void save_unsigned_image( vil_image_view< unsigned > corr_surf,
-                          vcl_string fname )
+                          std::string fname )
 {
   double min = 2e30;
   double max = 0;

@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2011 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2011-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -23,17 +23,19 @@ namespace vidtk
 
 // Names the thread. Returns false if the thread was not renamed (lack of
 // platform support or a failure).
-bool name_thread(vcl_string const& name)
+bool name_thread(std::string const& name)
 {
 #ifdef HAVE_SETPROCTITLE
   setproctitle( "%s", name.c_str() );
 #elif __linux__
-  int ret = prctl(PR_SET_NAME, (unsigned long)name.c_str(), 0, 0, 0);
+  int ret = prctl(PR_SET_NAME, reinterpret_cast<unsigned long>(name.c_str()), 0, 0, 0);
 
   return ( ret < 0 );
 #elif _WIN32
   SetThreadName( -1, const_cast<char*>(name.c_str()) );
 #else
+  (void)name;
+
   return false;
 #endif
 

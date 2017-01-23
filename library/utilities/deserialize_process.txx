@@ -1,26 +1,30 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
 #include <vsl/vsl_binary_io.h>
-#include <utilities/log.h>
+
 #include <utilities/unchecked_return_value.h>
 
 #include "deserialize_process.h"
+
+#include <logger/logger.h>
+VIDTK_LOGGER("deserialize_process_txx");
+
 
 namespace vidtk
 {
 
 template<typename T>
 deserialize_process<T>
-::deserialize_process( const vcl_string &name )
-: process(name, "deserialize_process"), 
+::deserialize_process( const std::string &name )
+: process(name, "deserialize_process"),
   disabled_(false),
   stream_(NULL), bstream_(NULL), data_(NULL)
 {
-  config_.add_parameter("disabled", "false", 
+  config_.add_parameter("disabled", "false",
     "Whether or not the deserialization process is disabled");
 }
 
@@ -37,7 +41,7 @@ deserialize_process<T>
 
 
 template<typename T>
-config_block 
+config_block
 deserialize_process<T>
 ::params() const
 {
@@ -46,7 +50,7 @@ deserialize_process<T>
 
 
 template<typename T>
-bool 
+bool
 deserialize_process<T>
 ::set_params( const config_block &blk)
 {
@@ -54,11 +58,10 @@ deserialize_process<T>
   {
     blk.get("disabled", this->disabled_);
   }
-  catch( unchecked_return_value& )
+  catch( unchecked_return_value& e)
   {
-    // Reset to old values
-    log_error( name() << ": couldn't set parameters\n" );
-    this->set_params( this->config_ );
+    LOG_ERROR( this->name() << ": set_params failed: "
+               << e.what() );
     return false;
   }
 
@@ -67,7 +70,7 @@ deserialize_process<T>
 
 
 template<typename T>
-bool 
+bool
 deserialize_process<T>
 ::initialize()
 {
@@ -76,7 +79,7 @@ deserialize_process<T>
 
 
 template<typename T>
-bool 
+bool
 deserialize_process<T>
 ::step()
 {
@@ -100,7 +103,7 @@ deserialize_process<T>
 
   this->bstream_->is().peek();
   if( !(this->bstream_->is().good()) ) { return false; }
-  
+
 
   if( this->data_ )
   {
@@ -115,9 +118,9 @@ deserialize_process<T>
 
 
 template<typename T>
-void 
+void
 deserialize_process<T>
-::set_stream( vcl_istream &stream )
+::set_stream( std::istream &stream )
 {
   this->stream_ = &stream;
 }
@@ -132,4 +135,3 @@ deserialize_process<T>
 }
 
 }
-

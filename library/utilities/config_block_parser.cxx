@@ -1,27 +1,30 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
 #include <utilities/config_block_parser.h>
-#include <utilities/log.h>
-#include <vcl_cassert.h>
+
+#include <cassert>
 #include <vul/vul_file.h>
 
 #define BOOST_FILESYSTEM_VERSION 3
 
 #include <boost/filesystem/path.hpp>
-#include <boost/tuple/tuple.hpp>
+
+#include <logger/logger.h>
+VIDTK_LOGGER("config_block_parser");
+
 
 namespace {
 
 
 /// Trim whitespace from the left and right of \a str.
 void
-trim_space( vcl_string& str )
+trim_space( std::string& str )
 {
-  typedef vcl_string::size_type size_type;
+  typedef std::string::size_type size_type;
 
   char const* whitespace = " \t\r\n";
 
@@ -51,59 +54,76 @@ namespace vidtk
 
 config_block_parser
 ::config_block_parser()
-  : istr_( NULL )
+  : istr_( NULL ),
+    parse_error_found_( false )
 {
 }
 
+config_block_parser
+::~config_block_parser()
+{
+  if( include_file_stack_.size() != 0 )
+  {
+    LOG_ERROR("FILE STACK IS NOT EMPTY: this would mean some files where not properly parsed");
+    for( unsigned int i = 0; i < include_file_stack_.size(); ++i )
+    {
+      file_stack_item_t fh = include_file_stack_[i];
+      if (fh.get<2>())
+      {
+        delete fh.get<0>();
+      }
+    }
+  }
+}
 
-// Stack element to keep track of active files. The second element
-// indicates if we own the file or it was passed in. If we own it,
-// then we must delete it.
-typedef boost::tuple <vcl_istream *, vcl_string, bool> file_stack_item_t;
-vcl_vector < file_stack_item_t > include_file_stack;
 
-
+// ------------------------------------------------------------------
+// Sets the initial file name for parsing a config.
 checked_bool
 config_block_parser
-::set_filename( vcl_string const& filename )
+::set_filename( std::string const& filename )
 {
   filename_ = filename;
   line_number_ = 0;
   block_names_.clear();
 
 
-  vcl_ifstream * fstr = new vcl_ifstream (filename_.c_str());
+  std::ifstream * fstr = new std::ifstream (filename_.c_str());
   if( ! *fstr )
   {
-    log_error( "config_block_parser: failed to open \""
-               << filename_ << "\" for reading\n" );
+    LOG_ERROR( "config_block_parser: failed to open \""
+               << filename_ << "\" for reading" );
+    delete fstr;
     return false;
   }
   else
   {
     istr_ = fstr;
     // indicate we own the file - will be deleted at EOF
-    include_file_stack.push_back (file_stack_item_t(istr_, vul_file::dirname(filename_), true) );
+    // The stack top is our file context
+    include_file_stack_.push_back (file_stack_item_t(istr_, vul_file::dirname(filename_), true, 0, filename) );
     return true;
   }
 }
 
 
+// ------------------------------------------------------------------
+// Set input stream to parse
 void
 config_block_parser
-::set_input_stream( vcl_istream& istr )
+::set_input_stream( std::istream& istr )
 {
   istr_ = &istr;
   // indicate we do not own the stream.
-  include_file_stack.push_back (file_stack_item_t(istr_, vul_file::get_cwd(), false) );
-
+  include_file_stack_.push_back (file_stack_item_t(istr_, vul_file::get_cwd(), false, 0, "??") );
 }
 
 
 // ----------------------------------------------------------------
 /** Parse config file.
  *
- *
+ * set_filename() or set_input_stream() must have been previously
+ * called to set up the initial file stream.
  */
 checked_bool
 config_block_parser
@@ -112,7 +132,7 @@ config_block_parser
 
   assert( istr_ != NULL );
 
-  config_file_dir_ = include_file_stack.back().get<1>();
+  config_file_dir_ = include_file_stack_.back().get<1>();
 
   blk_ = &in_blk;
 
@@ -120,30 +140,33 @@ config_block_parser
 
   try
   {
-    vcl_string line;
+    std::string line;
     while( 1 )
     {
-      if ( ! vcl_getline( *istr_, line ) ) // end of file
+      if ( ! std::getline( *istr_, line ) ) // end of file
       {
         // Pop current file off of stack.
-        file_stack_item_t fh = include_file_stack.back();
+        file_stack_item_t fh = include_file_stack_.back();
         if (fh.get<2>())
         {
           delete fh.get<0>();
         }
 
-        include_file_stack.pop_back();
+        // Get rid of old file entry
+        include_file_stack_.pop_back();
 
         // If there are no more elements on the stack, then this is
         // the end of the top level file - we are done.
-        if (include_file_stack.empty() )
+        if (include_file_stack_.empty() )
           {
             break;
           }
 
         // Resume reading where we left off on the previous file.
-        istr_ = include_file_stack.back().get<0>();
-        config_file_dir_ = include_file_stack.back().get<1>();
+        istr_ = include_file_stack_.back().get<0>();
+        config_file_dir_ = include_file_stack_.back().get<1>();
+        line_number_ = include_file_stack_.back().get<3>();
+        filename_ = include_file_stack_.back().get<4>();
         continue; // restart while loop
       }
 
@@ -154,31 +177,31 @@ config_block_parser
       trim_space( line );
 
       // Skip blank lines and comment lines.
-      vcl_string::size_type first_char = line.find_first_not_of( " \t" );
+      std::string::size_type first_char = line.find_first_not_of( " \t" );
       if( first_char == line.npos || line[first_char] == '#' )
       {
         continue;
       }
 
-      vcl_string::size_type equal_pos = line.find_first_of( "=" );
+      std::string::size_type equal_pos = line.find_first_of( "=" );
 
       // The line has an equal sign, assume it is a key-value pair.
       // Otherwise, see if it can parsed as a control string.
       //
       if( equal_pos != line.npos )
       {
-        vcl_string key = line.substr( 0, equal_pos );
-        vcl_string value = line.substr( equal_pos+1 );
+        std::string key = line.substr( 0, equal_pos );
+        std::string value = line.substr( equal_pos+1 );
 
         trim_space( key );
-        vcl_string::size_type space_pos = key.find_first_of( " \t" );
+        std::string::size_type space_pos = key.find_first_of( " \t" );
         if( space_pos == key.npos )
         {
           this->set( key, value );
         }
         else
         {
-          vcl_string type = key.substr( 0, space_pos );
+          std::string type = key.substr( 0, space_pos );
           key = key.substr( space_pos );
           trim_space( key );
           if( type == "relativepath" )
@@ -188,15 +211,17 @@ config_block_parser
           }
           else
           {
-            log_error( "unknown type \"" << type << "\" when processing key \""
-                       << key << "\"\n" );
-            throw vcl_runtime_error( "failed to parse config file" );
+            LOG_ERROR( "unknown type \"" << type << "\" when processing key \""
+                       << key << "\"" );
+
+            this->parse_error_found_ = true;
+            continue;
           }
         }
       }
       else // handle control words
       {
-        vcl_string control_word =  read_word( "control word" );
+        std::string control_word =  read_word( "control word" );
         if( control_word[0] == '#' )
         {
           // skip comments.
@@ -210,77 +235,94 @@ config_block_parser
         {
           if( block_names_.empty() )
           {
-            log_error( "endblock without a \"block\"\n" );
-            throw vcl_runtime_error( "failed to parse config file" );
+            LOG_ERROR( "endblock without a \"block\"" );
+
+            this->parse_error_found_ = true;
+            continue;
           }
           block_names_.pop_back();
           update_block_name();
         }
         else if (control_word == "include")
         {
-          vcl_string filename = read_rest_of_line( "include file name");
+          std::string filename = read_rest_of_line( "include file name");
           if (!boost::filesystem::path( filename ).is_absolute() )
           {
             filename = config_file_dir_ + "/" + filename;
           }
-          vcl_ifstream * inc_file = new vcl_ifstream( filename.c_str() );
+          std::ifstream * inc_file = new std::ifstream( filename.c_str() );
           if ( ! *inc_file )
           {
             // error opening file - die a horrible death
-            log_error ("Could not open file " << filename
+            LOG_ERROR ("Could not open file " << filename
                        << " specified in include control at line "
-                       << line_number_ << vcl_endl );
-            return false;
+                       << line_number_ );
+            delete inc_file;
+
+            this->parse_error_found_ = true;
+            continue;
           }
 
-          vcl_string dirpath = vul_file::dirname( filename );
+          std::string dirpath = vul_file::dirname( filename );
+
+          // Save current line number on our stack entry
+          include_file_stack_.back().get<3>() = line_number_;
 
           // push file onto stack, we own the file
-          include_file_stack.push_back ( file_stack_item_t (inc_file, dirpath, true) );
+          include_file_stack_.push_back ( file_stack_item_t (inc_file, dirpath, true, 0, filename ));
           istr_ = inc_file; // set to use new include file
           config_file_dir_ = dirpath;
+          line_number_ = 0;
+          filename_ = filename;
         }
         else
         {
-          log_error( "unknown control word \"" << control_word << "\"\n" );
-          throw vcl_runtime_error( "failed to parse config file" );
+          LOG_ERROR( "Unknown control word \"" << control_word << "\"" );
+
+          this->parse_error_found_ = true;
+          continue;
         }
       }
     } // end while
 
     if( ! block_names_.empty() )
     {
-      log_error( "block " << block_names_.back() << " not ended\n" );
+      LOG_ERROR( "block " << block_names_.back() << " not ended" );
       return false;
     }
   }
-  catch( vcl_runtime_error& err )
+  catch( std::runtime_error& err )
   {
-    log_error( err.what() << vcl_endl );
+    LOG_ERROR( err.what() );
     return checked_bool( err.what() );
   }
 
-  // If we get here, then all was well.
+  // If we get here, report error status.
+  if ( this->parse_error_found_ )
+  {
+    return checked_bool( "Error parsing config" );
+  }
   return true;
 }
 
 
-vcl_string
+// ------------------------------------------------------------------
+std::string
 config_block_parser
 ::read_rest_of_line( char const* msg )
 {
-  vcl_string line;
+  std::string line;
 
-  vcl_getline( line_str_, line );
+  std::getline( line_str_, line );
 
   line.erase( 0, line.find_first_not_of( " \t" ) );
 
   if( line.empty() )
   {
-    log_error( "Error parsing file " << filename_
+    LOG_ERROR( "Error parsing file " << filename_
                << ":" << line_number_ << ": couldn't read "
-               << (msg ? msg : "rest of line") << "\n" );
-    throw vcl_runtime_error( "failed to parse config file" );
+               << (msg ? msg : "rest of line") );
+    throw std::runtime_error( "failed to parse config file" );
   }
 
   return line;
@@ -296,24 +338,25 @@ config_block_parser
  *
  * @return The next work in the input line.
  */
-vcl_string
+std::string
 config_block_parser
 ::read_word( char const* msg )
 {
-  vcl_string word;
+  std::string word;
 
   if( ! ( line_str_ >> word ) )
   {
-    log_error( "Error parsing file " << filename_
+    LOG_ERROR( "Error parsing file " << filename_
                << ":" << line_number_ << ": couldn't read "
-               << (msg ? msg : "next word") << "\n" );
-    throw vcl_runtime_error( "failed to parse config file" );
+               << (msg ? msg : "next word") );
+    throw std::runtime_error( "failed to parse config file" );
   }
 
   return word;
 }
 
 
+// ------------------------------------------------------------------
 void
 config_block_parser
 ::update_block_name()
@@ -327,16 +370,27 @@ config_block_parser
 }
 
 
+// ------------------------------------------------------------------
 void
 config_block_parser
-::set( vcl_string key, vcl_string value )
+::set( std::string key, std::string value )
 {
   assert( blk_ != NULL );
 
   trim_space( key );
   trim_space( value );
-  blk_->set( block_name_+key, value );
-}
+  checked_bool status = blk_->set( block_name_ + key, value );
+  // test for set failure and report source file name and line number
+  if (! status )
+  {
+    std::stringstream msg;
 
+    LOG_ERROR( "Error parsing file "<< filename_
+               <<  ":" << line_number_ << " - "
+               << status.message() );
+
+    this->parse_error_found_ = true;
+  }
+}
 
 } // end namespace vidtk

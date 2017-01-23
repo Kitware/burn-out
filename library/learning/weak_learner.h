@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2013-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -17,12 +17,13 @@ namespace weak_learners
 {
   enum learner
   {
-    stump_weak_learner,
+    stump_weak_learner = 0,
     histogram_weak_learner,
     weak_learner_gausian,
     weak_learner_single_gausian,
     weak_learner_single_hw_gausian,
-    linear_weak_learner
+    linear_weak_learner,
+    tree_weak_learner
   };
 };
 
@@ -33,8 +34,8 @@ typedef vbl_smart_ptr<weak_learner> weak_learner_sptr;
 class weak_learner : public learner_base
 {
   public:
-    weak_learner( vcl_string const & name, int desc )
-      : name_(name), descriptor_(desc) { }
+    weak_learner( std::string const & _name, int desc )
+      : name_(_name), descriptor_(desc) { }
     weak_learner( ) {}
     virtual weak_learner_sptr clone() const = 0;
     /// Creates and trains a new instance of the weak learner
@@ -46,31 +47,31 @@ class weak_learner : public learner_base
     {
       return ((this->classify(data) == 1)?1:0);
     }
-    vcl_string const & name() const{ return name_; }
+    std::string const & name() const{ return name_; }
     ///Useful in debuging.  Please note that it is assumed if the string constains
     ///useful information that it will have the endline in it.
-    virtual vcl_string gplot_command() const
+    virtual std::string gplot_command() const
     {
-      vcl_string r("");
+      std::string r("");
       return r;
     }
     ///Function useful for debuging
     virtual void debug(unsigned int /*i*/) const
     {
     }
-    virtual bool read(vcl_istream & in)
+    virtual bool read(std::istream & in)
     {
       in >> name_;
       in >> descriptor_;
       return true;
     }
-    virtual bool write(vcl_ostream & out) const
+    virtual bool write(std::ostream & out) const
     {
-      out << name_ << " " << descriptor_ << vcl_endl;
+      out << name_ << " " << descriptor_ << std::endl;
       return true;
     }
     virtual weak_learners::learner get_id() const = 0;
-    virtual vcl_string unique_id() const
+    virtual std::string unique_id() const
     {
       return "";
     }
@@ -78,7 +79,7 @@ class weak_learner : public learner_base
     { return 0.; }
   protected:
     ///Name of the learner
-    vcl_string name_;
+    std::string name_;
     ///Id number of the descritor this learner uses
     int descriptor_;
 };

@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2011 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2011-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -10,8 +10,8 @@
 
 #include <utilities/base_reader_writer.h>
 
-#include <vcl_cstdio.h>
-#include <vcl_iomanip.h>
+#include <cstdio>
+#include <iomanip>
 
 
 
@@ -40,12 +40,12 @@ public:
  *
  *
  */
-  virtual void write_object(vcl_ostream& str)
+  virtual void write_object(std::ostream& str)
   {
     str << this->entry_tag_string() << " "
-        << vcl_setprecision(20)
+        << std::setprecision(20)
         << *datum_addr()
-        << vcl_endl;
+        << std::endl;
   }
 
 
@@ -54,10 +54,10 @@ public:
  *
  * This header line indicates the data values in the line.
  */
-  virtual void write_header(vcl_ostream & str)
+  virtual void write_header(std::ostream & str)
   {
     str << "# " << this->entry_tag_string()
-        << "  gsd-value" << vcl_endl;
+        << "  gsd-value" << std::endl;
   }
 
 
@@ -74,11 +74,11 @@ public:
  *
  * @retval 0 - object read correctly
  * @retval 1 - object not recognized
- * @throws vcl_runtime_error - if format error.
+ * @throws std::runtime_error - if format error.
  */
- virtual int read_object(vcl_istream& str)
+ virtual int read_object(std::istream& str)
   {
-    vcl_string input_tag;
+    std::string input_tag;
     double local_gsd;
 
     set_valid_state (false);

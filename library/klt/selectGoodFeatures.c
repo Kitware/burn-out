@@ -19,7 +19,7 @@
 #include "klt_util.h"
 #include "pyramid.h"
 
-int KLT_verbose = 1;
+extern int KLT_verbose;
 
 typedef enum {SELECTING_ALL, REPLACING_SOME} selectionMode;
 

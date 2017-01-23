@@ -1,15 +1,40 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010,2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
-
 #include <logger/logger_factory_mini_logger.h>
 
 #include <logger/vidtk_logger_mini_logger.h>
+#include <logger/vidtk_logger_mini_logger_export.h>
+
+#include <typeinfo>
+
+#if defined LOADABLE_MODULE
+// ------------------------------------------------------------------
+/*
+ * Shared object bootstrap function
+ */
+extern "C"
+{
+  VIDTK_LOGGER_MINI_LOGGER_EXPORT
+  void* class_bootstrap()
+  {
+    vidtk::logger_ns::logger_factory_mini_logger* ptr =  new vidtk::logger_ns::logger_factory_mini_logger;
+    return ptr;
+  }
+
+  VIDTK_LOGGER_MINI_LOGGER_EXPORT
+  const char* class_bootstrap_type()
+  {
+    return typeid( vidtk::logger_ns::logger_factory ).name();
+  }
+}
+#endif
 
 
+// ------------------------------------------------------------------
 namespace vidtk {
 namespace logger_ns {
 
@@ -29,7 +54,7 @@ logger_factory_mini_logger
 
 
 int logger_factory_mini_logger
-::initialize(vcl_string const& /*config_file*/)
+::initialize(std::string const& /*config_file*/)
 {
 
   return (0);
@@ -44,9 +69,8 @@ int logger_factory_mini_logger
 vidtk_logger_sptr logger_factory_mini_logger
 ::get_logger( const char * const name )
 {
-  return new vidtk_logger_mini_logger(name);
+  return new vidtk_logger_mini_logger( this, name);
 }
-
 
 } // end namespace
 } // end namespace

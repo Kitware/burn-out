@@ -1,0 +1,35 @@
+/*ckwg +5
+ * Copyright 2012 by Kitware, Inc. All Rights Reserved. Please refer to
+ * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
+ * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
+ */
+
+#ifndef VIDTK_VERSION_H
+#define VIDTK_VERSION_H
+
+#define VIDTK_VERSION_MAJOR  @vidtk_version_major@
+#define VIDTK_VERSION_MINOR  @vidtk_version_minor@
+#define VIDTK_VERSION_PATCH  @vidtk_version_patch@
+#define VIDTK_VERSION        "@vidtk_version@"
+
+#define VIDTK_VERSION_CHECK(major, minor, patch) \
+     (((major) <  VIDTK_VERSION_MAJOR) \
+  || (((major) == VIDTK_VERSION_MAJOR) \
+   && ((minor) <  VIDTK_VERSION_MINOR)) \
+  || (((major) == VIDTK_VERSION_MAJOR) \
+   && ((minor) == VIDTK_VERSION_MINOR) \
+   && ((patch) <= VIDTK_VERSION_PATCH)))
+
+#cmakedefine VIDTK_BUILT_FROM_GIT
+#define VIDTK_GIT_HASH       "@vidtk_git_hash@"
+#define VIDTK_GIT_HASH_SHORT "@vidtk_git_hash_short@"
+#define VIDTK_GIT_DIRTY      "@vidtk_git_dirty@"
+#define VIDTK_GIT_VERSION    VIDTK_GIT_HASH VIDTK_GIT_DIRTY
+
+#ifdef VIDTK_BUILT_FROM_GIT
+#define VIDTK_VERSION_FULL   VIDTK_VERSION ".git" VIDTK_GIT_VERSION
+#else
+#define VIDTK_VERSION_FULL   VIDTK_VERSION
+#endif
+
+#endif // VIDTK_VERSION_H

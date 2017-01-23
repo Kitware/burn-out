@@ -1,18 +1,18 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
 #include "training_feature_set.h"
 
-#include <vcl_algorithm.h>
+#include <algorithm>
 
-#include <vcl_string.h>
-#include <vcl_algorithm.h>
-#include <vcl_sstream.h>
-#include <vcl_iomanip.h>
-#include <vcl_fstream.h>
+#include <string>
+#include <algorithm>
+#include <sstream>
+#include <iomanip>
+#include <fstream>
 
 #include <vnl/vnl_math.h>
 
@@ -47,7 +47,7 @@ training_feature_set
   {
     for(unsigned int c = 0; c < this->mapping_[d].size(); ++c)
     {
-      vcl_vector<training_set_value_pointer_struct> t;
+      std::vector<training_set_value_pointer_struct> t;
       t.reserve(this->mapping_[d][c].size());
       for(unsigned int i = 0; i < this->data_.size(); ++i)
       {
@@ -55,7 +55,7 @@ training_feature_set
                                                         this->data_[this->mapping_[d][c][i]],
                                                         i ) );
       }
-      vcl_sort( t.begin(), t.end() );
+      std::sort( t.begin(), t.end() );
       for(unsigned int i = 0; i < this->data_.size(); ++i)
       {
         this->mapping_[d][c][i] = t[i].loc;
@@ -86,14 +86,14 @@ training_feature_set
 }
 
 training_feature_set
-::training_feature_set(vcl_vector< learner_training_data_sptr > samples)
+::training_feature_set(std::vector< learner_training_data_sptr > samples)
   : data_(samples)
 {
   assert(samples.size());
   assert(samples[0]);
   unsigned int numberOfDesc = samples[0]->number_of_descriptors();
   this->mapping_.resize(numberOfDesc);
-  vcl_vector<unsigned int> t(this->data_.size());
+  std::vector<unsigned int> t(this->data_.size());
   for(unsigned int i = 0; i < this->data_.size(); ++i)
   {
     t[i] = i;

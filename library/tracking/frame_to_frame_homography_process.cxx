@@ -1,13 +1,12 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2016 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
 #include "frame_to_frame_homography_process.h"
-#include <utilities/unchecked_return_value.h>
-#include <vcl_cassert.h>
-#include <vcl_fstream.h>
+#include <cassert>
+#include <fstream>
 
 #include <vgl/algo/vgl_h_matrix_2d.h>
 #include <vgl/algo/vgl_h_matrix_2d_optimize_lmq.h>
@@ -22,26 +21,31 @@
 #include <rrel/rrel_mlesac_obj.h>
 #include <rrel/rrel_muset_obj.h>
 
+#include <logger/logger.h>
+
+VIDTK_LOGGER("frame_to_frame_homography_process");
+
+
 namespace vidtk
 {
 
 
 frame_to_frame_homography_process
-::frame_to_frame_homography_process( vcl_string const& name )
-  : process( name, "frame_to_frame_homography_process" ),
+::frame_to_frame_homography_process( std::string const& _name )
+  : process( _name, "frame_to_frame_homography_process" ),
     refine_geometric_error_( false ),
     delta_( 1 ),
     disabled_( false ),
     homog_is_valid_( false )
 {
-  config_.add( "refine_with_geometric_error", "false" );
+  config_.add_parameter( "refine_with_geometric_error", "false", "UNDOCUMENTED" );
 
   // If delta is 1, the homography is from frame to frame.  If delta
   // is 2, the homography is from 2 frames ago to the current frame.
   // And so on.  It doesn't make sense for delta_ to be zero.
-  config_.add( "delta", "1" );
+  config_.add_parameter( "delta", "1", "UNDOCUMENTED" );
 
-  config_.add( "disabled", "false" );
+  config_.add_parameter( "disabled", "false", "UNDOCUMENTED" );
 
   forw_H_.set_identity();
   back_H_.set_identity();
@@ -68,14 +72,14 @@ frame_to_frame_homography_process
 {
   try
   {
-    blk.get( "refine_with_geometric_error", refine_geometric_error_ );
-    blk.get( "delta", delta_ );
-    blk.get( "disabled", disabled_ ); 
+    refine_geometric_error_ = blk.get<bool>( "refine_with_geometric_error" );
+    delta_ = blk.get<unsigned>( "delta" );
+    disabled_ = blk.get<bool>( "disabled" );
  }
-  catch( unchecked_return_value& )
+  catch( config_block_parse_error const& e)
   {
-    // reset to old values
-    this->set_params( this->config_ );
+    LOG_ERROR( this->name() << ": set_params failed: "
+               << e.what() );
     return false;
   }
 
@@ -104,8 +108,8 @@ frame_to_frame_homography_process
 
   homog_is_valid_ = false;
 
-  vcl_vector< vnl_vector<double> > from_pts;
-  vcl_vector< vnl_vector<double> > to_pts;
+  std::vector< vnl_vector<double> > from_pts;
+  std::vector< vnl_vector<double> > to_pts;
 
   vnl_vector<double> p(3);
   p[2] = 1.0;
@@ -115,7 +119,7 @@ frame_to_frame_homography_process
   {
     if( it->second.good_ )
     {
-      vcl_vector< track_state_sptr > const& hist = it->first->history();
+      std::vector< track_state_sptr > const& hist = it->first->history();
       unsigned const N = hist.size();
       if( N > delta_ )
       {
@@ -147,7 +151,7 @@ frame_to_frame_homography_process
 
   if ( ! result )
   {
-    vcl_cout << name() << ": MSAC failed!!\n";
+    LOG_ERROR( name() << ": MSAC failed!!");
     forw_H_.set_identity();
   }
   else
@@ -175,9 +179,9 @@ frame_to_frame_homography_process
   {
   static unsigned cnt = -1;
   ++cnt;
-  vcl_ostringstream fn;
+  std::ostringstream fn;
   fn << "homog" << cnt << ".txt";
-  vcl_ofstream debugout( fn.str().c_str() );
+  std::ofstream debugout( fn.str().c_str() );
 
   state_map_type::const_iterator end = tracks_.end();
   for( state_map_type::const_iterator it = tracks_.begin();
@@ -218,10 +222,10 @@ frame_to_frame_homography_process
 
 void
 frame_to_frame_homography_process
-::set_new_tracks( vcl_vector< track_sptr > const& trks )
+::set_new_tracks( std::vector< track_sptr > const& trks )
 {
-  vcl_vector< track_sptr >::const_iterator it = trks.begin();
-  vcl_vector< track_sptr >::const_iterator end = trks.end();
+  std::vector< track_sptr >::const_iterator it = trks.begin();
+  std::vector< track_sptr >::const_iterator end = trks.end();
   for( ; it != end; ++it )
   {
     extra_info_type& ei = tracks_[ *it ];
@@ -233,10 +237,10 @@ frame_to_frame_homography_process
 
 void
 frame_to_frame_homography_process
-::set_terminated_tracks( vcl_vector< track_sptr > const& trks )
+::set_terminated_tracks( std::vector< track_sptr > const& trks )
 {
-  vcl_vector< track_sptr >::const_iterator it = trks.begin();
-  vcl_vector< track_sptr >::const_iterator end = trks.end();
+  std::vector< track_sptr >::const_iterator it = trks.begin();
+  std::vector< track_sptr >::const_iterator end = trks.end();
   for( ; it != end; ++it )
   {
     tracks_.erase( *it );
@@ -252,7 +256,7 @@ frame_to_frame_homography_process
 }
 
 
-vgl_h_matrix_2d<double> const&
+vgl_h_matrix_2d<double>
 frame_to_frame_homography_process
 ::forward_homography() const
 {
@@ -260,7 +264,7 @@ frame_to_frame_homography_process
 }
 
 
-vgl_h_matrix_2d<double> const&
+vgl_h_matrix_2d<double>
 frame_to_frame_homography_process
 ::backward_homography() const
 {
@@ -276,8 +280,8 @@ frame_to_frame_homography_process
   // outliers have been eliminated.  Refine the homography based on
   // geometric error.
 
-  vcl_vector<vgl_homg_point_2d<double> > from_pts;
-  vcl_vector<vgl_homg_point_2d<double> > to_pts;
+  std::vector<vgl_homg_point_2d<double> > from_pts;
+  std::vector<vgl_homg_point_2d<double> > to_pts;
 
   state_map_type::const_iterator end = tracks_.end();
   for( state_map_type::const_iterator it = tracks_.begin();

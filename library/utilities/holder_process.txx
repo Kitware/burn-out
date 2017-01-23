@@ -1,12 +1,16 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2016 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
 #include <utilities/holder_process.h>
-#include <utilities/unchecked_return_value.h>
-#include <vcl_cassert.h>
+#include <cassert>
+#include <logger/logger.h>
+
+#undef VIDTK_DEFAULT_LOGGER
+#define VIDTK_DEFAULT_LOGGER __vidtk_logger_auto_holder_process_txx__
+VIDTK_LOGGER("holder_process_txx");
 
 namespace vidtk
 {
@@ -14,8 +18,8 @@ namespace vidtk
 
 template <class TData>
 holder_process<TData>
-::holder_process( vcl_string const& name )
-  : process( name, "holder_process" ),
+::holder_process( std::string const& _name )
+  : process( _name, "holder_process" ),
     get_new_value_( false ),
     default_value_(),
     input_datum_( NULL ),
@@ -66,10 +70,10 @@ holder_process<TData>
 
     default_value_ = blk.get<TData> ("default_value");
   }
-  catch( unchecked_return_value& )
+  catch( config_block_parse_error const& e)
   {
-    // reset to old values
-    this->set_params( this->config_ );
+    LOG_ERROR( this->name() << ": set_params failed: "
+               << e.what() );
     return false;
   }
 
@@ -101,7 +105,7 @@ holder_process<TData>
       get_new_value_ = false;
     }
   }
-  
+
   output_datum_ = default_value_;
 
   input_datum_ = NULL;
@@ -119,9 +123,9 @@ holder_process<TData>
 }
 
 template <class TData>
-TData &
+TData
 holder_process<TData>
-::get_output_datum() 
+::get_output_datum()
 {
   return output_datum_;
 }
@@ -129,7 +133,7 @@ holder_process<TData>
 template <class TData>
 void
 holder_process<TData>
-::clear() 
+::clear()
 {
   output_datum_ = TData();
 }

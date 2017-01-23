@@ -1,3 +1,2 @@
-# VIBRANT
-
-This is VIBRANT (Video and Image-Based Retrieval and Analysis Toolkit) a toolkit for motion based detection and tracking in video.  It is a component of the [KWIVER](http://www.kwiver.org) system.
+# burn-out
+A computer vision toolkit designed to generate pixel-level object classifications, and additionally perform other types of video filtering. Originally created to remove on-screen displays from video. 

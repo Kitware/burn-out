@@ -1,15 +1,20 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2016 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
 #include "homography_reader_process.h"
-#include <utilities/unchecked_return_value.h>
-#include <utilities/log.h>
-#include <vcl_cassert.h>
-#include <vcl_fstream.h>
+
+#include <cassert>
+#include <fstream>
 #include <vnl/vnl_double_3x3.h>
+
+#include <logger/logger.h>
+#undef VIDTK_DEFAULT_LOGGER
+#define VIDTK_DEFAULT_LOGGER __vidtk_logger_auto_homography_reader_process_cxx__
+VIDTK_LOGGER("homography_reader_process_cxx");
+
 
 
 namespace vidtk
@@ -17,16 +22,16 @@ namespace vidtk
 
 
 homography_reader_process
-::homography_reader_process( vcl_string const& name )
-  : process( name, "homography_reader_process" ),
-    version_( 1 )
+::homography_reader_process( std::string const& _name )
+  : process( _name, "homography_reader_process" ),
+    version_( 2 )
 {
-  config_.add_parameter( "textfile", 
+  config_.add_parameter( "textfile",
     "",
     "The file from which to read the homography." );
 
-  config_.add_parameter( "version", 
-    "1",
+  config_.add_parameter( "version",
+    "2",
     "1 or 2. 1 reads in a file containing a 3x3 homography for each frame. "
     "2 reads in a file containing a frame number, a timestamp, and a 3x3 "
     "homography for each frame" );
@@ -53,13 +58,17 @@ homography_reader_process
 {
   try
   {
-    blk.get( "textfile", input_filename_ );
-    blk.get( "version", version_ );
+    input_filename_ = blk.get<std::string>( "textfile" );
+    version_ = blk.get<unsigned>( "version" );
+    if(version_ != 1 && version_ != 2)
+    {
+      throw config_block_parse_error("The version number is not 1 or 2");
+    }
   }
-  catch( unchecked_return_value& e )
+  catch( config_block_parse_error const& e )
   {
-    log_error( this->name() << ": set_params failed: "
-               << e.what() << "\n" );
+    LOG_ERROR( this->name() << ": set_params failed: "
+               << e.what() );
     return false;
   }
 
@@ -77,8 +86,8 @@ homography_reader_process
     homog_str_.open( input_filename_.c_str() );
     if( ! homog_str_ )
     {
-      log_error( "Couldn't open \"" << input_filename_
-                 << "\" for reading\n" );
+      LOG_ERROR( "Couldn't open \"" << input_filename_
+                 << "\" for reading" );
       return false;
     }
   }
@@ -117,13 +126,19 @@ homography_reader_process
     {
       if( ! (homog_str_ >> M(i,j)) )
       {
-        log_error( "Failed to read homography\n" );
+        LOG_ERROR( "Failed to read homography" );
         return false;
       }
     }
   }
 
   img_to_world_H_.set( M );
+
+  if( M.is_identity( 1.0e-5 ) )
+  {
+    reference_ = time_;
+  }
+
   world_to_img_H_ = img_to_world_H_.get_inverse();
 
   return true;
@@ -131,17 +146,16 @@ homography_reader_process
 
 /// Input port(s)
 
-void 
+void
 homography_reader_process
-::set_timestamp( timestamp const & /*ts*/ )
+::set_timestamp( timestamp const & ts )
 {
-  // Currently don't need to do anything. This port is merely used to add 
-  // execution dependency in an async pipeline.
+  time_ = ts;
 }
 
 /// Output port(s)
 
-vgl_h_matrix_2d<double> const&
+vgl_h_matrix_2d<double>
 homography_reader_process
 ::image_to_world_homography() const
 {
@@ -149,7 +163,7 @@ homography_reader_process
 }
 
 
-vgl_h_matrix_2d<double> const&
+vgl_h_matrix_2d<double>
 homography_reader_process
 ::world_to_image_homography() const
 {
@@ -171,7 +185,7 @@ homography_reader_process
 ::world_to_image_vidtk_homography_plane() const
 {
   plane_to_image_homography wtih;
-  wtih.set_transform(img_to_world_H_);
+  wtih.set_transform(world_to_img_H_);
   wtih.set_dest_reference(time_);
   return wtih;
 }
@@ -183,6 +197,7 @@ homography_reader_process
   image_to_image_homography itwh;
   itwh.set_transform(img_to_world_H_);
   itwh.set_source_reference(time_);
+  itwh.set_dest_reference(reference_);
   return itwh;
 }
 
@@ -191,7 +206,8 @@ homography_reader_process
 ::world_to_image_vidtk_homography_image() const
 {
   image_to_image_homography wtih;
-  wtih.set_transform(img_to_world_H_);
+  wtih.set_transform(world_to_img_H_);
+  wtih.set_source_reference(reference_);
   wtih.set_dest_reference(time_);
   return wtih;
 }

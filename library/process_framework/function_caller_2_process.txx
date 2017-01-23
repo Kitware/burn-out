@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -12,8 +12,8 @@ namespace vidtk
 
 template <class Arg1Type, class Arg2Type>
 function_caller_2_process<Arg1Type,Arg2Type>
-::function_caller_2_process( vcl_string const& name )
-  : process( name, "function_caller_2_process" )
+::function_caller_2_process( std::string const& _name )
+  : process( _name, "function_caller_2_process" )
 {
 }
 

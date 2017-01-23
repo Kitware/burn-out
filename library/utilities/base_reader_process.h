@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2011 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2011-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -26,12 +26,12 @@ class base_reader_process
 {
 public:
 
-  base_reader_process( vcl_string const& name, vcl_string const& type );
+  base_reader_process( std::string const& name, std::string const& type );
   virtual ~base_reader_process();
 
 
 protected:
-  virtual bool initialize(base_io_process::internal_t);
+  virtual bool initialize_internal();
   virtual int error_hook( int status);
 
 private:

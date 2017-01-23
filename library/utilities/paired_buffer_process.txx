@@ -1,20 +1,26 @@
 /*ckwg +5
- * Copyright 2011 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2011-2014 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
 #include "paired_buffer_process.h"
 
-#include <utilities/log.h>
+
+
+#include <logger/logger.h>
+#undef VIDTK_DEFAULT_LOGGER
+#define VIDTK_DEFAULT_LOGGER __vidtk_logger_auto_paired_buffer_process_txx__
+VIDTK_LOGGER("paired_buffer_process_txx");
+
 
 namespace vidtk
 {
 
 template< class keyT, class datumT >
 paired_buffer_process< keyT, datumT >
-::paired_buffer_process( vcl_string const& name )
-  : process( name, "paired_buffer_process" ),
+::paired_buffer_process( std::string const& _name )
+  : process( _name, "paired_buffer_process" ),
     next_key_( NULL ),
     next_datum_( NULL )
 {
@@ -42,7 +48,7 @@ paired_buffer_process< keyT, datumT >
   }
   catch( config_block_parse_error & e )
   {
-    log_error( name() << ": failed to set parameters, "<< e.what() <<"\n" );
+    LOG_ERROR( name() << ": failed to set parameters, "<< e.what() );
     return false;
   }
 
@@ -54,8 +60,15 @@ bool
 paired_buffer_process< keyT, datumT >
 ::initialize()
 {
-  paired_buff_.initialize();
-  return true;
+  return paired_buff_.initialize();
+}
+
+template< class keyT, class datumT >
+bool
+paired_buffer_process< keyT, datumT >
+::reset()
+{
+  return paired_buff_.reset();
 }
 
 template< class keyT, class datumT >
@@ -68,7 +81,7 @@ paired_buffer_process< keyT, datumT >
     return false;
   }
 
-  typename paired_buffer_process< keyT, datumT >::pair_t 
+  typename paired_buffer_process< keyT, datumT >::pair_t
     next_pair( *next_key_, *next_datum_ );
 
   paired_buff_.buffer_.push_back( next_pair );
@@ -97,7 +110,7 @@ paired_buffer_process< keyT, datumT >
 }
 
 template< class keyT, class datumT >
-typename paired_buffer_process< keyT, datumT >::paired_buff_t const&
+typename paired_buffer_process< keyT, datumT >::paired_buff_t
 paired_buffer_process< keyT, datumT >
 ::buffer() const
 {
@@ -105,9 +118,9 @@ paired_buffer_process< keyT, datumT >
 }
 
 template< class keyT, class datumT >
-void 
+void
 paired_buffer_process< keyT, datumT >
-::set_updated_items( vcl_vector< typename paired_buffer_process< keyT, datumT >::pair_t > const& uis )
+::set_updated_items( std::vector< typename paired_buffer_process< keyT, datumT >::pair_t > const& /*uis*/ )
 {
   // TODO: *Replace* buffer_ with entries in uis.
 }

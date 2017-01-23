@@ -1,10 +1,10 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
-#include <vcl_iostream.h>
+#include <iostream>
 #include <testlib/testlib_test.h>
 #include <vil/vil_image_view.h>
 #include <vil/vil_load.h>
@@ -16,7 +16,7 @@
 namespace {
 
 
-vcl_string g_data_dir;
+std::string g_data_dir;
 
 
 inline double sqr( double x ) { return x*x; }
@@ -24,7 +24,7 @@ inline double sqr( double x ) { return x*x; }
 void
 test_expected_translation()
 {
-  vcl_cout << "Test image translation\n";
+  std::cout << "Test image translation\n";
 
   vil_image_view<vxl_byte> img0 = vil_load( (g_data_dir+"/ocean_city.png").c_str() );
   vil_image_view<vxl_byte> img1 = vil_load( (g_data_dir+"/ocean_city_trans+16+6.png").c_str() );
@@ -46,13 +46,13 @@ test_expected_translation()
 
   KLTSelectGoodFeatures(tc, img0.top_left_ptr(), img0.ni(), img0.nj(), fl);
 
-  vcl_vector<float> xs, ys;
+  std::vector<float> xs, ys;
   unsigned found_count = 0;
   for (i = 0 ; i < fl->nFeatures ; i++)
   {
     xs.push_back( fl->feature[i]->x );
     ys.push_back( fl->feature[i]->y );
-    if( fl->feature[i] >= 0 )
+    if( fl->feature[i] != NULL )
     {
       ++found_count;
     }
@@ -62,7 +62,7 @@ test_expected_translation()
   //KLTWriteFeatureList(fl, "feat1.txt", "%3d");
 
   KLTTrackFeatures(tc, img0.top_left_ptr(), img1.top_left_ptr(),
-                   img0.ni(), img0.nj(), fl);
+                   img0.ni(), img0.nj(), NULL, fl);
 
   bool good = true;
   unsigned tracked_count = 0;
@@ -73,21 +73,24 @@ test_expected_translation()
     if( fl->feature[i]->val >= 0 )
     {
       ++tracked_count;
-      double e = vcl_sqrt( sqr(x-xs[i])+sqr(y-ys[i]) );
+      double e = std::sqrt( sqr(x-xs[i])+sqr(y-ys[i]) );
       if( e > 1 )
       {
-        vcl_cout << "Pt " << i << ": ("<<xs[i]<<","<<ys[i]<<")->("
-                 << x << "," << y << "); err = " << e << vcl_endl;
+        std::cout << "Pt " << i << ": ("<<xs[i]<<","<<ys[i]<<")->("
+                 << x << "," << y << "); err = " << e << std::endl;
         good = false;
       }
     }
   }
 
-  vcl_cout << "Found count = " << found_count << "\n";
-  vcl_cout << "Tracked count = " << tracked_count << "\n";
+  std::cout << "Found count = " << found_count << "\n";
+  std::cout << "Tracked count = " << tracked_count << "\n";
 
   TEST( "Tracked features were tracked well", good, true );
   TEST( "Enough features tracked", tracked_count > 0.6 * found_count, true );
+
+  KLTFreeTrackingContext(tc);
+  KLTFreeFeatureList(fl);
 
   //KLTWriteFeatureListToPPM(fl, img2, ncols, nrows, "feat2.ppm");
   //KLTWriteFeatureList(fl, "feat2.fl", NULL);      /* binary file */

@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2011 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2011-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -8,8 +8,8 @@
 #define vidtk_paired_buffer_h_
 
 #include <boost/circular_buffer.hpp>
-#include <vcl_utility.h>
-#include <vcl_vector.h>
+#include <utility>
+#include <vector>
 
 // For convenience
 #include <utilities/timestamp.h>
@@ -55,6 +55,8 @@ public:
 
   bool initialize();
 
+  bool reset();
+
   void set_length( unsigned len );
 
   datumT const& find_datum( keyT const& key,
@@ -69,7 +71,7 @@ public:
                    typename buffer_t::const_iterator & iter,
                    bool is_sorted = false ) const;
 
-  bool replace_items( vcl_vector< key_datum_t > const& );
+  bool replace_items( std::vector< key_datum_t > const& );
 
   buffer_t buffer_;
 

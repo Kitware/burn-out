@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2011 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2011-2014 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -10,16 +10,17 @@
 // The process-level logic of the across-a-glitch stitching algorithm.
 //
 // Takes the following as input:
-// (1) image (required)
-// (2) metadata vector
-// (3) timestamp vector
-// (4) timestamp
-
-// (5) shot break flags
+// (1) source image (pass through only)
+// (2) metadata vector (pass through only)
+// (3) timestamp vector (pass through only)
+// (4) timestamp (required)
+// (5) shot break flags (required)
 // (6) src2ref_homog (required)
-// (7) unprocessed image mask
+// (7) metadata burn-in image mask (optional)
+// (8) klt_tracks (pass through only)
+// (9) rescaled source image (required)
 //
-// Collectively, 1-7 make up a packet.
+// Collectively, 1-9 make up a packet.
 //
 // The shot break flags (5) is considered to be either GOOD (frame_usable)
 // or BAD (shot_end or frame_not_processed.)
@@ -77,7 +78,7 @@
 #include <utilities/homography.h>
 #include <kwklt/klt_track.h>
 
-#include <tracking/shot_break_flags.h>
+#include <tracking_data/shot_break_flags.h>
 
 
 namespace vidtk
@@ -85,6 +86,20 @@ namespace vidtk
 
 template< typename PixType > class shot_stitching_process_impl;
 
+// ----------------------------------------------------------------
+/** Shot Stitching Process.
+ *
+ * This process attempts to stitch two shots together to make one bit
+ * shot.
+ *
+ * Note about masking - The mask input port is optional and is not
+ * connected when masking is disabled in the super-process. In this
+ * case, a default constructed vil_image_view() is creaed in the input
+ * pads. The homography process (which applies the mask) checks to see
+ * if the mask is smaller than the image and does the right thing. We
+ * have avoided configuring the masking option by relying on this
+ * system level behaviour.
+ */
 template< typename PixType >
 class shot_stitching_process
   : public process
@@ -93,7 +108,7 @@ public:
   typedef shot_stitching_process self_type;
   friend class shot_stitching_process_impl<PixType>;  // so impl can see pads_type and push_output
 
-  explicit shot_stitching_process( const vcl_string& name );
+  explicit shot_stitching_process( const std::string& name );
   virtual ~shot_stitching_process();
 
   virtual config_block params() const;
@@ -109,15 +124,14 @@ private:
 // Define list of ports
 //  name, type
 #define PORT_LIST                                                       \
-  PORT_DEF(image,                   vil_image_view<PixType>)            \
+  PORT_DEF(source_image,            vil_image_view< PixType >)          \
+  PORT_DEF(rescaled_image,          vil_image_view< PixType >)          \
   PORT_DEF(src2ref_h,               image_to_image_homography)          \
   PORT_DEF(timestamp,               vidtk::timestamp)                   \
-  PORT_DEF(timestamp_vector,        vidtk::timestamp::vector_t )        \
   PORT_DEF(shot_break_flags,        vidtk::shot_break_flags)            \
   PORT_DEF(metadata_vector,         video_metadata::vector_t )          \
-  PORT_DEF(klt_tracks,              vcl_vector< klt_track_ptr > )       \
+  PORT_DEF(klt_tracks,              std::vector< klt_track_ptr > )       \
   PORT_DEF(metadata_mask,           vil_image_view< bool > )
-
 
   // because this process runs asynchronously, we need to recognize
   // when our inputs fail.  This is facilitated by folding all the
@@ -140,8 +154,9 @@ private:
 //
 #define INPUT_COUNT (SET_LAST-1) // number of inputs currently configured
 
-#define REQUIRED_INPUTS ( (1 << SET_shot_break_flags) | (1 << SET_timestamp) | (1 << SET_src2ref_h) )
-#define OPTIONAL_INPUT_COUNT (1) // inputs that are simetimes not connected.
+#define REQUIRED_INPUTS ( (1<< SET_rescaled_image) | (1 << SET_shot_break_flags) |\
+                          (1 << SET_timestamp) | (1 << SET_src2ref_h) )
+#define OPTIONAL_INPUT_COUNT (4) // inputs that are simetimes not connected.
 
 // ----------------------------------------------------------------
 /* Input data set
@@ -161,7 +176,7 @@ private:
     unsigned input_status;
     int input_count;
 
-  pads_type() : input_status( SET_NONE ), input_count(0) {}
+    pads_type() : input_status( SET_NONE ), input_count(0) {}
     void reset_status() { input_status = SET_NONE; }
 
     /** Is this a valid set of inputs. If the inputs are not valid,
@@ -180,10 +195,10 @@ public:
 
 // Define input and output ports and access methods
 #define PORT_DEF(N,T)                                                   \
-  void input_ ## N( const T& i ) { pads.N ## _pad_ = i; pads.input_status |= ( 1 << SET_ ## N); pads.input_count++; } \
-  VIDTK_OPTIONAL_INPUT_PORT( input_ ## N, const T& );                   \
-  const T& output_ ## N() const { return pads.N ## _pad_; }              \
-  VIDTK_OUTPUT_PORT( const T&, output_ ## N );
+  void set_input_ ## N( const T& i ) { pads.N ## _pad_ = i; pads.input_status |= ( 1 << SET_ ## N); pads.input_count++; } \
+  VIDTK_OPTIONAL_INPUT_PORT( set_input_ ## N, const T& );                   \
+  T output_ ## N() const { return pads.N ## _pad_; }              \
+  VIDTK_OUTPUT_PORT( T, output_ ## N );
 
     PORT_LIST   // expand over all ports
 

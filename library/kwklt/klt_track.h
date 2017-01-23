@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2011 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2011-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -10,13 +10,18 @@
 #include <boost/optional.hpp>
 #include <boost/shared_ptr.hpp>
 
+#include <tracking_data/track.h>
+#include <tracking_data/track_sptr.h>
+
 namespace vidtk
 {
 
 class klt_track;
 
-typedef boost::shared_ptr<const klt_track> klt_track_ptr;
+typedef boost::shared_ptr<klt_track> klt_track_ptr;
 
+
+/// A track object specialized for capturing klt tracks over time
 class klt_track
 {
   public:
@@ -53,6 +58,9 @@ class klt_track
      * Returns a NULL pointer if is_end is true.
      */
     klt_track_ptr tail() const;
+
+    void trim_track( int count );
+
   private:
     klt_track();
     klt_track(point_t pt, klt_track_ptr tail);
@@ -63,6 +71,12 @@ class klt_track
     klt_track_ptr tail_;
     const int size_;
 };
+
+
+// Converts a klt track into a standard vidtk track, this function will
+// become deprecated if kw_klt is converted to use a light-weight common
+// track object in tracking_data.
+vidtk::track_sptr convert_from_klt_track(klt_track_ptr trk);
 
 }
 

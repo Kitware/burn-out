@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ext:trackProduct xmlns:xs="http://www.w3.org/2001/XMLSchema"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:ext="urn:mil.darpa.i2o.insight:erm.icd"
+                  xmlns:fn="http://www.w3.org/2005/xpath-functions"
+                  xmlns="urn:mil.darpa.i2o.insight:erm.icd.stanag4676">

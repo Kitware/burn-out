@@ -121,11 +121,11 @@ class ConfigBlock :
       if blockMatch != None :
         blockName = blockMatch.group(1)
         if blockName in self.Blocks :
-          print "Warning: ignoring block definition for '" + blockName + "'"
+          print("Warning: ignoring block definition for '%s'" % blockName)
           continue
         block = ConfigBlock(blockName)
         if not block.ParseStream(s) :
-          print "Error: failure parsing block", blockName
+          print("Error: failure parsing block: %s" % blockName)
           return False
         self.Blocks[blockName] = block
         continue
@@ -142,7 +142,7 @@ class ConfigBlock :
         self.AddParameter(paramName, paramValue)
         continue
 
-      print "Warning: unable to parse '" + line + "'"
+      print("Warning: unable to parse '%s'" % line)
     return True
     
 

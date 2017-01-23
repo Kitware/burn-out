@@ -1,11 +1,11 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
 #include <utilities/barcode_factory.h>
-#include <vcl_limits.h>
+#include <limits>
 
 namespace
 {
@@ -26,10 +26,10 @@ struct barcode_properties
   T middle_val;         // midpoint of image's pixel range
 
   barcode_properties( int b, int s, int w, int h,
-		    double on_frac, double off_frac ):
+                      double on_frac, double off_frac ):
     bpc(b), block_w(w), block_h(h), start_row(s)
   {
-    T maxval = vcl_numeric_limits<T>::max();
+    T maxval = std::numeric_limits<T>::max();
     on_val = static_cast<T>( on_frac * maxval );
     off_val = static_cast<T>( off_frac * maxval );
     middle_val = static_cast<T>( 0.5 * maxval );
@@ -40,10 +40,10 @@ struct barcode_properties
   // a vector of alternating (i,j) coordinates for all the pixels of the
   // bit block for that bit index.
 
-  vcl_vector<unsigned>
+  std::vector<unsigned>
   get_bit_coordinates( int bit_index ) const
   {
-    vcl_vector<unsigned> ij_vals;
+    std::vector<unsigned> ij_vals;
     // how many columns in are we?
     int c_base = bit_index / this->bpc;
     // how many rows down are we?
@@ -54,8 +54,8 @@ struct barcode_properties
     // compute (i,j) pairs
     for (int i=0; i<this->block_w; i++) {
       for (int j=0; j<this->block_h; j++) {
-	ij_vals.push_back( i_base + i );
-	ij_vals.push_back( j_base + j );
+        ij_vals.push_back( i_base + i );
+        ij_vals.push_back( j_base + j );
       }
     }
 
@@ -70,12 +70,12 @@ struct barcode_properties
 template< typename T >
 void
 write_bit( vil_image_view<T> img,
-	   const barcode_properties<T>& props,
-	   int bit_index,
-	   int bit )
+           const barcode_properties<T>& props,
+           int bit_index,
+           int bit )
 {
   T v = (bit) ? props.on_val : props.off_val;
-  vcl_vector<unsigned> coords =
+  std::vector<unsigned> coords =
     props.get_bit_coordinates( bit_index );
 
   for (unsigned pix=0; pix<coords.size(); pix += 2) {
@@ -94,11 +94,11 @@ write_bit( vil_image_view<T> img,
 template< typename T >
 bool
 read_bit( const vil_image_view<T> img,
-	  const barcode_properties<T>& props,
-	  int bit_index )
+          const barcode_properties<T>& props,
+          int bit_index )
 {
   double sum_vals = 0.0;
-  vcl_vector<unsigned> coords =
+  std::vector<unsigned> coords =
     props.get_bit_coordinates( bit_index );
 
   int c=0;
@@ -120,9 +120,9 @@ read_bit( const vil_image_view<T> img,
 template< typename T >
 void
 write_byte( vil_image_view<T> img,
-	    const barcode_properties<T>& props,
-	    int& bit_index,
-	    unsigned char data )
+            const barcode_properties<T>& props,
+            int& bit_index,
+            unsigned char data )
 {
 
   int bit_mask = 1;
@@ -141,8 +141,8 @@ write_byte( vil_image_view<T> img,
 template< typename T >
 unsigned char
 read_byte( const vil_image_view<T> img,
-	   const barcode_properties<T>& props,
-	   int& bit_index )
+           const barcode_properties<T>& props,
+           int& bit_index )
 {
   unsigned char byte = 0;
   int bit_mask = 1;
@@ -163,8 +163,8 @@ read_byte( const vil_image_view<T> img,
 template< typename T >
 void
 insert_check_pattern( const vil_image_view<T> img,
-		      const barcode_properties<T> props,
-		      int ncols )
+                      const barcode_properties<T> props,
+                      int ncols )
 {
   int bit_index = 0;
   for (int c=0; c<ncols; c++) {
@@ -184,8 +184,8 @@ insert_check_pattern( const vil_image_view<T> img,
 template< typename T >
 bool
 verify_check_pattern( const vil_image_view<T> img,
-		      const barcode_properties<T> props,
-		      int col )
+                      const barcode_properties<T> props,
+                      int col )
 {
   int bit_index = (col * props.bpc);
   bool bit_val = (col % 2 == 0);
@@ -204,10 +204,10 @@ verify_check_pattern( const vil_image_view<T> img,
 template< typename T >
 bool
 vidtk::barcode_factory::
-encode( const vcl_vector<unsigned char>& data,
-	vil_image_view<T> img,
-	int start_row,
-	int end_row ) const
+encode( const std::vector<unsigned char>& data,
+        vil_image_view<T> img,
+        int start_row,
+        int end_row ) const
 {
   if (start_row == -1) start_row = 0;
   if (end_row == -1) end_row = img.nj()-1;
@@ -216,11 +216,11 @@ encode( const vcl_vector<unsigned char>& data,
   int bpc = rows / this->block_h_;    // blocks per column
 
   barcode_properties<T> props( bpc, start_row, this->block_w_, this->block_h_,
-			       this->on_val_, this->off_val_ );
+                               this->on_val_, this->off_val_ );
 
   // will we fit in the image?
 
-  unsigned int nbits = (data.size()+1) * 8;    // +1 for data size byte
+  size_t nbits = (data.size()+1) * 8;    // +1 for data size byte
   unsigned int columns_needed = nbits / bpc;
   columns_needed += this->check_columns_;
   if ((columns_needed * this->block_w_) > img.ni()) return false;
@@ -250,9 +250,9 @@ template< typename T>
 bool
 vidtk::barcode_factory::
 decode( const vil_image_view<T> img,
-	vcl_vector<unsigned char>& data,
-	int start_row,
-	int end_row ) const
+        std::vector<unsigned char>& data,
+        int start_row,
+        int end_row ) const
 {
   if (start_row == -1) start_row = 0;
   if (end_row == -1) end_row = img.nj()-1;
@@ -261,7 +261,7 @@ decode( const vil_image_view<T> img,
   int bpc = rows / this->block_h_;    // blocks per column
 
   barcode_properties<T> props( bpc, start_row, this->block_w_, this->block_h_,
-			       this->on_val_, this->off_val_ );
+                               this->on_val_, this->off_val_ );
 
   // verify the columns of the check pattern
 

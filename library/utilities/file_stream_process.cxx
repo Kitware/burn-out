@@ -1,28 +1,34 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2016 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
-#include <vcl_cstring.h>
-#include <utilities/unchecked_return_value.h>
+#include <cstring>
+#include <logger/logger.h>
+
+#include <iostream>
 
 #include "file_stream_process.h"
+
+#undef VIDTK_DEFAULT_LOGGER
+#define VIDTK_DEFAULT_LOGGER __vidtk_logger_auto_file_stream_process_cxx__
+VIDTK_LOGGER("file_stream_process_cxx");
 
 namespace vidtk
 {
 
 file_stream_process
-::file_stream_process( const vcl_string &name, bool in, bool out )
-: process(name, "file_stream_process"), 
+::file_stream_process( const std::string &_name, bool in, bool out )
+: process(_name, "file_stream_process"),
   disabled_(false), mode_append_(false), mode_input_(in), mode_output_(out)
 {
   config_.add_parameter("filename", "Name of the file to open");
-  config_.add_parameter("append", "false", 
+  config_.add_parameter("append", "false",
                         "Whether or not to append an existing file");
-  config_.add_parameter("binary", "true", 
+  config_.add_parameter("binary", "true",
                         "Whether or not ito use binary I/O instead of ASCII");
-  config_.add_parameter("disabled", "false", 
+  config_.add_parameter("disabled", "false",
                         "Enable or disable the file process");
 }
 
@@ -34,7 +40,7 @@ file_stream_process
 }
 
 
-config_block 
+config_block
 file_stream_process
 ::params() const
 {
@@ -42,34 +48,34 @@ file_stream_process
 }
 
 
-bool 
+bool
 file_stream_process
 ::set_params( const config_block &blk)
 {
   try
   {
-    blk.get("disabled", this->disabled_);
+    disabled_ = blk.get<bool>("disabled");
     if(!this->disabled_)
     {
-      blk.get("filename", this->filename_);
-      blk.get("append", this->mode_append_);
-      blk.get("binary", this->mode_binary_);
+      this->filename_ = blk.get<std::string>("filename");
+      this->mode_append_ = blk.get<bool>("append");
+      this->mode_binary_ = blk.get<bool>("binary");
     }
   }
-  catch( unchecked_return_value& )
+  catch( config_block_parse_error const& e)
   {
-    // Reset to old values
-    this->set_params( this->config_ );
+    LOG_ERROR( this->name() << ": set_params failed: "
+               << e.what() );
     return false;
   }
-  
+
   this->config_.update( blk );
   return true;
-} 
+}
 
 
 bool
-file_stream_process 
+file_stream_process
 ::initialize()
 {
   return true;
@@ -84,28 +90,28 @@ file_stream_process
   {
     return true;
   }
-  
-  vcl_ios_openmode mode;
-  vcl_memset(&mode, 0, sizeof(vcl_ios_openmode));
+
+  std::ios::openmode mode;
+  std::memset(&mode, 0, sizeof(std::ios::openmode));
 
   if( this->mode_binary_ )
   {
-    mode |= vcl_ios_binary;
+    mode |= std::ios::binary;
   }
-  if( this->mode_input_ ) 
+  if( this->mode_input_ )
   {
-    mode |= vcl_ios_in;
+    mode |= std::ios::in;
   }
   if( this->mode_output_ )
   {
-    mode |= vcl_ios_out;
-    if( this->mode_append_ ) 
+    mode |= std::ios::out;
+    if( this->mode_append_ )
     {
-      mode |= vcl_ios_app;
+      mode |= std::ios::app;
     }
     else
-    { 
-      mode |= vcl_ios_trunc;
+    {
+      mode |= std::ios::trunc;
     }
   }
 
@@ -118,7 +124,7 @@ file_stream_process
 }
 
 
-vcl_iostream& 
+std::iostream&
 file_stream_process
 ::stream(void)
 {
@@ -126,5 +132,3 @@ file_stream_process
 }
 
 }  // namespace vidtk
-
-

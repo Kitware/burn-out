@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2011 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2011-2013 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -16,41 +16,43 @@
    2.  A class that inherits from external_base_process,
        Ex: class my_super_cool_process : public external_base_process
    3.  An instance file in the shared library containing only the following
-
+\code
    #include <path/to/my_super_cool_process.h>
 
    #define EXTERNAL_PROCESS_TYPE super_cool::my_super_cool_process
    #define EXTERNAL_PROCESS_NAME "proc1" // Name of the process node
    #include <process_framework/external_process_interface_impl.h>
-
+\endcode
    This will create all the appropriate bindings on both sides to be able
    dynamically load and bind to your process.
 */
 
 #include <vil/vil_image_view.h>
-#include <utilities/log.h>
+#include <logger/logger.h>
 #include <process_framework/external_process_interface.h>
 
-#ifndef EXTERNAL_PROCESS_TYPE 
+#ifndef EXTERNAL_PROCESS_TYPE
 #error "EXTERNAL_PROCESS_TYPE must be defined"
 #endif
 #ifndef EXTERNAL_PROCESS_NAME
 #error "EXTERNAL_PROCESS_NAME must be defined"
 #endif
 
-#define TO_STR_( X ) TO_STR( X )
-#define TO_STR( X ) #X
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+
+
+VIDTK_LOGGER (EXTERNAL_PROCESS_NAME "_logger");
+
 // Constructor returning a pointer to the tracker object
 EXTERNAL_PROCESS_API
-vidtk::external_base_process* 
+vidtk::external_base_process*
 construct(void)
 {
-  return new (EXTERNAL_PROCESS_TYPE)( TO_STR(EXTERNAL_PROCESS_NAME) );
+  return new (EXTERNAL_PROCESS_TYPE)( EXTERNAL_PROCESS_NAME );
 }
 
 
@@ -61,9 +63,7 @@ set_params(vidtk::external_base_process* obj, const vidtk::config_block &blk)
 {
   if( !obj )
   {
-    log_error( TO_STR(EXTERNAL_PROCESS_NAME)
-               << "_wrapper: Invalid pointer passed for object"
-               << vcl_endl );
+    LOG_ERROR( EXTERNAL_PROCESS_NAME << "_wrapper: Invalid pointer passed for object");
     return false;
   }
 
@@ -74,16 +74,14 @@ set_params(vidtk::external_base_process* obj, const vidtk::config_block &blk)
 }
 
 
-// Initialize 
-EXTERNAL_PROCESS_API 
-bool 
+// Initialize
+EXTERNAL_PROCESS_API
+bool
 initialize(vidtk::external_base_process* obj)
 {
   if( !obj )
   {
-    log_error( TO_STR(EXTERNAL_PROCESS_NAME)
-               << "_wrapper: Invalid pointer passed for object"
-               << vcl_endl );
+    LOG_ERROR( EXTERNAL_PROCESS_NAME << "_wrapper: Invalid pointer passed for object");
     return false;
   }
 
@@ -98,9 +96,7 @@ set_inputs(vidtk::external_base_process* obj, const vidtk::external_base_process
 {
   if( !obj )
   {
-    log_error( TO_STR(EXTERNAL_PROCESS_NAME)
-               << "_wrapper: Invalid pointer passed for object"
-               << vcl_endl );
+    LOG_ERROR( EXTERNAL_PROCESS_NAME << "_wrapper: Invalid pointer passed for object");
     return false;
   }
 
@@ -116,9 +112,7 @@ step(vidtk::external_base_process* obj)
 {
   if( !obj )
   {
-    log_error( TO_STR(EXTERNAL_PROCESS_NAME)
-               << "_wrapper: Invalid pointer passed for object"
-               << vcl_endl );
+    LOG_ERROR( EXTERNAL_PROCESS_NAME << "_wrapper: Invalid pointer passed for object");
     return false;
   }
 
@@ -133,9 +127,7 @@ get_outputs(vidtk::external_base_process* obj, vidtk::external_base_process::dat
 {
   if( !obj )
   {
-    log_error( TO_STR(EXTERNAL_PROCESS_NAME)
-               << "_wrapper: Invalid pointer passed for object"
-               << vcl_endl );
+    LOG_ERROR( EXTERNAL_PROCESS_NAME << "_wrapper: Invalid pointer passed for object");
     return false;
   }
 
@@ -146,14 +138,12 @@ get_outputs(vidtk::external_base_process* obj, vidtk::external_base_process::dat
 
 // Destroy the tracker object
 EXTERNAL_PROCESS_API
-void 
+void
 destruct(vidtk::external_base_process *obj)
 {
   if( !obj )
   {
-    log_error( TO_STR(EXTERNAL_PROCESS_NAME)
-               << "_wrapper: Invalid pointer passed for object"
-              << vcl_endl );
+    LOG_ERROR( EXTERNAL_PROCESS_NAME << "_wrapper: Invalid pointer passed for object");
     return;
   }
 

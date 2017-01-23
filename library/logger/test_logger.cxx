@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2012,2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -7,7 +7,7 @@
 
 
 #include <logger/logger.h>
-#include <vcl_iostream.h>
+#include <iostream>
 #include <logger/vidtk_mini_logger_formatter.h>
 #include <logger/vidtk_logger_mini_logger.h>
 
@@ -15,9 +15,6 @@
 VIDTK_LOGGER("main.logger");
 
 using namespace vidtk;
-
-void legacy_test();
-
 
 
 // ----------------------------------------------------------------
@@ -39,12 +36,12 @@ public:
   vidtk_mini_logger_formatter_test() { }
   virtual ~vidtk_mini_logger_formatter_test() { }
 
-  virtual void format_message(vcl_ostream& str);
+  virtual void format_message(std::ostream& str);
 
 }; // end class vidtk_mini_logger_formatter_test
 
 void vidtk_mini_logger_formatter_test::
-format_message(vcl_ostream& str)
+format_message(std::ostream& str)
 {
   // Format this message on the stream
   str << get_level() << " "
@@ -77,7 +74,7 @@ format_message(vcl_ostream& str)
 
   str << "- "
       << get_message()
-      << vcl_endl;
+      << std::endl;
 }
 
 
@@ -88,15 +85,15 @@ int main(int argc, char *argv[])
 
   vidtk::logger_manager::instance()->initialize(argc, argv);
 
-  vcl_cout << "Logger using factory: "
-           << vidtk::logger_manager::instance()->get_factory_name()
-           << vcl_endl;
+  std::cout << "Logger using factory: "
+            << vidtk::logger_manager::instance()->get_factory_name()
+            << std::endl;
 
   // TEST macros
-  vcl_cout << "\nTesting log macros. The log lines will print twice when using log4cxx unless\n"
+  std::cout << "\nTesting log macros. The log lines will print twice when using log4cxx unless\n"
            << "there is a log4cxx.properties file specifying an appender.\n"
            << "That just the way it is!\n"
-           << vcl_endl;
+           << std::endl;
 
   LOG_ERROR("MACRO first message" << " from here");
 
@@ -114,20 +111,20 @@ int main(int argc, char *argv[])
   bool rc = set_mini_logger_formatter (log2, new vidtk_mini_logger_formatter_test() );
   if (rc)
   {
-    vcl_cout << "Successfully set new formatter\n";
+    std::cout << "Successfully set new formatter\n";
   }
   else
   {
-    vcl_cout << "Cound not set new formatter - wrong logger type\n";
+    std::cout << "Cound not set new formatter - wrong logger type\n";
   }
 
-  vcl_cout << "\nUsing another logger.\n";
+  std::cout << "\nUsing another logger.\n";
 
   log2->set_level(vidtk_logger::LEVEL_WARN);
 
-  vcl_cout << "\nCurrent log level "
+  std::cout << "\nCurrent log level "
            << log2->get_level_string (log2->get_level())
-           << vcl_endl << vcl_endl;
+           << std::endl << std::endl;
 
   // TEST direct call
   log2->log_fatal("direct logger call");
@@ -139,9 +136,9 @@ int main(int argc, char *argv[])
 
   log2->set_level(vidtk_logger::LEVEL_TRACE);
 
-  vcl_cout << "\nCurrent log level "
+  std::cout << "\nCurrent log level "
            << log2->get_level_string (log2->get_level())
-           << vcl_endl << vcl_endl;
+           << std::endl << std::endl;
 
   // TEST direct call
   log2->log_fatal("direct logger call");
@@ -151,20 +148,5 @@ int main(int argc, char *argv[])
   log2->log_debug("direct logger call");
   log2->log_trace("direct logger call");
 
-  legacy_test();
-
   return 0;
-}
-
-
-#include <utilities/log.h>
-
-// TEST legacy macros
-void legacy_test()
-{
-  vcl_cout << "\nTesting legacy macros\n\n";
-  log_error("legacy message error\n");
-  log_warning("legacy message warning\n");
-  log_info("legacy message info\n");
-  log_debug("legacy message debug\n");
 }

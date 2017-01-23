@@ -1,8 +1,8 @@
-find_package(Doxygen)
+find_package(Doxygen 1.8.1)
 
 add_custom_target(doxygen)
 
-macro (create_doxygen outputdir inputdir name)
+function (create_doxygen outputdir inputdir name)
     foreach (tag ${ARGN})
         string(REGEX REPLACE "=.*" "" tagfile ${tag})
         set(tagdeps
@@ -17,13 +17,14 @@ macro (create_doxygen outputdir inputdir name)
     add_custom_command(
         OUTPUT  ${outputdir}/${name}/Doxyfile
         COMMAND ${CMAKE_COMMAND}
-                -D "DOXYGEN_TEMPLATE=${CMAKE_SOURCE_DIR}/Doxyfile.in"
+                -D "DOXY_INCLUDE_ROOT=${vidtk_all_SOURCE_DIR}"
+                -D "DOXYGEN_TEMPLATE=${vidtk_all_SOURCE_DIR}/Doxyfile.in"
                 -D "DOXY_PROJECT_SOURCE_DIR=${inputdir}"
                 -D "DOXY_DOCUMENTATION_OUTPUT_PATH=${outputdir}"
                 -D "DOXY_PROJECT_NAME=${name}"
                 -D "DOXY_TAG_FILES=${ARGN}"
-                -P "${CMAKE_SOURCE_DIR}/CMake/doxygen-script.cmake"
-        DEPENDS ${CMAKE_SOURCE_DIR}/Doxyfile.in
+                -P "${vidtk_all_SOURCE_DIR}/CMake/doxygen-script.cmake"
+        DEPENDS ${vidtk_all_SOURCE_DIR}/Doxyfile.in
                 ${outputdir}/${name}
         WORKING_DIRECTORY
                 ${outputdir}/${name}
@@ -53,4 +54,4 @@ macro (create_doxygen outputdir inputdir name)
 #         DIRECTORY   ${outputdir}/${name}
 #         DESTINATION ${CMAKE_INSTALL_PREFIX}/share/doc/${CMAKE_PROJECT_NAME}-${vidtk_VERSION}/${name}
 #         COMPONENT   documentation)
-endmacro (create_doxygen)
+endfunction (create_doxygen)

@@ -1,10 +1,10 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
-#include <vcl_iostream.h>
+#include <iostream>
 #include <testlib/testlib_test.h>
 
 #include <utilities/format_block.h>
@@ -15,9 +15,9 @@
 namespace {
 
 void
-replace_spaces( vcl_string& str )
+replace_spaces( std::string& str )
 {
-  vcl_string::iterator it = str.begin();
+  std::string::iterator it = str.begin();
   for( ; it != str.end(); ++it )
   {
     if( *it == ' ' )
@@ -29,19 +29,19 @@ replace_spaces( vcl_string& str )
 
 
 void
-test( vcl_string const& source,
-      vcl_string const& prefix,
+test( std::string const& source,
+      std::string const& prefix,
       unsigned line_length,
-      vcl_string const& expected )
+      std::string const& expected )
 {
-  vcl_string output = vidtk::format_block( source, prefix, line_length );
+  std::string output = vidtk::format_block( source, prefix, line_length );
   bool good = ( output == expected );
   if( !good )
   {
     replace_spaces( output );
-    vcl_string exp_copy = expected;
+    std::string exp_copy = expected;
     replace_spaces( exp_copy );
-    vcl_cout << "\n\n\nSource/expected/generated (+ = space):\n---\n" << source
+    std::cout << "\n\n\nSource/expected/generated (+ = space):\n---\n" << source
              << "\n---\n" << exp_copy
              << "\n---\n" << output
              << "\n---\n";

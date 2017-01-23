@@ -1,12 +1,23 @@
-#include <utilities/log.h>
+/*ckwg +5
+ * Copyright 2011-2014 by Kitware, Inc. All Rights Reserved. Please refer to
+ * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
+ * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
+ */
+
 #include "external_base_process.h"
+
+#include <logger/logger.h>
+#undef VIDTK_DEFAULT_LOGGER
+#define VIDTK_DEFAULT_LOGGER __vidtk_logger_auto_external_base_process_cxx__
+VIDTK_LOGGER("external_base_process_cxx");
+
 
 namespace vidtk
 {
 
 external_base_process
-::external_base_process(const vcl_string &proc_name,
-                        const vcl_string &child_name)
+::external_base_process(const std::string &proc_name,
+                        const std::string &child_name)
 : process(proc_name, child_name),
   disabled_(false),
   inputs_(NULL)
@@ -33,8 +44,8 @@ external_base_process
   }
   catch(const config_block_parse_error &e)
   {
-    log_error( this->name() << ": Unable to set parameters: " 
-               << e.what() << vcl_endl );
+    LOG_ERROR( this->name() << ": Unable to set parameters: "
+               << e.what() );
     return false;
   }
 
@@ -58,7 +69,7 @@ external_base_process
   this->inputs_ = &inputs;
 }
 
-external_base_process::data_map_type&
+external_base_process::data_map_type &
 external_base_process
 ::outputs(void)
 {

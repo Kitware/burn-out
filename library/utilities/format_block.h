@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -9,7 +9,7 @@
 
 /// \file
 
-#include <vcl_string.h>
+#include <string>
 
 namespace vidtk
 {
@@ -47,11 +47,11 @@ namespace vidtk
 /// string. The prefix counts toward the line length.
 ///
 /// \param[in] line_length The maximum length of each output line.  If
-/// a single word exceeds this length, the word <emph>will not</emph>
+/// a single word exceeds this length, the word <e> will not </e>
 /// be split to fit (i.e. the line length will be exceeded).
-vcl_string
-format_block( vcl_string const& content,
-              vcl_string const& prefix,
+std::string
+format_block( std::string const& content,
+              std::string const& prefix,
               unsigned line_length );
 
 

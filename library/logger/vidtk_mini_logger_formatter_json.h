@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2014 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -60,7 +60,7 @@ public:
   vidtk_mini_logger_formatter_json();
   virtual ~vidtk_mini_logger_formatter_json();
 
-  virtual void format_message(vcl_ostream& str);
+  virtual void format_message(std::ostream& str);
 
 }; // end class vidtk_mini_logger_formatter_json
 

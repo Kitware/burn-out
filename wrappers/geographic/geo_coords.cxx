@@ -1,10 +1,10 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
-#include <vcl_limits.h>
+#include <limits>
 #include <GeographicLib/GeoCoords.hpp>
 #include "geo_coords.h"
 
@@ -13,10 +13,28 @@ namespace vidtk
 namespace geographic
 {
 
+bool
+is_latlon_valid(const double lat, const double lon)
+{
+  // Copied from private method UTMUPS::CheckLatLon()
+  bool is_valid = true;
+  if (!(lat >= -90 && lat <= 90))
+  {
+    is_valid = false;
+  }
+  else if (!(lon >= -180 && lon <= 360))
+  {
+    is_valid = false;
+  }
+
+  return is_valid;
+}
+
+
 struct geo_coords_impl
 {
   geo_coords_impl(void)
-  : is_valid(true)
+  : is_valid(false)
   { }
 
   bool is_valid;
@@ -33,7 +51,7 @@ geo_coords
 
 
 geo_coords
-::geo_coords(const vcl_string &s)
+::geo_coords(const std::string &s)
 : impl_(0)
 {
   impl_ = new geo_coords_impl;
@@ -43,22 +61,22 @@ geo_coords
 
 
 geo_coords
-::geo_coords(double latitude, double longitude)
+::geo_coords(double _latitude, double _longitude)
 : impl_(0)
 {
   impl_ = new geo_coords_impl;
 
-  this->reset(latitude, longitude);
+  this->reset(_latitude, _longitude);
 }
 
 
 geo_coords
-::geo_coords(int zone, bool is_north, double easting, double northing)
+::geo_coords(int _zone, bool _is_north, double _easting, double _northing)
 : impl_(0)
 {
   impl_ = new geo_coords_impl;
 
-  this->reset(zone, is_north, easting, northing);
+  this->reset(_zone, _is_north, _easting, _northing);
 }
 
 
@@ -101,7 +119,7 @@ geo_coords
   {
     this->impl_->c.Reset(s);
   }
-  catch(const GeographicLib::GeographicErr &ex)
+  catch(const GeographicLib::GeographicErr &)
   {
     return this->impl_->is_valid = false;
   }
@@ -111,13 +129,13 @@ geo_coords
 
 bool
 geo_coords
-::reset(double latitude, double longitude)
+::reset(double _latitude, double _longitude)
 {
   try
   {
-    this->impl_->c.Reset(latitude, longitude);
+    this->impl_->c.Reset(_latitude, _longitude);
   }
-  catch(const GeographicLib::GeographicErr &ex)
+  catch(const GeographicLib::GeographicErr &)
   {
     return this->impl_->is_valid = false;
   }
@@ -127,13 +145,13 @@ geo_coords
 
 bool
 geo_coords
-::reset(int zone, bool is_north, double easting, double northing)
+::reset(int _zone, bool _is_north, double _easting, double _northing)
 {
   try
   {
-    this->impl_->c.Reset(zone, is_north, easting, northing);
+    this->impl_->c.Reset(_zone, _is_north, _easting, _northing);
   }
-  catch(const GeographicLib::GeographicErr &ex)
+  catch(const GeographicLib::GeographicErr &)
   {
     return this->impl_->is_valid = false;
   }
@@ -146,7 +164,7 @@ geo_coords
 ::latitude(void) const
 {
   return this->impl_->is_valid ? this->impl_->c.Latitude() :
-                                vcl_numeric_limits<double>::max();
+                                std::numeric_limits<double>::max();
 }
 
 
@@ -155,7 +173,7 @@ geo_coords
 ::longitude(void) const
 {
   return this->impl_->is_valid ? this->impl_->c.Longitude() :
-                                vcl_numeric_limits<double>::max();
+                                std::numeric_limits<double>::max();
 }
 
 
@@ -164,7 +182,7 @@ geo_coords
 ::easting(void) const
 {
   return this->impl_->is_valid ? this->impl_->c.Easting() :
-                                vcl_numeric_limits<double>::max();
+                                std::numeric_limits<double>::max();
 }
 
 
@@ -173,7 +191,7 @@ geo_coords
 ::northing(void) const
 {
   return this->impl_->is_valid ? this->impl_->c.Northing() :
-                                vcl_numeric_limits<double>::max();
+                                std::numeric_limits<double>::max();
 }
 
 
@@ -182,7 +200,7 @@ geo_coords
 ::convergence(void) const
 {
   return this->impl_->is_valid ? this->impl_->c.Convergence() :
-                                vcl_numeric_limits<double>::max();
+                                std::numeric_limits<double>::max();
 }
 
 
@@ -191,7 +209,7 @@ geo_coords
 ::scale(void) const
 {
   return this->impl_->is_valid ? this->impl_->c.Scale() :
-                                vcl_numeric_limits<double>::max();
+                                std::numeric_limits<double>::max();
 }
 
 
@@ -216,19 +234,19 @@ geo_coords
 ::zone(void) const
 {
   return this->impl_->is_valid ? this->impl_->c.Zone() :
-                                vcl_numeric_limits<int>::max();
+                                std::numeric_limits<int>::max();
 }
 
 
 bool
 geo_coords
-::set_alt_zone(int zone)
+::set_alt_zone(int _zone)
 {
   try
   {
-    this->impl_->c.SetAltZone(zone);
+    this->impl_->c.SetAltZone(_zone);
   }
-  catch(const GeographicLib::GeographicErr &ex)
+  catch(const GeographicLib::GeographicErr &)
   {
     return false;
   }
@@ -241,7 +259,7 @@ geo_coords
 ::alt_zone(void) const
 {
   return this->impl_->is_valid ? this->impl_->c.AltZone() :
-                                vcl_numeric_limits<int>::max();
+                                std::numeric_limits<int>::max();
 }
 
 
@@ -250,7 +268,7 @@ geo_coords
 ::alt_easting() const
 {
   return this->impl_->is_valid ? this->impl_->c.AltEasting() :
-                                vcl_numeric_limits<double>::max();
+                                std::numeric_limits<double>::max();
 }
 
 
@@ -259,7 +277,7 @@ geo_coords
 ::alt_northing() const
 {
   return this->impl_->is_valid ? this->impl_->c.AltNorthing() :
-                                vcl_numeric_limits<double>::max();
+                                std::numeric_limits<double>::max();
 }
 
 
@@ -268,7 +286,7 @@ geo_coords
 ::alt_convergence() const
 {
   return this->impl_->is_valid ? this->impl_->c.AltConvergence() :
-                                vcl_numeric_limits<double>::max();
+                                std::numeric_limits<double>::max();
 }
 
 
@@ -277,11 +295,11 @@ geo_coords
 ::alt_scale() const
 {
   return this->impl_->is_valid ? this->impl_->c.AltScale() :
-                                vcl_numeric_limits<double>::max();
+                                std::numeric_limits<double>::max();
 }
 
 
-vcl_string
+std::string
 geo_coords
 ::geo_representation(int prec) const
 {
@@ -289,7 +307,7 @@ geo_coords
 }
 
 
-vcl_string
+std::string
 geo_coords
 ::dms_representation(int prec) const
 {
@@ -297,14 +315,14 @@ geo_coords
 }
 
 
-vcl_string
+std::string
 geo_coords
 ::mgrs_representation(int prec) const
 {
   return this->impl_->is_valid ? this->impl_->c.MGRSRepresentation(prec) : "";
 }
 
-vcl_string
+std::string
 geo_coords
 ::utm_ups_representation(int prec) const
 {
@@ -312,7 +330,7 @@ geo_coords
 }
 
 
-vcl_string
+std::string
 geo_coords
 ::alt_mgrs_representation(int prec) const
 {
@@ -320,7 +338,7 @@ geo_coords
 }
 
 
-vcl_string
+std::string
 geo_coords
 ::alt_utm_ups_representation(int prec) const
 {

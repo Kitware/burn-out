@@ -20,7 +20,7 @@ create_test_sourcelist( test_sources
 add_executable( vidtk_test_process_framework
    ${test_sources}
 )
-target_link_libraries( vidtk_test_process_framework vidtk_pipeline vidtk_process_framework testlib vul vpl )
+target_link_libraries( vidtk_test_process_framework vidtk_pipeline_framework vidtk_process_framework testlib vul vpl )
 
 # Create ADD_TEST lines for some tests automatically.  Tests taking
 # special arguments will be specified manually later.

@@ -1,12 +1,11 @@
 /*ckwg +5
- * Copyright 2011 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2011-2016 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
 #include "base_io_process.h"
 
-#include <utilities/unchecked_return_value.h>
 #include <logger/logger.h>
 
 namespace vidtk
@@ -16,8 +15,8 @@ namespace vidtk
 
 
 base_io_process::
-  base_io_process(vcl_string const& name,  vcl_string const& type)
-    : process(name, type),
+  base_io_process(std::string const& _name,  std::string const& type)
+    : process(_name, type),
       m_appendFile(false),
       m_enabled(false)
 {
@@ -68,14 +67,14 @@ bool base_io_process::
 {
   try
   {
-    blk.get("enabled", this->m_enabled);
+    this->m_enabled = blk.get<bool>("enabled");
     if ( this->m_enabled )
     {
-      blk.get("filename", this->m_filename);
-      blk.get("append", this->m_appendFile);
+      this->m_filename = blk.get<std::string>("filename");
+      this->m_appendFile = blk.get<bool>("append");
     }
   }
-  catch (const unchecked_return_value & e)
+  catch (const config_block_parse_error & e)
   {
     LOG_ERROR(name() << ": couldn't set parameters: " << e.what());
     return false;
@@ -108,7 +107,7 @@ initialize()
   }
 
   // init most derived classes
-  return  initialize (INTERNAL);
+  return  initialize_internal ();
 }
 
 
@@ -161,7 +160,7 @@ bool base_io_process::
  *
  *
  */
-vcl_fstream & base_io_process::
+std::fstream & base_io_process::
 file_stream()
 {
   return this->m_fileStream;
@@ -210,27 +209,27 @@ add_data_io (base_reader_writer const& obj)
  *
  */
 void base_io_process::
-write_all_objects(vcl_ostream& str)
+write_all_objects(std::ostream& str)
 {
   this->m_dataGroup.write_object (str);
 }
 
 // Read inputs
 int base_io_process::
-read_all_objects(vcl_istream& str)
+read_all_objects(std::istream& str)
 {
   return this->m_dataGroup.read_object (str);
 }
 
 // Write headers
 void base_io_process::
-write_all_headers(vcl_ostream& str)
+write_all_headers(std::ostream& str)
 {
   this->m_dataGroup.write_header (str);
 }
 
 
-vcl_string const& base_io_process::
+std::string const& base_io_process::
 get_file_name() const
 {
   return m_filename;

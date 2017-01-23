@@ -13,19 +13,18 @@
 
 #include <json.h>
 
+using namespace libjson;
 
 // Put everything in an anonymous namespace so that different tests
 // won't conflict.
 namespace {
-
-using namespace libjson;
 
 // custom testing class
 class my_json : public vidtk::logger_ns::vidtk_mini_logger_formatter_json
 {
 public:
 
-  virtual void format_message(vcl_ostream& str)
+  virtual void format_message(vcl_ostream& /*str*/)
   {
     vidtk::logger_ns::vidtk_mini_logger_formatter_json::format_message (_oss_);
   }
@@ -112,7 +111,7 @@ void test_formatter()
  *
  *
  */
-int test_json_formatter(int argc, char * argv[])
+int test_json_formatter(int /*argc*/, char * /*argv*/[])
 {
   testlib_test_start( "json formatter");
 

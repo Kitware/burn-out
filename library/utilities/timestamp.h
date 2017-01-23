@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2014 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -8,8 +8,8 @@
 #define vidtk_timestamp_h_
 
 #include <vxl_config.h>
-#include <vcl_ostream.h>
-#include <vcl_vector.h>
+#include <ostream>
+#include <vector>
 
 /**\file
    \brief
@@ -27,7 +27,7 @@ namespace vidtk
 class timestamp
 {
 public:
-  typedef vcl_vector < timestamp > vector_t;
+  typedef std::vector < timestamp > vector_t;
 
   /// \brief Default constructor.
   timestamp()
@@ -196,8 +196,8 @@ private:
 };
 
 
-vcl_ostream & operator<< (vcl_ostream& str, const vidtk::timestamp& obj);
-vcl_ostream & operator<< (vcl_ostream& str, const vidtk::timestamp::vector_t& obj);
+std::ostream & operator<< (std::ostream& str, const vidtk::timestamp& obj);
+std::ostream & operator<< (std::ostream& str, const vidtk::timestamp::vector_t& obj);
 
 
 } // end namespace vidtk

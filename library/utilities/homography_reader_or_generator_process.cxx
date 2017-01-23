@@ -1,17 +1,22 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2016 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
 #include "homography_reader_or_generator_process.h"
-#include <utilities/unchecked_return_value.h>
-#include <utilities/log.h>
-#include <vcl_cassert.h>
-#include <vcl_fstream.h>
+
+#include <cassert>
+#include <fstream>
 #include <vnl/vnl_double_3x3.h>
 
-#include <vcl_sstream.h>
+#include <sstream>
+
+#include <logger/logger.h>
+#undef VIDTK_DEFAULT_LOGGER
+#define VIDTK_DEFAULT_LOGGER __vidtk_logger_auto_homography_reader_or_generator_process_cxx__
+VIDTK_LOGGER("homography_reader_or_generator_process_cxx");
+
 
 
 namespace vidtk
@@ -19,8 +24,11 @@ namespace vidtk
 
 
 homography_reader_or_generator_process
-::homography_reader_or_generator_process( vcl_string const& name )
-  : process( name, "homography_reader_or_generator_process" ),
+::homography_reader_or_generator_process( std::string const& _name )
+  : process( _name, "homography_reader_or_generator_process" ),
+    generate_ ( false ),
+    image_needs_homog_( false ),
+    number_to_generate_( 0 ),
     number_generated_(0)
 {
   config_.add_parameter( "textfile", "", "The file from which to read the homography." );
@@ -50,13 +58,14 @@ homography_reader_or_generator_process
 {
   try
   {
-    blk.get( "textfile", input_filename_ );
-    blk.get( "generate", generate_ );
-    blk.get( "number_of_homographys", number_to_generate_ );
-    vcl_string homg;
-    blk.get( "input_homography", homg );
-    vcl_stringstream ss(homg);
+    input_filename_ = blk.get<std::string>( "textfile" );
+    generate_ = blk.get<bool>( "generate" );
+    number_to_generate_ = blk.get<unsigned>( "number_of_homographys" );
+    std::string homg = blk.get<std::string>( "input_homography" );
+    std::stringstream ss(homg);
     vnl_double_3x3 M;
+    // TODO: Isn't reading from the config file as vnl_double_3x3 the same
+    // thing? Or is it transposed?
     for( unsigned i = 0; i < 3; ++i )
     {
       for( unsigned j = 0; j < 3; ++j )
@@ -67,10 +76,10 @@ homography_reader_or_generator_process
     img_to_world_H_.set(M);
     world_to_img_H_ = img_to_world_H_.get_inverse();
   }
-  catch( unchecked_return_value& e )
+  catch( config_block_parse_error const& e )
   {
-    log_error( this->name() << ": set_params failed: "
-               << e.what() << "\n" );
+    LOG_ERROR( this->name() << ": set_params failed: "
+               << e.what() );
     return false;
   }
 
@@ -90,8 +99,8 @@ homography_reader_or_generator_process
       homog_str_.open( input_filename_.c_str() );
       if( ! homog_str_ )
       {
-        log_error( "Couldn't open \"" << input_filename_
-                  << "\" for reading\n" );
+        LOG_ERROR( "Couldn't open \"" << input_filename_
+                  << "\" for reading" );
         return false;
       }
     }
@@ -133,7 +142,7 @@ homography_reader_or_generator_process
       {
         if( ! (homog_str_ >> M(i,j)) )
         {
-          log_warning( "Failed to read homography\n" );
+          LOG_WARN( "Failed to read homography" );
           return false;
         }
       }
@@ -146,7 +155,7 @@ homography_reader_or_generator_process
 }
 
 
-vgl_h_matrix_2d<double> const&
+vgl_h_matrix_2d<double>
 homography_reader_or_generator_process
 ::image_to_world_homography() const
 {
@@ -154,7 +163,7 @@ homography_reader_or_generator_process
 }
 
 
-vgl_h_matrix_2d<double> const&
+vgl_h_matrix_2d<double>
 homography_reader_or_generator_process
 ::world_to_image_homography() const
 {

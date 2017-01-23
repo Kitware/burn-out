@@ -1,41 +1,45 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2016 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
 #include "homography_holder_process.h"
 
-#include <vcl_vector.h>
+#include <vector>
 #include <vnl/vnl_double_3x3.h>
 #include <utilities/timestamp.h>
-#include <utilities/unchecked_return_value.h>
-#include <utilities/log.h>
+
+#include <logger/logger.h>
+#undef VIDTK_DEFAULT_LOGGER
+#define VIDTK_DEFAULT_LOGGER __vidtk_logger_auto_homography_holder_process_cxx__
+VIDTK_LOGGER("homography_holder_process_cxx");
+
 
 namespace vidtk
 {
 
 homography_holder_process
-::homography_holder_process( vcl_string const& name )
- : process( name, "homography_holder_process" )
+::homography_holder_process( std::string const& _name )
+ : process( _name, "homography_holder_process" )
 {
-  config_.add_parameter( "matrix", 
+  config_.add_parameter( "matrix",
     "1 0 0  0 1 0  0 0 1",
     "Full 3x3 homography." );
 
-  config_.add_parameter( "scale", 
+  config_.add_parameter( "scale",
     "1.0",
     "Scale (same for both x and y) applied to the \"matrix\"." );
 
-  config_.add_parameter( "translation", 
+  config_.add_parameter( "translation",
     "0 0",
     "Translation [x y] vector replaces (0,2) & (1,2) elements in \"matrix\"." );
 
-  config_.add_parameter( "reference_image:frame_number", 
+  config_.add_parameter( "reference_image:frame_number",
     "0",
     "Frame number (unsigned int) identifying the reference frame in H_ref2wld." );
 
-  config_.add_parameter( "reference_image:time_in_secs", 
+  config_.add_parameter( "reference_image:time_in_secs",
     "0.0",
     "Timestamp (double for seconds) identifying the reference frame in H_ref2wld." );
 }
@@ -58,23 +62,31 @@ homography_holder_process
 {
   try
   {
-    vnl_double_3x3 mat;
-    blk.get( "matrix", mat);
-    homography::transform_t H( mat );
+    homography::transform_t H;
+    H.set_identity();
 
-    //double s;
-    //blk.get( "scale", s);
-    //H.set_scale( s );
+    bool has_user_value = false;
+    blk.get_has_user_value( std::string("matrix"), has_user_value );
 
-    //double t[2];
-    //blk.get( "translation", t);
-    //H.set_translation( t[0], t[1] );
-    
-    unsigned int frame_num;
-    blk.get ("reference_image:frame_number", frame_num );
-    
-    double time_in_secs;
-    blk.get ("reference_image:time_in_secs", time_in_secs );
+    if( has_user_value )
+    {
+      vnl_double_3x3 mat;
+      mat = blk.get<vnl_double_3x3>( "matrix" );
+      H.set( mat );
+    }
+    else
+    {
+      double s = blk.get<double>( "scale" );
+      H.set_scale( s );
+
+      double t[2];
+      blk.get( "translation", t);
+      H.set_translation( t[0], t[1] );
+    }
+
+    unsigned int frame_num = blk.get<unsigned>("reference_image:frame_number" );
+
+    double time_in_secs = blk.get<double>("reference_image:time_in_secs" );
 
     timestamp ref_ts( time_in_secs * 1e6, frame_num );
 
@@ -84,9 +96,9 @@ homography_holder_process
 
     this->config_.update( blk );
   }
-  catch( unchecked_return_value & e )
+  catch( config_block_parse_error const& e )
   {
-    log_error( this->name() << ": couldn't set parameters: "<< e.what() <<"\n" );
+    LOG_ERROR( this->name() << ": couldn't set parameters: "<< e.what() );
     return false;
   }
 
@@ -107,7 +119,7 @@ homography_holder_process
   return true;
 }
 
-image_to_plane_homography const& 
+image_to_plane_homography
 homography_holder_process
 ::homography_ref_to_wld()
 {

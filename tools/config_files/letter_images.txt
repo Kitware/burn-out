@@ -1,2 +1,0 @@
-/home/boeckb/code/vidtk/src/tools/config_files/N.png
-/home/boeckb/code/vidtk/src/tools/config_files/N_edge.png

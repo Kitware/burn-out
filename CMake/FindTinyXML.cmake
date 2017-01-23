@@ -10,8 +10,6 @@
 # TinyXML_INCLUDE_DIR - The path to the tinyxml header files
 # TinyXML_LIBRARY     - The full path to the TinyXML library
 
-message("KEITH YES FINDTINYXML")
-
 if( TinyXML_DIR )
     find_package( TinyXML ${TinyXML_FIND_VERSION} NO_MODULE )
 elseif( NOT TinyXML_FOUND )

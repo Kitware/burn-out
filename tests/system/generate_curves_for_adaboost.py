@@ -141,7 +141,7 @@ def RunExperiment(tracks, adaboost_file, base_directory, experiment_name, aoi) :
   ada_input = "adaboost_track_classifier:track_reader:"
 
   old_dir = os.getcwd()
-  print os.path.basename(adaboost_file)
+  print(os.path.basename(adaboost_file))
   new_dir = os.path.basename(adaboost_file)
   os.mkdir(new_dir)
   os.chdir(new_dir)
@@ -171,13 +171,13 @@ def RunExperiment(tracks, adaboost_file, base_directory, experiment_name, aoi) :
     f.write(l + "\n")
   f.close()
 
-  print "Classifying the tracks"
+  print("Classifying the tracks")
   ClassifyTracks( "classify_and_filter_tracks.conf" )
   ExtractPVO( )
   input_video = base_directory + "/raw_video.avi"
   DrawVideosPVO( input_video, tracks )
 
-  print "Generating the accuracy file"
+  print("Generating the accuracy file")
   ClassificationAccuracy( )
 
   os.chdir(old_dir)

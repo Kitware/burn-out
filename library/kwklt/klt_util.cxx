@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2011 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2011-2013 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -9,22 +9,104 @@
 #include <vil/vil_image_view_base.h>
 #include <vil/vil_convert.h>
 
+#include <logger/logger.h>
+
 #include <klt/convolve.h>
 #include <klt/klt_util.h>
 
+#include <cstring> //memcpy
+
 #include <cstdlib>
+
+#undef VIDTK_DEFAULT_LOGGER
+#define VIDTK_DEFAULT_LOGGER __vidtk_logger_auto_klt_tracking_process_cxx__
+VIDTK_LOGGER("klt_util_cxx");
 
 namespace vidtk
 {
 
-static _KLT_FloatImage klt_image_convert(vil_image_view<float> /*const*/& img);
-static _KLT_FloatImage klt_image_shared(vil_image_view<float> /*const*/& img);
-
+_KLT_FloatImage klt_image_convert(vil_image_view<float> /*const*/& img);
 
 _KLT_Pyramid
-klt_pyramid_convert(vil_pyramid_image_view<float> /*const*/& pyramid, int subsampling)
+klt_pyramid_convert(vil_pyramid_image_view<float> /*const*/& pyramid)
 {
   size_t const nlevels = pyramid.nlevels();
+  int subsampling = 1;
+
+  if (!nlevels)
+  {
+    return NULL;
+  }
+
+  if (nlevels >= 2)
+  {
+    double l0_scale;
+    double l1_scale;
+
+    pyramid.get_view(0, l0_scale);
+    pyramid.get_view(1, l1_scale);
+
+    // Round after the division.
+    subsampling = static_cast<int>((l0_scale / l1_scale) + 0.5);
+  }
+
+#ifndef NDEBUG
+  double top_scale;
+  vil_image_view_base_sptr lv0_img = pyramid.get_view(0, top_scale);
+  size_t const top_width = lv0_img->ni();
+  size_t const top_height = lv0_img->nj();
+  size_t const top_planes = lv0_img->nplanes();
+  for (size_t i = 1; i < nlevels; ++i)
+  {
+    double l0_scale;
+    double l1_scale;
+
+    pyramid.get_view(i - 1, l0_scale);
+    pyramid.get_view(i, l1_scale);
+
+    // Round after the division.
+    int const lv_subsampling = static_cast<int>((l0_scale / l1_scale) + 0.5);
+
+    if (lv_subsampling != subsampling)
+    {
+      LOG_ERROR("Subsampling is not constant throughout the pyramid on level: " << i);
+      return NULL;
+    }
+
+    vil_image_view<float> const& img = pyramid(i);
+    size_t const width = img.ni();
+    size_t const height = img.nj();
+    size_t const planes = img.nplanes();
+
+    double const local_scale = l1_scale / top_scale;
+
+    // No rounding here (partial pixels are just dropped).
+    size_t const exp_width = local_scale * top_width;
+    size_t const exp_height = local_scale * top_height;
+
+    if (width != exp_width)
+    {
+      LOG_ERROR("Pyramid for KLT level " << i << " does not have the correct width: "
+                "Expected: " << exp_width << " "
+                "Received: " << width);
+      return NULL;
+    }
+    if (height != exp_height)
+    {
+      LOG_ERROR("Pyramid for KLT level " << i << " does not have the correct height: "
+                "Expected: " << exp_height << " "
+                "Received: " << height);
+      return NULL;
+    }
+    if (planes != top_planes)
+    {
+      LOG_ERROR("Pyramid for KLT level " << i << " does not have the correct number of planes: "
+                "Expected: " << top_planes << " "
+                "Received: " << planes);
+      return NULL;
+    }
+  }
+#endif
 
   _KLT_Pyramid klt_pyramid = _KLTCreatePyramid(pyramid(0).ni(), pyramid(0).nj(), subsampling, nlevels);
 
@@ -32,79 +114,12 @@ klt_pyramid_convert(vil_pyramid_image_view<float> /*const*/& pyramid, int subsam
   {
     // Free the image made during pyramid creation
     _KLTFreeFloatImage(klt_pyramid->img[i]);
-    klt_pyramid->img[i] = klt_image_convert(pyramid(nlevels - i - 1));
+    klt_pyramid->img[i] = klt_image_convert(pyramid(i));
     klt_pyramid->ncols[i] = klt_pyramid->img[i]->ncols;
     klt_pyramid->nrows[i] = klt_pyramid->img[i]->nrows;
   }
 
   return klt_pyramid;
-}
-
-vil_pyramid_image_view<float>
-create_klt_pyramid(vil_image_view<vxl_byte> /*const*/& img, int levels, int subsampling, float sigma_factor, float init_sigma)
-{
-  vil_pyramid_image_view<float> pyramid;
-
-  const float sigma = subsampling * sigma_factor;
-  const int subhalf = subsampling / 2;
-  int cols = img.ni();
-  int rows = img.nj();
-  double scale = 1;
-
-  vil_image_view_base_sptr img_ptr;
-
-  vil_image_view<float> prev_img;
-
-  vil_convert_cast(img, prev_img);
-
-  {
-    vil_image_view<float> smoothed_img(cols, rows, 1);
-    _KLT_FloatImage orig = klt_image_shared(prev_img);
-    _KLT_FloatImage smooth = klt_image_shared(smoothed_img);
-
-    _KLTComputeSmoothedImage(orig, init_sigma, smooth);
-
-    img_ptr = new vil_image_view<float>(smoothed_img);
-    pyramid.add_view(img_ptr, scale);
-
-    prev_img = smoothed_img;
-
-    free(orig);
-    free(smooth);
-  }
-
-  for (int i = 1; i < levels; ++i)
-  {
-    vil_image_view<float> smoothed_img(cols, rows, 1);
-    _KLT_FloatImage orig = klt_image_shared(prev_img);
-    _KLT_FloatImage smooth = klt_image_shared(smoothed_img);
-
-    _KLTComputeSmoothedImage(orig, sigma, smooth);
-
-    cols /= subsampling;
-    rows /= subsampling;
-    vil_image_view<float> subsampled_img(cols, rows, 1);
-
-    for(int y = 0; y < rows; ++y)
-    {
-      for(int x = 0; x < cols; ++x)
-      {
-        subsampled_img(x, y) = smoothed_img(subsampling * x + subhalf,
-                                            subsampling * y + subhalf);
-      }
-    }
-
-    img_ptr = new vil_image_view<float>(subsampled_img);
-    pyramid.add_view(img_ptr, scale);
-
-    scale /= subsampling;
-    prev_img = subsampled_img;
-
-    free(orig);
-    free(smooth);
-  }
-
-  return pyramid;
 }
 
 std::pair<vil_image_view<float>, vil_image_view<float> >
@@ -152,16 +167,11 @@ klt_image_convert(vil_image_view<float> /*const*/& img)
   return klt_img;
 }
 
-_KLT_FloatImage
-klt_image_shared(vil_image_view<float> /*const*/& img)
+vil_image_view<float> klt_img_to_vil(_KLT_FloatImage const& klt_img)
 {
-  _KLT_FloatImage klt_img = (_KLT_FloatImage)malloc(sizeof(_KLT_FloatImageRec));
-
-  klt_img->ncols = img.ni();
-  klt_img->nrows = img.nj();
-  klt_img->data = img.top_left_ptr();
-
-  return klt_img;
+  vil_image_view<float> result(klt_img->ncols, klt_img->nrows);
+  memcpy( result.top_left_ptr(), klt_img->data, klt_img->ncols*klt_img->nrows*sizeof(float) );
+  return result;
 }
 
 }

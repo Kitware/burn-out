@@ -1,24 +1,30 @@
 /*ckwg +5
- * Copyright 2010-11 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
 #include "filter_video_metadata_process.h"
 
-#include <utilities/unchecked_return_value.h>
-#include <utilities/log.h>
-#include <vcl_cmath.h>
-#include <vcl_sstream.h>
-#include <vcl_iomanip.h>
+#include <string>
+#include <sstream>
+#include <iomanip>
+
+#include <vnl/vnl_double_2.h>
+#include <vnl/vnl_math.h>
+
+#include <logger/logger.h>
+
+VIDTK_LOGGER("filter_video_metadata_process_cxx");
 
 namespace vidtk
 {
 
 filter_video_metadata_process
-::filter_video_metadata_process( vcl_string const& name )
-: process( name, "filter_video_metadata_process" ),
+::filter_video_metadata_process( std::string const& _name )
+: process( _name, "filter_video_metadata_process" ),
   disable_(true),
+  allow_equal_time_(false),
   max_hfov_(0.0),
   max_alt_delta_(0.0),
   max_lat_delta_(0.0),
@@ -26,9 +32,13 @@ filter_video_metadata_process
   input_single_(NULL),
   input_multi_(NULL),
   previous_time_(0),
-  previous_alt_(0.0)
+  previous_alt_(0.0),
+  ts_()
 {
-  config_.add( "disabled", "false" );
+  config_.add_parameter( "disabled",
+    "false",
+    "Whether or not this process is disabled, if so metadata will simply "
+    "be passed along as-is." );
 
   config_.add_parameter( "max_hfov",
     "90",
@@ -47,7 +57,18 @@ filter_video_metadata_process
     " two consecutive metadata packets. Currently it is reasonable to apply"
     " same threshold to all the position fields with latitude/longitude units." );
 
-  invalid_.is_valid(false);
+  config_.add_parameter( "allow_equal_time",
+    "false",
+    "When true, we consider metadata packets whose time is "
+    "equal to the previous packet.  If the current packet "
+    "is same as the previous packet, then it is filtered "
+    "out.  Otherwise, it is passed on." );
+
+  config_.add_optional( "scale_filename",
+    "Do not compute GSD, but instead read precomputed values from a file. "
+    "Set to 'help' for more info in LOG_INFO messages." );
+
+  invalid_.is_valid( false );
 }
 
 
@@ -71,17 +92,21 @@ filter_video_metadata_process
 {
   try
   {
-    blk.get( "disabled", disable_ );
-    blk.get( "max_hfov", max_hfov_ );
-    blk.get( "max_platform_altitude_change", max_alt_delta_ );
-    double max_lat_lon_delta[2];
-    blk.get( "max_lat_lon_change", max_lat_lon_delta );
-    max_lat_delta_ = max_lat_lon_delta[0];
-    max_lon_delta_ = max_lat_lon_delta[1];
+    disable_ = blk.get<bool>( "disabled" );
+
+    if( !disable_ )
+    {
+      max_hfov_ = blk.get<double>( "max_hfov" );
+      max_alt_delta_ = blk.get<double>( "max_platform_altitude_change" );
+      vnl_double_2 max_lat_lon_delta = blk.get<vnl_double_2>( "max_lat_lon_change" );
+      max_lat_delta_ = max_lat_lon_delta[0];
+      max_lon_delta_ = max_lat_lon_delta[1];
+      allow_equal_time_ = blk.get<bool>("allow_equal_time");
+    }
   }
-  catch( unchecked_return_value const& e )
+  catch( const config_block_parse_error& e )
   {
-    log_error (name() << ": set_params() failed: "<< e.what() <<"\n");
+    LOG_ERROR( this->name() << ": Unable to set parameters: " << e.what() );
     return false;
   }
 
@@ -99,7 +124,21 @@ filter_video_metadata_process
   previous_time_ = 0;
   previous_alt_ = 0.0;
   invalid_.is_valid(false);
-  return true;
+  previous_packet_.is_valid(false);
+
+  bool okay = true;
+  if ( config_.has( "scale_filename" ))
+  {
+    std::string gsd_file_fn = config_.get<std::string>( "scale_filename" );
+    if ( gsd_file_fn == "help" )
+    {
+      gsd_file_source_t::log_format_as_info();
+      return false;
+    }
+    okay = gsd_file_source_.initialize( gsd_file_fn );
+  }
+
+  return okay;
 }
 
 
@@ -114,21 +153,21 @@ filter_video_metadata_process
 {
   output_vector_.clear();       // clear outputs
 
-  if(input_single_ && input_multi_)
+  if( input_single_ && input_multi_ )
   {
-    log_error( this->name() << ": Cannot use both single and multi input ports.\n" );
+    LOG_ERROR( this->name() << ": Cannot use both single and multi input ports." );
     return false;
   }
 
-  if(disable_)
+  if( disable_ )
   {
-    log_info( this->name() << ": is disabled, passing the input along unchanged.\n" );
+    LOG_INFO( this->name() << ": is disabled, passing the input along unchanged." );
 
-    if(input_single_)
+    if( input_single_ )
     {
       output_vector_.push_back(*input_single_);
     }
-    else if( input_multi_)
+    else if( input_multi_ )
     {
       output_vector_ = *input_multi_;
     }
@@ -146,32 +185,36 @@ filter_video_metadata_process
   //
   if( !input_single_ && !input_multi_ )
   {
-    log_error( this->name() << ": Input data not provided.\n" );
+    LOG_ERROR( this->name() << ": Input data not provided." );
     return false;
   }
 
   //Test to see if it is valid
-  if(input_single_ && this->is_good(input_single_))
+  if(input_single_)
   {
-    log_info( this->name() << " : Received valid metadata with ts=" << input_single_->timeUTC()
-                           << ", valid corners: "<< input_single_->has_valid_corners() << "\n" );
+    video_metadata v = *input_single_;
+    if(this->is_good(&v))
+    {
+      LOG_INFO( this->name() << " : Received valid metadata with ts=" << input_single_->timeUTC()
+                             << ", valid corners: "<< input_single_->has_valid_corners() );
 
-    output_vector_.push_back(*input_single_);
+      output_vector_.push_back(v);
+    }
   }
 
   //
-  // Vector of metadata obejects
+  // Vector of metadata objects
   //
   if(input_multi_)
   {
     for( unsigned int i = 0; i < input_multi_->size(); ++i )
     {
-      video_metadata const * v = &(*input_multi_)[i];
-      if( this->is_good(v))
+      video_metadata v = (*input_multi_)[i];
+      if( this->is_good(&v))
       {
-         log_info( this->name() << " : Received valid metadata with ts=" << v->timeUTC()
-                                <<", valid corners: "<< v->has_valid_corners() << "\n" );
-         output_vector_.push_back(*v);
+         LOG_INFO( this->name() << " : Received valid metadata with ts=" << v.timeUTC()
+                                <<", valid corners: "<< v.has_valid_corners() );
+         output_vector_.push_back(v);
       }
     }
   }
@@ -198,47 +241,40 @@ filter_video_metadata_process
  */
 bool
 filter_video_metadata_process
-::is_good(video_metadata const * in)
+::is_good(video_metadata * in)
 {
   if(!in)
   {
-    log_error( this->name() << ": Input is NULL\n" );
+    LOG_ERROR( this->name() << ": Input is NULL" );
     return false;
   }
 
   if ( !in->is_valid() )
   {
-    //log_debug( "Invalid metadata packet\n" );
     return false;
   }
 
   if ( !in->has_valid_time() )
   {
-    //log_debug( this->name() ": Does not have valid time.\n" );
     return false;
   }
 
   vxl_uint_64 t = in->timeUTC();
 
-  //log_debug( "TIME is: " << (unsigned long)t << vcl_endl );
-
   if(0 != t)
   {
-    if(t <= previous_time_)
+    if( t < previous_time_ ||
+        (t == previous_time_ && (!allow_equal_time_ || previous_packet_ == *in) ) )
     {
-//      log_debug( this->name() << ": Current metadata timestamp is less or equal"
-//                 << " to previous timestamp " << (unsigned long)t << " "
-//                 << (unsigned long)previous_time_ << vcl_endl );
       return false;
     }
   }
   else
   {
-    //log_debug( "Input does not have time\n" );
     return false;
   }
-  //log_debug( "Time change: " << (unsigned long)previous_time_ << "  :to:  " << (unsigned long)t << vcl_endl);
   previous_time_ = t;
+  previous_packet_ = *in;
 
   const double INVALID_DEFAULT = 0.0;
 
@@ -247,9 +283,9 @@ filter_video_metadata_process
   if( in->sensor_horiz_fov() != INVALID_DEFAULT &&
       in->sensor_horiz_fov() > max_hfov_ )
   {
-    log_debug( name() << ": Removing metadata packet "<< t
+    LOG_DEBUG( name() << ": Removing metadata packet "<< t
       <<" due to a high horizontal field-of-view value ("
-      << in->sensor_horiz_fov() << ").\n");
+      << in->sensor_horiz_fov() << ")." );
     return false;
   }
 
@@ -261,13 +297,13 @@ filter_video_metadata_process
     {
       // NOTE: Use of previous_alt_ in the denominator is intentional as it
       // relatively more trusted value than in->platform_altitude().
-      double alt_delta = vcl_fabs( previous_alt_ - in->platform_altitude() ) / previous_alt_;
+      double alt_delta = std::fabs( previous_alt_ - in->platform_altitude() ) / previous_alt_;
 
       if( alt_delta > max_alt_delta_ )
       {
-        log_debug( name() << ": Removing metadata packet "<< t <<" due to large ("
+        LOG_DEBUG( name() << ": Removing metadata packet "<< t <<" due to large ("
           << alt_delta <<") change in platform altitude value ( from "<< previous_alt_
-          <<" to "<< in->platform_altitude() << ").\n");
+          <<" to "<< in->platform_altitude() << ")." );
         return false;
       }
     }
@@ -275,24 +311,73 @@ filter_video_metadata_process
     previous_alt_ = in->platform_altitude();
   }// if (in->platform_altitude() != INVALID_DEFAULT)
 
-  try
+  if (!is_good_location( in->platform_location(), prev_platform_loc_ ) ||
+      !is_good_location( in->frame_center(), prev_frame_center_ ) ||
+      !is_good_location( in->corner_ul(), prev_corner_ul_ ) ||
+      !is_good_location( in->corner_ur(), prev_corner_ur_ ) ||
+      !is_good_location( in->corner_lr(), prev_corner_lr_ ) ||
+      !is_good_location( in->corner_ll(), prev_corner_ll_ ))
   {
-    is_good_location( in->platform_location(), prev_platform_loc_ );
-    is_good_location( in->frame_center(), prev_frame_center_ );
-    is_good_location( in->corner_ul(), prev_corner_ul_ );
-    is_good_location( in->corner_ur(), prev_corner_ur_ );
-    is_good_location( in->corner_lr(), prev_corner_lr_ );
-    is_good_location( in->corner_ll(), prev_corner_ll_ );
-  }
-  catch( unchecked_return_value const& e )
-  {
-    log_debug( name() << ": Removing metadata packet "<< t <<" due to: " << e.what() << "\n" );
+    LOG_DEBUG( name() << ": Removing metadata packet " << t);
     return false;
+  }
+
+  // Temporary location; should be cleaned up later.
+  // TODO: Replace gsd with the world_image_width or equivalent.
+  /*
+    \todo Arslan's code review comments that need to be addressed.
+    "This should be cleaned up, the file doesn't contain GSD anymore
+    but the image width in meters."
+   */
+  if ( gsd_file_source_.is_valid() )
+  {
+    //
+    // Compute a new Horizontal FOV angle field of the metadata based on a image width
+    // in meters loaded from file and slant range from the metadata packet.
+    //
+    // "Retrieve" the GSD by asking gsd_file_source to look up the GSD
+    // based on the timestamp.
+    //
+
+    if( !in->has_valid_slant_range() )
+    {
+      LOG_WARN( this->name() << ": Could not use the metadata packet " << in->timeUTC() << ", on frame with " << ts_ << " due to missing slant range." );
+      return false;
+    }
+
+    if ( !ts_.is_valid() )
+    {
+      LOG_ERROR( "Stepped gen_world_units_per_pixel with gsd_file_source without setting timestamp?" );
+      return false;
+    }
+
+    double scale = gsd_file_source_.get_gsd( ts_ );
+    LOG_INFO( this->name() << ": Image width = " << scale << " (meters) via file lookup" );
+
+    double slant = in->slant_range();
+
+    // Now use the trignometry to come up with the horizontal FOV angle from scale and slant.
+    double hfov = 2.0 * atan2( (scale / 2.0), slant ) * 180.0 / vnl_math::pi;
+
+    LOG_TRACE( this->name() << ": replacing HFOV: from " << in->sensor_horiz_fov() << " to " << hfov );
+
+    in->sensor_horiz_fov( hfov );
+    // since we are over-riding the HFOV, we need to ensure that the unreliable VFOV is also removed.
+    in->sensor_vert_fov( 0.0 );
+
+    ts_ = timestamp();
   }
 
   return true;
 }
 
+
+void
+filter_video_metadata_process
+::set_timestamp( timestamp const & ts)
+{
+  ts_ = ts;
+}
 
 void
 filter_video_metadata_process
@@ -303,33 +388,33 @@ filter_video_metadata_process
 
 void
 filter_video_metadata_process
-::set_source_metadata_vector( vcl_vector< video_metadata > const& in)
+::set_source_metadata_vector( std::vector< video_metadata > const& in)
 {
   input_multi_ = &in;
 }
 
-vcl_vector< video_metadata > const &
+std::vector< video_metadata >
 filter_video_metadata_process
 ::output_metadata_vector() const
 {
   return output_vector_;
 }
 
-video_metadata const &
+video_metadata
 filter_video_metadata_process
 ::output_metadata() const
 {
-  if(output_vector_.size())
+  if( ! output_vector_.empty())
   {
     return output_vector_[0];
   }
   return invalid_;
 }
 
-checked_bool
+bool
 filter_video_metadata_process
-::is_good_location( video_metadata::lat_lon_t const& new_loc,
-                    video_metadata::lat_lon_t & prev_loc ) const
+::is_good_location( geo_coord::geo_lat_lon const& new_loc,
+                    geo_coord::geo_lat_lon & prev_loc ) const
 {
   // Lat/Lon location should not change drastically between
   // two consecutive metadata packets.
@@ -338,17 +423,18 @@ filter_video_metadata_process
   {
     if( prev_loc.is_valid() )
     {
-      double lat_delta = vcl_fabs( prev_loc.lat() - new_loc.lat() );
-      double lon_delta = vcl_fabs( prev_loc.lon() - new_loc.lon() );
+      double lat_delta = std::fabs( prev_loc.get_latitude() - new_loc.get_latitude() );
+      double lon_delta = std::fabs( prev_loc.get_longitude() - new_loc.get_longitude() );
 
       if( lat_delta > max_lat_delta_ || lon_delta > max_lon_delta_)
       {
-        vcl_stringstream strs;
-        strs << vcl_setprecision( 16 );
-        strs << "large change in location ( from ";
-        prev_loc.ascii_serialize(strs) << " to ";
-        new_loc.ascii_serialize(strs) << ").\n";
-        return checked_bool( strs.str() );
+        std::stringstream strs;
+        strs << std::setprecision( 16 )
+             << "large change in location ( from "
+             << prev_loc << " to "
+             << new_loc << ").\n";
+        LOG_ERROR(strs.str());
+        return false;
       }
     }
 

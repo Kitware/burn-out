@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -7,7 +7,7 @@
 #ifndef vidtk_ffmt_h_
 #define vidtk_ffmt_h_
 
-#include <vcl_iostream.h>
+#include <iostream>
 
 namespace vidtk
 {
@@ -18,11 +18,11 @@ namespace vidtk
 /// standard way across platforms, guaranteeing that the text representations
 /// are identical.  This allows direct compares of text files for tests, for
 /// instance.  The problem with using the standard C++ routines is that the
-/// implementations vary (exponents are 2 *or* 3 digits depending on the 
+/// implementations vary (exponents are 2 *or* 3 digits depending on the
 /// system)
 ///
 /// example:
-///   vcl_cout << ffmt(1234567.89, 3) << "\n";
+///   LOG_INFO( ffmt(1234567.89, 3));
 /// produces: 1.23e6
 class ffmt
 {
@@ -35,11 +35,11 @@ public:
 private:
   double value_;
   int precision_;
-  friend vcl_ostream& operator<< (vcl_ostream& out, const ffmt &f);
+  friend std::ostream& operator<< (std::ostream& out, const ffmt &f);
 };
 
 /// \brief ostream insertion operator for standard formatted floating point
-vcl_ostream& operator<< (vcl_ostream& out, const ffmt &f);
+std::ostream& operator<< (std::ostream& out, const ffmt &f);
 
 } // end namespace vidtk
 

@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2011 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2013-2016 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -7,6 +7,7 @@
 
 
 #include "kw_archive_writer_process.h"
+
 #include <logger/logger.h>
 
 
@@ -20,25 +21,39 @@ VIDTK_LOGGER("kw_archive_writer_process");
  *
  *
  */
-  kw_archive_writer_process::
-  kw_archive_writer_process(vcl_string const& name)
-    : process(name, "kw_archive_writer_process"),
-      m_enable(true),
-      m_allow_overwrite(false),
-      m_archive_writer(0)
+  template< class PixType >
+  kw_archive_writer_process< PixType >::
+  kw_archive_writer_process(std::string const& _name)
+    : process(_name, "kw_archive_writer_process"),
+      disable_(true),
+      separate_meta_(true),
+      compress_image_(true),
+      gsd_( 0 ),
+      archive_writer_(0)
   {
-    m_config.add("disabled", "true");
-    m_config.add("file_path", ".");
-    m_config.add("file_name", "kw_archive");
-    m_config.add_parameter( "overwrite_existing", "false",
-                            "Weather or not a file can be overwriten." );
+    config_.add_parameter("disabled", "true", "");
+    config_.add_parameter("output_directory", ".", "");
+    config_.add_parameter("base_filename", "kw_archive",
+                           "Base filename (no extension)");
+    config_.add_parameter("separate_meta", "true",
+                           "Whether to write separate .meta file");
+    config_.add_parameter("mission_id", "", "mission id to store in archive");
+    config_.add_parameter("stream_id", "", "stream id to store in archive");
+    config_.add_parameter("compress_image", "true",
+                 "Whether to compress image data stored in archive");
+
+    // Obsolete parameters
+    // Replace by output_directory & base_filename
+    config_.add_parameter("file_path", "OBSOLETE");
+    config_.add_parameter("file_name", "OBSOLETE");
   }
 
 
-  kw_archive_writer_process::
+  template< class PixType >
+  kw_archive_writer_process< PixType >::
   ~kw_archive_writer_process()
   {
-    delete m_archive_writer;
+    delete archive_writer_;
   }
 
 
@@ -50,10 +65,11 @@ VIDTK_LOGGER("kw_archive_writer_process");
  *
  * @return Config block with all parameters.
  */
-  config_block kw_archive_writer_process::
+  template< class PixType >
+  config_block kw_archive_writer_process< PixType >::
   params() const
   {
-    return (m_config);
+    return (config_);
   }
 
 
@@ -66,13 +82,39 @@ VIDTK_LOGGER("kw_archive_writer_process");
  *
  * @param[in] blk - updated config block
  */
-  bool kw_archive_writer_process::
+  template< class PixType >
+  bool kw_archive_writer_process< PixType >::
   set_params( config_block const& blk)
   {
-    blk.get("enabled", m_enable);
-    blk.get("file_path", m_file_path);
-    blk.get("file_name", m_file_name);
-    blk.get( "overwrite_existing", m_allow_overwrite );
+    // Check for obsolete params
+    if (blk.has("file_path") || blk.has("file_name"))
+    {
+      std::string message =
+        "Obsolete config parameters for kw_archive_writer_process. "
+        "Parameters \"file_path\" and \"file_name\" "
+        "have been replaced by \"output_directory\" and \"base_filename\". "
+        "kw_archive_writer_process disabled.";
+        LOG_ERROR(message);
+      disable_ = true;
+      return false;
+    }
+
+    try
+    {
+      disable_ = blk.get<bool>("disabled");
+      output_directory_ = blk.get<std::string>("output_directory");
+      base_filename_ = blk.get<std::string>("base_filename");
+      separate_meta_ = blk.get<bool>("separate_meta");
+      mission_id_ = blk.get<std::string>("mission_id");
+      stream_id_ = blk.get<std::string>("stream_id");
+      compress_image_ = blk.get<bool>("compress_image");
+    }
+    catch( config_block_parse_error const& e)
+    {
+      LOG_ERROR( this->name() << ": set_params failed: "
+                 << e.what() );
+      return false;
+    }
 
     return (true);
   }
@@ -85,29 +127,28 @@ VIDTK_LOGGER("kw_archive_writer_process");
  * have been supplied. It is our duty to initialize this process
  * and make it ready to operate.
  */
-  bool kw_archive_writer_process::
+  template< class PixType >
+  bool kw_archive_writer_process< PixType >::
   initialize()
   {
-    if ( ! m_enable)
+    if ( disable_ )
     {
       return (true);
     }
 
-    if (m_file_name.empty())
-    {
-      LOG_ERROR("Required base file name is missing");
-      return (false);
-    }
-
     // Create and initialize the real writer
-    this->m_archive_writer = new vidtk::kw_archive_writer();
+    this->archive_writer_ = new vidtk::kw_archive_index_writer< PixType >();
+    std::string path = output_directory_ + "/" + base_filename_;
+    typename vidtk::kw_archive_index_writer< PixType >::open_parameters writer_params =
+      typename vidtk::kw_archive_index_writer< PixType >::open_parameters()
+      .set_base_filename(path)
+      .set_separate_meta(separate_meta_)
+      .set_overwrite(true)
+      .set_mission_id(mission_id_)
+      .set_stream_id(stream_id_)
+      .set_compress_image(compress_image_);
 
-    bool status = this->m_archive_writer->set_up_files (m_file_path, m_file_name, m_allow_overwrite);
-    if ( ! status)
-    {
-      LOG_ERROR ("Could not set up output files.");
-    }
-
+    bool status = archive_writer_->open(writer_params);
     return status;
   }
 
@@ -117,101 +158,79 @@ VIDTK_LOGGER("kw_archive_writer_process");
  *
  * This method is called once per iteration of the pipeline.
  */
-  bool kw_archive_writer_process::
+  template< class PixType >
+  bool kw_archive_writer_process< PixType >::
   step()
   {
     // Need to return true in case we are in an async pipeline.
     // Need to consume inputs so source node will not block.
-    if ( ! m_enable )
+    if ( disable_ )
     {
       return (true);
     }
 
     // Test for invalid input - means we have reached end of video
-    if (! m_data_set.m_timestamp.is_valid() )
+    if (! timestamp_.is_valid() )
     {
       LOG_DEBUG(name() << ": invalid time stamp seen - assume EOF"); // TEMP
       return (false);
     }
 
-    if ( ! m_data_set.m_timestamp.has_time())
+    if ( ! timestamp_.has_time())
     {
       LOG_WARN ("Must have valid time in timestamp input.");
       return (true);
     }
 
-    // check for valid src -> utm homography
-    if (! !m_data_set.m_src_to_utm_homog.is_valid())
-    {
-      // src2utm not available, then try to make one from wld2utm and src2wld
-      if ( m_wld_to_utm_h.is_valid() && m_src_to_wld_h.is_valid() )
-      {
-        this->m_data_set.m_src_to_utm_homog = m_wld_to_utm_h * m_src_to_wld_h;
-      }
-      else
-      {
-        LOG_WARN ("Must have either src_to_utm or (src_to_wld and wld_to_utm)");
-        return (true);
-      }
-    }
-
-    // Write out one frame of data
-    this->m_archive_writer->write_frame_data (this->m_data_set);
-
-    // Set to known invalid state.
-    m_data_set.clear();
-    return (true);
+    // Write frame
+    bool status = archive_writer_->write_frame(timestamp_,
+                                               corner_points_,
+                                               image_,
+                                               frame_to_ref_,
+                                               gsd_);
+    return status;
   }
 
 
 // ================================================================
 // -- inputs --
-void kw_archive_writer_process::
+template< class PixType >
+void kw_archive_writer_process< PixType >::
 set_input_timestamp ( vidtk::timestamp const& val)
 {
-  m_data_set.m_timestamp = val;
+  timestamp_ = val;
 }
 
 
-void kw_archive_writer_process::
+template< class PixType >
+void kw_archive_writer_process< PixType >::
+set_input_corner_points(vidtk::video_metadata const& val)
+{
+  corner_points_ = val;
+}
+
+
+template< class PixType >
+void kw_archive_writer_process< PixType >::
 set_input_src_to_ref_homography ( vidtk::image_to_image_homography const& val)
 {
-  m_data_set.m_src_to_ref_homog = val;
+  frame_to_ref_ = val;
 }
 
 
-void kw_archive_writer_process::
-set_input_src_to_utm_homography ( vidtk::image_to_utm_homography const& val)
-{
-  m_data_set.m_src_to_utm_homog = val;
-}
-
-
-void kw_archive_writer_process::
-set_input_src_to_wld_homography ( vidtk::image_to_plane_homography const& val)
-{
-  m_src_to_wld_h = val;
-}
-
-
-void kw_archive_writer_process::
-set_input_wld_to_utm_homography ( vidtk::plane_to_utm_homography const& val)
-{
-  m_wld_to_utm_h = val;
-}
-
-void kw_archive_writer_process::
+template< class PixType >
+void kw_archive_writer_process< PixType >::
 set_input_world_units_per_pixel ( double val )
 {
-  m_data_set.m_gsd = val;
+  gsd_ = val;
 }
 
 
-void kw_archive_writer_process::
-set_input_image ( vil_image_view < vxl_byte > const& val)
+template< class PixType >
+void kw_archive_writer_process< PixType >::
+set_input_image ( vil_image_view < PixType > const& val)
 {
-  m_data_set.m_image = val;
+  image_ = val;
 }
-
 
 } // end namespace

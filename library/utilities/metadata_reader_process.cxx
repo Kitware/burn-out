@@ -1,24 +1,27 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2016 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
 #include "metadata_reader_process.h"
 
-#include <utilities/unchecked_return_value.h>
-#include <utilities/log.h>
-
 #include <vnl/vnl_double_3x3.h>
 
-#include <vcl_fstream.h>
+#include <fstream>
+
+#include <logger/logger.h>
+#undef VIDTK_DEFAULT_LOGGER
+#define VIDTK_DEFAULT_LOGGER __vidtk_logger_auto_metadata_reader_process_cxx__
+VIDTK_LOGGER("metadata_reader_process_cxx");
+
 
 namespace vidtk
 {
 
 metadata_reader_process
-::metadata_reader_process( vcl_string const& name )
-  : process( name, "metadata_reader_process" ),
+::metadata_reader_process( std::string const& _name )
+  : process( _name, "metadata_reader_process" ),
     input_filename_(),
     input_file_(),
     ts_()
@@ -45,12 +48,12 @@ metadata_reader_process
 {
   try
   {
-    blk.get( "filename", input_filename_ );
+    input_filename_ = blk.get<std::string>( "filename" );
   }
-  catch( unchecked_return_value & e )
+  catch( config_block_parse_error const& e )
   {
-    log_error( this->name() <<": set_params failed:"
-      << e.what() << vcl_endl );
+    LOG_ERROR( this->name() <<": set_params failed:"
+      << e.what() );
     return false;
   }
   return true;
@@ -65,15 +68,15 @@ metadata_reader_process
     input_file_.open( input_filename_.c_str() );
     if( !input_file_ )
     {
-      log_error( "Couldn't open file: " << input_filename_ <<vcl_endl );
+      LOG_ERROR( "Couldn't open file: " << input_filename_ );
       return false;
-    }     
-    
+    }
+
     char hash;
     input_file_.get( hash );
     if( hash == '#' )
     {
-      char comment_line[10000];
+      char comment_line[10000]; // FIXME: Static buffer.
       input_file_.getline( comment_line, 10000 );
 
       // TODO: comments are currently being ignored. Use them for reading in the metdata. 
@@ -97,7 +100,7 @@ metadata_reader_process
   {
     return true;
   }
-  
+
   char comma;
 
   unsigned frame_number;
@@ -131,39 +134,38 @@ metadata_reader_process
     for( unsigned j = 0; j < 3; j++ ){
       input_file_ >> M(i,j);
       // Handling one last missing comma at the end of line.
-      if( !(i == 2 && j == 2) ) 
+      if( !(i == 2 && j == 2) )
       {
         input_file_ >> comma;
       }
     }
   }
-  H_img_to_wld_.set( M ); 
+  H_img_to_wld_.set( M );
   H_wld_to_img_ = H_img_to_wld_.get_inverse();
 
   return true;
 }
 
 
-vgl_h_matrix_2d< double > const&
+vgl_h_matrix_2d< double >
 metadata_reader_process
 ::image_to_world_homography() const
 {
   return H_img_to_wld_;
 }
 
-vgl_h_matrix_2d< double > const&
+vgl_h_matrix_2d< double >
 metadata_reader_process
 ::world_to_image_homography() const
 {
   return H_wld_to_img_;
 }
 
-timestamp const&
+timestamp
 metadata_reader_process
-::timestamp() const 
+::timestamp() const
 {
   return ts_;
 }
 
 }// end namespace vidtk
-

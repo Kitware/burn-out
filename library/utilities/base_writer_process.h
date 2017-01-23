@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2011 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2011-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -27,12 +27,12 @@ class base_writer_process
 public:
   // typedef base_writer_process self_type;
 
-  base_writer_process( vcl_string const& name, vcl_string const& type );
+  base_writer_process( std::string const& name, std::string const& type );
   virtual ~base_writer_process();
 
 
 protected:
-  virtual bool initialize(base_io_process::internal_t);
+  virtual bool initialize_internal();
 
 private:
   void open_file();

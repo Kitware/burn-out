@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2014 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -7,11 +7,11 @@
 #ifndef vidtk_frame_to_frame_homography_process_h_
 #define vidtk_frame_to_frame_homography_process_h_
 
-#include <vcl_vector.h>
+#include <vector>
 #include <vgl/algo/vgl_h_matrix_2d.h>
 #include <process_framework/process.h>
 #include <process_framework/pipeline_aid.h>
-#include <tracking/track.h>
+#include <tracking_data/track.h>
 
 
 namespace vidtk
@@ -24,9 +24,9 @@ class frame_to_frame_homography_process
 public:
   typedef frame_to_frame_homography_process self_type;
 
-  frame_to_frame_homography_process( vcl_string const& name );
+  frame_to_frame_homography_process( std::string const& name );
 
-  ~frame_to_frame_homography_process();
+  virtual ~frame_to_frame_homography_process();
 
   virtual config_block params() const;
 
@@ -36,25 +36,20 @@ public:
 
   virtual bool step();
 
-  void set_new_tracks( vcl_vector< track_sptr > const& trks );
+  void set_new_tracks( std::vector< track_sptr > const& trks );
+  VIDTK_INPUT_PORT( set_new_tracks, std::vector< track_sptr > const& );
 
-  VIDTK_INPUT_PORT( set_new_tracks, vcl_vector< track_sptr > const& );
-
-  void set_terminated_tracks( vcl_vector< track_sptr > const& trks );
-
-  VIDTK_INPUT_PORT( set_terminated_tracks, vcl_vector< track_sptr > const& );
+  void set_terminated_tracks( std::vector< track_sptr > const& trks );
+  VIDTK_INPUT_PORT( set_terminated_tracks, std::vector< track_sptr > const& );
 
   bool homography_is_valid() const;
-
   VIDTK_OUTPUT_PORT( bool, homography_is_valid );
 
-  vgl_h_matrix_2d<double> const& forward_homography() const;
+  vgl_h_matrix_2d<double> forward_homography() const;
+  VIDTK_OUTPUT_PORT( vgl_h_matrix_2d<double>, forward_homography );
 
-  VIDTK_OUTPUT_PORT( vgl_h_matrix_2d<double> const&, forward_homography );
-
-  vgl_h_matrix_2d<double> const& backward_homography() const;
-
-  VIDTK_OUTPUT_PORT( vgl_h_matrix_2d<double> const&, backward_homography );
+  vgl_h_matrix_2d<double> backward_homography() const;
+  VIDTK_OUTPUT_PORT( vgl_h_matrix_2d<double>, backward_homography );
 
 public:
   struct extra_info_type
@@ -81,7 +76,7 @@ private:
 
   // Map from the tracked KLT features to extra stuff used for
   // homography estimation
-  typedef vcl_map< track_sptr, extra_info_type > state_map_type;
+  typedef std::map< track_sptr, extra_info_type > state_map_type;
   state_map_type tracks_;
 
   bool homog_is_valid_;

@@ -1,62 +1,27 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
 
 #include <utilities/video_metadata.h>
-#include <vcl_iomanip.h>
+
+#include <iomanip>
+#include <string>
+#include <iostream>
 
 
 namespace vidtk
 {
-
-
-const double video_metadata::lat_lon_t::INVALID = 444.;
-
-
-// ----------------------------------------------------------------
-/** Add two points.
- *
- * This method implements the offset operator.  This facilitates
- * resolving offset coordinates.
- */
-  video_metadata::lat_lon_t video_metadata::lat_lon_t::
-  operator+ ( const video_metadata::lat_lon_t &rhs ) const
-{
-  lat_lon_t res;
-
-  res.lat( this->lat() + rhs.lat() );
-  res.lon( this->lon() + rhs.lon() );
-
-  return res;
-}
-
-vcl_ostream &
-video_metadata::lat_lon_t::
-ascii_serialize(vcl_ostream& str) const
-{
-  str << m_lat << " "
-      << m_lon;
-  return str;
-}
-
-vcl_istream &
-video_metadata::lat_lon_t::
-ascii_deserialize(vcl_istream& str)
-{
-  str >> m_lat
-      >> m_lon;
-  return str;
-}
 
 // ----------------------------------------------------------------
 /** Constructor
  *
  *
  */
-video_metadata::video_metadata()
+video_metadata
+::video_metadata()
   : m_timeUTC(),
     m_platformLatLon(),
     m_platformAltitude(0),
@@ -79,26 +44,47 @@ video_metadata::video_metadata()
     m_sensorHorizFOV(0),
     m_sensorVertFOV(0),
 
+    m_horizontal_gsd(0),
+    m_vertical_gsd(0),
+
     m_is_valid(true)
 {
-
 }
 
 
-video_metadata::~video_metadata()
+video_metadata
+::~video_metadata()
 {
-
 }
 
 
-bool video_metadata::has_valid_corners() const
+bool
+video_metadata
+::has_valid_corners() const
 {
-  return m_corner_ul.is_valid() && m_corner_ur.is_valid()
-      && m_corner_lr.is_valid() && m_corner_ll.is_valid();
+  // First, all corners must be valid.
+  if ( ! m_corner_ul.is_valid() ) { return false; }
+  if ( ! m_corner_ur.is_valid() ) { return false; }
+  if ( ! m_corner_lr.is_valid() ) { return false; }
+  if ( ! m_corner_ll.is_valid() ) { return false; }
+
+  // Second, no two corners can be the same
+  if ( m_corner_ul == m_corner_ur ) { return false; }
+  if ( m_corner_ul == m_corner_lr ) { return false; }
+  if ( m_corner_ul == m_corner_ll ) { return false; }
+
+  if ( m_corner_ur == m_corner_lr ) { return false; }
+  if ( m_corner_ur == m_corner_ll ) { return false; }
+
+  if ( m_corner_lr == m_corner_ll ) { return false; }
+
+  return true; // finally - valid corners
 }
 
 
-bool video_metadata::has_valid_frame_center() const
+bool
+video_metadata
+::has_valid_frame_center() const
 {
   return m_frameCenter.is_valid();
 }
@@ -112,112 +98,117 @@ bool video_metadata::has_valid_frame_center() const
  * @param[in] str - output stream
  * @return The input stream is returned.
  */
-vcl_ostream & video_metadata::
-to_stream (vcl_ostream & str) const
+std::ostream&
+video_metadata
+::to_stream (std::ostream & str) const
 {
+  std::streamsize old_prec = str.precision();
+  str.precision(22);
+
   str << "video_metadata @ " << this << "  (metadata "
       << ( is_valid() ? ""  : "not") << " valid)"
-      << vcl_endl
+      << std::endl
 
-      << "TimeUTC: " << m_timeUTC << vcl_endl
+      << "TimeUTC: " << m_timeUTC << std::endl
       << "Platform location: " << m_platformLatLon << "  at: " << m_platformAltitude << " (ASL)"
-      << vcl_endl
+      << std::endl
 
       << "Platform [R:" << m_platformRoll << " P:" << m_platformPitch << " W:" << m_platformYaw << "]"
-      << vcl_endl
+      << std::endl
 
       << "Sensor WRT platform [R:" << m_sensorRoll << " P:" << m_sensorPitch << " W:" << m_sensorYaw << "]"
-      << vcl_endl
+      << std::endl
 
       << "Corners: (ul) " << m_corner_ul
       << "  (ur) " << m_corner_ur
       << "  (lr) " << m_corner_lr
       << "  (ll) " << m_corner_ll
-      << vcl_endl
+      << std::endl
 
       << "Slant range: " << m_slantRange << "   horiz FOV: " << m_sensorHorizFOV
       << "   vert FOV: " << m_sensorVertFOV
-      << vcl_endl
+      << std::endl
 
       << "Frame center: " << m_frameCenter
-      << vcl_endl
-
+      << std::endl
     ;
 
-    return str;
-}
-
-vcl_ostream&
-video_metadata::
-ascii_serialize(vcl_ostream& str) const
-{
-  str << vcl_setprecision(20);
-  str << m_timeUTC << " ";
-  m_platformLatLon.ascii_serialize(str) << " ";
-  str << m_platformAltitude << " "
-      << m_platformRoll << " "
-      << m_platformPitch << " "
-      << m_platformYaw << " "
-      << m_sensorRoll << " "
-      << m_sensorPitch << " "
-      << m_sensorYaw << " ";
-  m_corner_ul.ascii_serialize(str) << " ";
-  m_corner_ur.ascii_serialize(str) << " ";
-  m_corner_lr.ascii_serialize(str) << " ";
-  m_corner_ll.ascii_serialize(str) << " ";
-  str << m_slantRange << " "
-      << m_sensorHorizFOV << " "
-      << m_sensorVertFOV << " ";
-  m_frameCenter.ascii_serialize(str);
+  str.precision( old_prec );
 
   return str;
 }
 
 
-vcl_istream&
-video_metadata::
-ascii_deserialize(vcl_istream& str)
-{
-  str >> m_timeUTC;
-  m_platformLatLon.ascii_deserialize(str);
-  str >> m_platformAltitude
-      >> m_platformRoll
-      >> m_platformPitch
-      >> m_platformYaw
-      >> m_sensorRoll
-      >> m_sensorPitch
-      >> m_sensorYaw;
-  m_corner_ul.ascii_deserialize(str);
-  m_corner_ur.ascii_deserialize(str);
-  m_corner_lr.ascii_deserialize(str);
-  m_corner_ll.ascii_deserialize(str);
-  str >> m_slantRange
-      >> m_sensorHorizFOV
-      >> m_sensorVertFOV;
-  m_frameCenter.ascii_deserialize(str);
-
-  return str;
-}
-
-
-bool video_metadata::
-is_valid() const
+bool
+video_metadata
+::is_valid() const
 {
   return m_is_valid;
 }
 
 
-video_metadata& video_metadata::is_valid( bool in )
+bool
+video_metadata
+::has_valid_slant_range() const
+{
+  return m_slantRange != 0.0;
+}
+
+
+video_metadata&
+video_metadata
+::is_valid( bool in )
 {
   m_is_valid = in;
   return *this;
 }
 
 
-bool video_metadata::
-has_valid_time() const
+bool
+video_metadata
+::has_valid_time() const
 {
   return m_timeUTC != 0;
+}
+
+
+bool
+video_metadata
+::has_valid_gsd() const
+{
+  return ( has_valid_horizontal_gsd() || has_valid_vertical_gsd() );
+}
+
+
+bool
+video_metadata
+::has_valid_horizontal_gsd() const
+{
+  return ( m_horizontal_gsd > 0 );
+}
+
+
+bool
+video_metadata
+::has_valid_vertical_gsd() const
+{
+  return ( m_vertical_gsd > 0 );
+}
+
+
+bool
+video_metadata
+::has_valid_img_to_wld_homog() const
+{
+  return m_img_to_wld_homog.is_valid();
+}
+
+
+bool
+video_metadata
+::has_valid_camera_mode() const
+{
+  return !m_camera_mode.empty();
 }
 
 
@@ -228,8 +219,9 @@ has_valid_time() const
  * equal.  With the exception of both objects are invalid, then they
  * are equal regardless of the value of the other fields.
  */
-bool video_metadata::
-operator == ( const video_metadata &rhs ) const
+bool
+video_metadata
+::operator == ( const video_metadata &rhs ) const
 {
 
 #define TEST_ONE_FIELD(F)  if (this->F != rhs.F) return false
@@ -260,6 +252,8 @@ operator == ( const video_metadata &rhs ) const
   TEST_ONE_FIELD ( slant_range() );
   TEST_ONE_FIELD ( sensor_horiz_fov() );
   TEST_ONE_FIELD ( sensor_vert_fov() );
+
+  TEST_ONE_FIELD ( frame_center() );
 
 #undef TEST_ONE_FIELD
 

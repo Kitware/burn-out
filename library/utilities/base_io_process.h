@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2011 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2011-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -7,8 +7,8 @@
 #ifndef vidtk_base_io_process_h_
 #define vidtk_base_io_process_h_
 
-#include <vcl_vector.h>
-#include <vcl_fstream.h>
+#include <vector>
+#include <fstream>
 
 #include <process_framework/process.h>
 #include <process_framework/pipeline_aid.h>
@@ -47,25 +47,23 @@ public:
   base_reader_writer * add_data_io(base_reader_writer const& obj);
 
   // Write outputs
-  virtual void write_all_objects(vcl_ostream& str);
+  virtual void write_all_objects(std::ostream& str);
 
   // Read inputs
-  virtual int read_all_objects(vcl_istream& str);
+  virtual int read_all_objects(std::istream& str);
 
   // Write headers
-  virtual void write_all_headers(vcl_ostream& str);
+  virtual void write_all_headers(std::ostream& str);
 
-  vcl_string const& get_file_name() const;
+  std::string const& get_file_name() const;
 
 
 
 protected:
-  enum internal_t { INTERNAL };
-
-  virtual bool initialize(base_io_process::internal_t) = 0;
+  virtual bool initialize_internal() = 0;
   group_data_reader_writer * get_group();
 
-  base_io_process(vcl_string const & name, vcl_string const & type);
+  base_io_process(std::string const & name, std::string const & type);
   virtual ~base_io_process();
 
   virtual int pre_step_hook();
@@ -73,17 +71,17 @@ protected:
 
   virtual int do_file_step() = 0;
   virtual void open_file() = 0;
-  vcl_fstream& file_stream();
+  std::fstream& file_stream();
 
   config_block m_configBlock;
-  vcl_string m_filename;
+  std::string m_filename;
   group_data_reader_writer m_dataGroup;
   bool m_appendFile;
   bool m_enabled;
 
 
 private:
-  vcl_fstream m_fileStream;
+  std::fstream m_fileStream;
 
 };
 

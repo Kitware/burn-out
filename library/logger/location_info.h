@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010,2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -8,7 +8,7 @@
 #ifndef _LOCATION_INFO_H_
 #define _LOCATION_INFO_H_
 
-#include <vcl_string.h>
+#include <string>
 
 
 namespace vidtk {
@@ -39,29 +39,29 @@ public:
   /** Get file name. The file name for the current location is
    * returned.
    * @return file name, may be null. */
-  vcl_string get_file_name() const;
+  std::string get_file_name() const;
   char const * get_file_name_ptr() const { return m_fileName; }
 
   /** Get path part of file spec. The path or base name portion of the
    * file path is returned.
    * @ return file name base. May be null. */
-  vcl_string get_file_path() const;
+  std::string get_file_path() const;
 
   /** Get full function/method signature. The whole signature, as
    * captured by the macro, is returned.
    */
-  vcl_string get_signature() const;
+  std::string get_signature() const;
 
   /** Get method name. The method name for the current location is
    * returned.
    * @return method name, may be null. */
-  vcl_string get_method_name() const;
+  std::string get_method_name() const;
   char const * get_method_name_ptr() const { return m_methodName; }
 
   /** Get class name. This method returns the method name for the
    * current location
    * @return class name. */
-  vcl_string get_class_name() const;
+  std::string get_class_name() const;
 
   /** Get line number. The line number for the current location is
    * returned.

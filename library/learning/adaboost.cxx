@@ -1,12 +1,12 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
 #include "adaboost.h"
 
-#include <vcl_iostream.h>
+#include <iostream>
 
 #include <vnl/vnl_double_2.h>
 
@@ -14,19 +14,26 @@
 #define DEBUG
 
 #ifdef DEBUG
-#include <vcl_string.h>
-#include <vcl_algorithm.h>
-#include <vcl_sstream.h>
-#include <vcl_iomanip.h>
-#include <vcl_fstream.h>
+#include <string>
+#include <algorithm>
+#include <sstream>
+#include <iomanip>
+#include <fstream>
 #endif
 
 #include <math.h>
 
 #include <learning/linear_weak_learners.h>
-//#include <learning/gaussian_weak_learners.h>
+#include <learning/gaussian_weak_learners.h>
 #include <learning/stump_weak_learners.h>
 #include <learning/histogram_weak_learners.h>
+#include <learning/tree_weak_learners.h>
+
+#include <logger/logger.h>
+#undef VIDTK_DEFAULT_LOGGER
+#define VIDTK_DEFAULT_LOGGER __vidtk_logger_auto_adaboost_cxx__
+VIDTK_LOGGER("adaboost_cxx");
+
 
 namespace vidtk
 {
@@ -40,7 +47,7 @@ inline double alpha_t(double e_t)
   return 1.0;
 }
 
-void sigmoid_training(vcl_vector<vnl_double_2> const & training, double & A, double & B)
+void sigmoid_training(std::vector<vnl_double_2> const & training, double & A, double & B)
 {
   double prior1 = 0;
   double prior0 = 0;
@@ -59,28 +66,28 @@ void sigmoid_training(vcl_vector<vnl_double_2> const & training, double & A, dou
       assert(!"This should not happen");
     }
     A = 0;
-    B = vcl_log((prior0+1)/(prior1+1));
+    B = std::log((prior0+1)/(prior1+1));
     double hiTarget = (prior1 + 1)/(prior1+2);
     double loTarget = 1/(prior0+2);
     double lambda = 1e-3;
     double olderr = 1e300;
     unsigned int count = 0;
-    vcl_vector<double> pp(training.size(),((prior1+1)/(prior0+prior1+2)));
+    std::vector<double> pp(training.size(),((prior1+1)/(prior0+prior1+2)));
     for(unsigned int it = 0; it < 100; ++it)
     {
       double a = 0, b = 0, c = 0, d = 0, e = 0;
-      for(unsigned int i = 0; i < training.size(); ++i)
+      for(unsigned int j = 0; j < training.size(); ++j)
       {
-        double t = (training[i][0] == 1)?hiTarget:loTarget;
-        double d1 = pp[i] - t;
-        double d2 = pp[i]*(1-pp[i]);
-        a += training[i][1]*training[i][1]*d2;
+        double t = (training[j][0] == 1)?hiTarget:loTarget;
+        double d1 = pp[j] - t;
+        double d2 = pp[j]*(1-pp[j]);
+        a += training[j][1]*training[j][1]*d2;
         b += d2;
-        c += training[i][1]*d2;
-        d += training[i][1]*d1;
+        c += training[j][1]*d2;
+        d += training[j][1]*d1;
         e += d1;
       }
-      if( vcl_abs(d) < 1e-9 && vcl_abs(e) < 1e-9 )
+      if( std::abs(d) < 1e-9 && std::abs(e) < 1e-9 )
       {
         break;
       }
@@ -98,14 +105,14 @@ void sigmoid_training(vcl_vector<vnl_double_2> const & training, double & A, dou
         A = oldA + ((b+lambda)*d-c*e)/det;
         B = oldB + ((a+lambda)*e-c*d)/det;
         err = 0;
-        for(unsigned int i = 0; i < training.size(); ++i)
+        for(unsigned int j = 0; j < training.size(); ++j)
         {
-          double p = 1/(1+vcl_exp(training[i][1]*A+B));
-          pp[i] = p;
-          double t = (training[i][0] == 1)?hiTarget:loTarget;
+          double p = 1/(1+std::exp(training[j][1]*A+B));
+          pp[j] = p;
+          double t = (training[j][0] == 1)?hiTarget:loTarget;
           //NOTE: there might be an error with log;
-          double log_p = (p!=0)?vcl_log(p):-200.0;
-          double log_1mp = (p!=1)?vcl_log(1-p):-200.0;
+          double log_p = (p!=0)?std::log(p):-200.0;
+          double log_1mp = (p!=1)?std::log(1-p):-200.0;
 //           assert(p);
 //           assert(1-p);
           err -= t*log_p + (1-t)*log_1mp;
@@ -118,7 +125,7 @@ void sigmoid_training(vcl_vector<vnl_double_2> const & training, double & A, dou
         lambda *= 10;
         if(lambda >= 1e6 )
         {
-          vcl_cout << "SOMETHING IS BROKEN HERE" << vcl_endl;
+          LOG_INFO( "SOMETHING IS BROKEN HERE" );
           break;
         }
         double diff = err - olderr;
@@ -141,13 +148,13 @@ void sigmoid_training(vcl_vector<vnl_double_2> const & training, double & A, dou
   }
 }
 
-void adaboost::train(vcl_vector<learner_training_data_sptr> const & d)
+void adaboost::train(std::vector<learner_training_data_sptr> const & d)
 {
   assert(this->weak_learner_factories_.size());
   this->learners_.clear();
   training_feature_set training_set(d);
   unsigned int s = training_set.size();
-  vnl_vector<double> wgts(s, 1.0/(double)(s));
+  vnl_vector<double> wgts(s, 1.0/s);
 
   // For t = 1, ..., MAX
   for(unsigned int t = 0; t < this->max_number_of_iterations_; ++t)
@@ -156,13 +163,13 @@ void adaboost::train(vcl_vector<learner_training_data_sptr> const & d)
     // Find the best distribution for the current distribution.
     weak_learner_sptr wc = this->weak_learner_factories_[0]->train(training_set,wgts);
     double et = this->error_rate(wc.as_pointer(), training_set, wgts);
-    //vcl_cout << "\t" << et << vcl_endl;
+    //LOG_INFO( "\t" << et );
 
     for(unsigned int i = 1; i < this->weak_learner_factories_.size(); ++i)
     {
       weak_learner_sptr temp_wc = this->weak_learner_factories_[i]->train(training_set,wgts);
       double temp_et = this->error_rate(temp_wc.as_pointer(), training_set, wgts);
-      //vcl_cout << "\t" << temp_et << vcl_endl;
+      //LOG_INFO( "\t" << temp_et );
       if(temp_et<et)
       {
         wc = NULL;
@@ -174,7 +181,7 @@ void adaboost::train(vcl_vector<learner_training_data_sptr> const & d)
         temp_wc = NULL;
       }
     }
-    //vcl_cout << "ERROR: " << et << vcl_endl;
+    //LOG_ERROR( "ERROR: " << et );
     // If the error rate is greater than or equal to 50%, then stop
     if(et >= 0.5)
     {
@@ -187,7 +194,7 @@ void adaboost::train(vcl_vector<learner_training_data_sptr> const & d)
       this->learners_.push_back(wc);
       double a_t = alpha_t(et);
       this->weights_.push_back(a_t);
-      //vcl_cout << et << " " << a_t << vcl_endl;
+      //LOG_INFO( et << " " << a_t );
       if(et != 0)
       {
         this->update_distribution(wc.as_pointer(), training_set, a_t, wgts);
@@ -203,18 +210,18 @@ void adaboost::train(vcl_vector<learner_training_data_sptr> const & d)
 }
 
 void
-adaboost::trainPlatt(vcl_vector<learner_training_data_sptr> const & datas)
+adaboost::train_platt(std::vector<learner_training_data_sptr> const & datas)
 {
   /// Calculate the Platt calibration parameters
   assert(this->learners_.size());
   assert(this->learners_.size() == this->weights_.size());
-  vcl_vector< learner_training_data_sptr > rvect = datas;
+  std::vector< learner_training_data_sptr > rvect = datas;
   random_shuffle(rvect.begin(), rvect.end());
-  vcl_vector< vnl_double_2 > platt_training_values;
+  std::vector< vnl_double_2 > platt_training_values;
   for(unsigned int i = 0; i < 3; ++i)
   {
-    vcl_vector< learner_training_data_sptr > training;
-    vcl_vector< learner_training_data_sptr > testing;
+    std::vector< learner_training_data_sptr > training;
+    std::vector< learner_training_data_sptr > testing;
     for(unsigned int t = 0; t < rvect.size(); ++t)
     {
       if(t%3==i)
@@ -226,7 +233,7 @@ adaboost::trainPlatt(vcl_vector<learner_training_data_sptr> const & datas)
         training.push_back(rvect[t]);
       }
     }
-    vcl_vector<weak_learner_sptr> wcfs; //, unsigned int max = 100
+    std::vector<weak_learner_sptr> wcfs; //, unsigned int max = 100
     for(unsigned int t = 0; t < weak_learner_factories_.size(); ++t)
     {
       wcfs.push_back(weak_learner_factories_[t]->clone());
@@ -248,14 +255,28 @@ int adaboost::classify(learner_data const & data)
   return this->classify( data, learners_.size() );
 }
 
-int adaboost::classify(learner_data const & data,unsigned int use_upto)
+double adaboost::classify_raw(learner_data const & data)
 {
-  assert(use_upto <= this->learners_.size());
-  assert(use_upto !=0);
+
   assert(this->learners_.size());
   assert(this->learners_.size() == this->weights_.size());
   double result = 0;
-  for( unsigned int i = 0; i < use_upto; ++i )
+  for( unsigned int i = 0; i < this->learners_.size(); ++i )
+  {
+    assert(this->learners_[i]);
+    result += this->weights_[i]*this->learners_[i]->classify(data);
+  }
+  return result;
+}
+
+int adaboost::classify(learner_data const & data,unsigned int use_up_to)
+{
+  assert(use_up_to <= this->learners_.size());
+  assert(use_up_to !=0);
+  assert(this->learners_.size());
+  assert(this->learners_.size() == this->weights_.size());
+  double result = 0;
+  for( unsigned int i = 0; i < use_up_to; ++i )
   {
     assert(this->learners_[i]);
     result += this->weights_[i]*this->learners_[i]->classify(data);
@@ -306,7 +327,7 @@ adaboost
 }
 
 adaboost
-::adaboost( vcl_vector<weak_learner_sptr> const & weak_learner_factories,
+::adaboost( std::vector<weak_learner_sptr> const & weak_learner_factories,
             unsigned int max )
   : weak_learner_factories_(weak_learner_factories),
     max_number_of_iterations_(max), platt_trained_(false)
@@ -320,7 +341,23 @@ adaboost::~adaboost()
 }
 
 bool
-adaboost::read(vcl_istream & in)
+adaboost::read_from_file(const std::string& fn)
+{
+  std::ifstream input( fn.c_str() );
+
+  if( input )
+  {
+    bool status = this->read( input );
+    input.close();
+    return status;
+  }
+
+  LOG_ERROR( "Unable to open: " << fn );
+  return false;
+}
+
+bool
+adaboost::read(std::istream & in)
 {
   unsigned int ws;
   in >> ws;
@@ -344,14 +381,30 @@ adaboost::read(vcl_istream & in)
       case weak_learners::histogram_weak_learner:
         this->learners_[i] = new histogram_weak_learner();
         break;
+      case weak_learners::weak_learner_gausian:
+        this->learners_[i] = new weak_learner_gausian();
+        break;
+      case weak_learners::weak_learner_single_gausian:
+        this->learners_[i] = new weak_learner_single_gausian();
+        break;
+      case weak_learners::weak_learner_single_hw_gausian:
+        this->learners_[i] = new weak_learner_single_hw_gausian();
+        break;
       case weak_learners::linear_weak_learner:
         this->learners_[i] = new linear_weak_learner();
         break;
+      case weak_learners::tree_weak_learner:
+        this->learners_[i] = new tree_weak_learner();
+        break;
       default:
-        vcl_cerr << "UNCONGIZED";
+        LOG_INFO( "UNCONGIZED");
         return false;
     }
-    this->learners_[i]->read(in);
+    if( !this->learners_[i]->read(in) )
+    {
+      LOG_ERROR( "Error parsing learner" );
+      return false;
+    }
   }
   if(!in.eof())
   {
@@ -361,10 +414,10 @@ adaboost::read(vcl_istream & in)
 }
 
 bool
-adaboost::write(vcl_ostream & out) const
+adaboost::write(std::ostream & out) const
 {
   unsigned int wsize = this->weights_.size();
-  out << wsize << vcl_endl;
+  out << wsize << std::endl;
   for(unsigned int i = 0; i < wsize; ++i)
   {
     out << this->weights_[i];
@@ -373,20 +426,20 @@ adaboost::write(vcl_ostream & out) const
       out << " ";
     }
   }
-  out << vcl_endl;
-  out << this->learners_.size() << vcl_endl;
+  out << std::endl;
+  out << this->learners_.size() << std::endl;
   for(unsigned int i = 0; i < this->learners_.size(); ++i)
   {
-    out << (unsigned int)(this->learners_[i]->get_id()) << vcl_endl;
+    out << static_cast<unsigned int>(this->learners_[i]->get_id()) << std::endl;
     this->learners_[i]->write(out);
-    out << vcl_endl;
+    out << std::endl;
   }
-  out << platt_trained_ << " " << platt_A_ << " " << platt_B_ << vcl_endl;
+  out << platt_trained_ << " " << platt_A_ << " " << platt_B_ << std::endl;
   return true;
 }
 
 double
-adaboost::probability(learner_data const & data)
+adaboost::platt_probability(learner_data const & data)
 {
   if(!this->platt_trained_)
   {
@@ -396,7 +449,7 @@ adaboost::probability(learner_data const & data)
   assert(this->learners_.size());
   assert(this->learners_.size() == this->weights_.size());
   double fx = this->f_x(data);
-  return 1./(1. + vcl_exp(platt_A_*fx+platt_B_));
+  return 1./(1. + std::exp(platt_A_*fx+platt_B_));
 }
 
 
@@ -410,9 +463,9 @@ double adaboost::f_x(learner_data const & data)
   {
     assert(this->learners_[i]);
     weight_sum += this->weights_[i];
-    //vcl_cout << "," << this->weights_[i] << ",";
+    //LOG_INFO( "," << this->weights_[i] << ",");
     fx += this->weights_[i]*this->learners_[i]->classify01(data);
-    //vcl_cout << "\n";
+    //LOG_INFO( "");
   }
   fx = fx/weight_sum;
 
@@ -420,22 +473,22 @@ double adaboost::f_x(learner_data const & data)
 }
 
 void
-adaboost::calculate_stats( vcl_map< vcl_string, unsigned int > & weak_learner_counts,
-                          vcl_map< vcl_string, vnl_double_2 > & average_value,
-                          vcl_map< vcl_string, vnl_double_2 > & average_importance,
-                          vcl_map< vcl_string, vnl_double_2 > & average_number_of_times )
+adaboost::calculate_stats( std::map< std::string, unsigned int > & weak_learner_counts,
+                          std::map< std::string, vnl_double_2 > & average_value,
+                          std::map< std::string, vnl_double_2 > & average_importance,
+                          std::map< std::string, vnl_double_2 > & average_number_of_times )
 {
   assert(this->learners_.size());
   assert(this->learners_.size() == this->weights_.size());
   double weight_sum = 0;
-  vcl_map<vcl_string, int> been_visited;
+  std::map<std::string, int> been_visited;
   for( unsigned int i = 0; i < this->learners_.size(); ++i )
   {
     weight_sum += this->weights_[i];
   }
   for(unsigned int i = 0; i < this->learners_.size(); ++i)
   {
-    vcl_string u = this->learners_[i]->unique_id();
+    std::string u = this->learners_[i]->unique_id();
     if(weak_learner_counts.find(u) == weak_learner_counts.end())
     {
       weak_learner_counts[u] = 0;
@@ -455,6 +508,11 @@ adaboost::calculate_stats( vcl_map< vcl_string, unsigned int > & weak_learner_co
     average_value[u][1]++;
     average_number_of_times[u][0]++;
   }
+}
+
+bool adaboost::is_valid() const
+{
+  return !weights_.empty();
 }
 
 } //namespace vidtk

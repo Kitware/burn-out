@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -9,7 +9,7 @@
 
 #include <utilities/buffer.h>
 
-#include <vcl_vector.h>
+#include <vector>
 
 namespace vidtk
 {
@@ -22,10 +22,13 @@ public:
   ring_buffer();
   virtual ~ring_buffer();
 
+  /// \brief Set the maximum capacity of the buffer.
   virtual void set_capacity( unsigned size );
 
+  /// \brief Returns the maximum capacity of the buffer.
   virtual unsigned capacity() const;
 
+  /// \brief Returns the number of entries in the buffer.
   virtual unsigned size() const;
 
   /// \brief Inserts an item into the buffer.
@@ -34,32 +37,31 @@ public:
   /// the buffer is at capacity.
   virtual void insert( Data const& item );
 
-  /// The index of of the newest item in the buffer.
+  /// \brief The index of of the newest item in the buffer.
   virtual unsigned head() const;
 
-  /// \brief Return the item \a offset away from the last item.
+  /// \brief Return the item \a offset away from the most recent item.
   ///
-  /// An \offset of 0 refers to the last (oldest) item.
+  /// An \a offset of 0 refers to the most recent (newest) item.
   ///
   /// It is an error to ask for an offset beyond the number of items
   /// currently in the buffer.  Use has_datum_at() or size() to
   /// verify.
-  virtual Data const& datum_at( unsigned offset ) const;
+  virtual const Data& datum_at( unsigned offset ) const;
 
-  /// \brief Check if there is an \a offset away from the last item.
+  /// \brief Check if there is an \a offset away from the head item.
   ///
-  /// An \offset of 0 refers to the last (oldest) item.
+  /// An \a offset of 0 refers to the most recent (newest) item.
   virtual bool has_datum_at( unsigned offset ) const;
 
   /// \brief Not implemented
   virtual unsigned offset_of( Data const& ) const { return unsigned(-1); }
 
-  /// \brief Empties the buffer. Returns the buffer to the initial state.
+  /// \brief Empties the buffer and returns the buffer to the initial state.
   virtual void clear();
 
-
 protected:
-  vcl_vector< Data > buffer_;
+  std::vector< Data > buffer_;
   unsigned head_;
   unsigned item_count_;
 };

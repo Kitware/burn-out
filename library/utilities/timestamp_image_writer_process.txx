@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -11,7 +11,7 @@ namespace vidtk
 {
 
 timestamp_image_writer_process
-::timestamp_image_writer_process( const vcl_string& name )
+::timestamp_image_writer_process( const std::string& name )
   : process( name )
 {
   // what configurables do we want?
@@ -55,4 +55,4 @@ timestamp_image_writer_process
   return add_timestamp( unstamped_image_, timestamped_image_, ts_ );
 }
 
-
+} // namespace vidtk

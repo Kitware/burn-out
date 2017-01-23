@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010,2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -7,7 +7,7 @@
 
 #include <logger/vidtk_logger.h>
 
-#include <logger/logger_manager.h>
+#include <logger/logger_factory.h>
 #include <vbl/vbl_smart_ptr.hxx>
 
 
@@ -19,28 +19,22 @@ namespace vidtk {
  *
  */
 vidtk_logger
-::vidtk_logger(const char * const realm)
-  : m_parent(0)
-{
-  m_loggingRealm = realm;
-  m_parent = ::vidtk::logger_manager::instance(); // currently only one parent possible
-}
+::vidtk_logger( logger_ns::logger_factory* p, const char * const realm)
+  : m_parent( p ),
+    m_loggingRealm( realm )
+{ }
 
 
 vidtk_logger
-::vidtk_logger( vcl_string const& realm)
-  : m_parent(0)
-{
-  m_loggingRealm = realm;
-  m_parent = ::vidtk::logger_manager::instance(); // currently only one parent possible
-}
+::vidtk_logger( logger_ns::logger_factory* p, std::string const& realm)
+  : m_parent( p ),
+    m_loggingRealm( realm )
+{ }
 
 
 vidtk_logger
 :: ~vidtk_logger()
-{
-
-}
+{ }
 
 
 // ----------------------------------------------------------------
@@ -67,7 +61,7 @@ char const* vidtk_logger
 }
 
 
-vcl_string vidtk_logger
+std::string vidtk_logger
 ::get_name()
 {
   return m_loggingRealm;
@@ -77,4 +71,3 @@ vcl_string vidtk_logger
 } // end namespace
 
 VBL_SMART_PTR_INSTANTIATE( ::vidtk::vidtk_logger );
-

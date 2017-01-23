@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2010 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2010-2015 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -7,8 +7,8 @@
 #ifndef _VIDTK_DESERIALIZE_PROCESS_H_
 #define _VIDTK_DESERIALIZE_PROCESS_H_
 
-#include <vcl_string.h>
-#include <vcl_istream.h>
+#include <string>
+#include <istream>
 #include <vsl/vsl_fwd.h>
 
 #include <process_framework/process.h>
@@ -24,7 +24,7 @@ class deserialize_process : public process
 public:
   typedef deserialize_process self_type;
 
-  deserialize_process( const vcl_string &name );
+  deserialize_process( const std::string &name );
 
   ~deserialize_process();
 
@@ -36,8 +36,8 @@ public:
 
   virtual bool step();
 
-  void set_stream( vcl_istream &stream );
-  VIDTK_INPUT_PORT( set_stream, vcl_istream& );
+  void set_stream( std::istream &stream );
+  VIDTK_INPUT_PORT( set_stream, std::istream& );
 
   T& data(void);
   VIDTK_OUTPUT_PORT( T&, data);
@@ -47,7 +47,7 @@ private:
 
   bool disabled_;
   bool first_step_;
-  vcl_istream *stream_;
+  std::istream *stream_;
   vsl_b_istream *bstream_;
   T *data_;
 };
