@@ -17,12 +17,12 @@
 
 #include <tracking_data/io/plugin_export.h>
 
-extern "C"  void PLUGIN_EXPORT register_factories( vidtk::plugin_manager* pm );
+extern "C"  void PLUGIN_EXPORT register_items( vidtk::plugin_manager* pm );
 
 // ------------------------------------------------------------------
 // Register factories in this module
 //
-void register_factories( vidtk::plugin_manager* pm )
+void register_items( vidtk::plugin_manager* pm )
 {
   vidtk::plugin_factory_handle_t fact;
 

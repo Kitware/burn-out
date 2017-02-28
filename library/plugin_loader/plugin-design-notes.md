@@ -40,9 +40,9 @@ Given the set of required plugin metadata and the function specific metadata, a 
 
 ### Plugin Manager
 
-The plugin manager is implemented as a singleton which discovers all available plugins when it is constructed. A plugin (shared library or DLL) must have exposed a C function `register_factories()` in order to be considered a suitable plugin. Other loadable modules can share the same directories if they do not expose this function.
+The plugin manager is implemented as a singleton which discovers all available plugins when it is constructed. A plugin (shared library or DLL) must have exposed a C function `register_items()` in order to be considered a suitable plugin. Other loadable modules can share the same directories if they do not expose this function.
 
-The `register_factories()` function is called by the plugin manager to obtain a list of object factories in the shared object. The plugin manager makes a map of all registered object factories.
+The `register_items()` function is called by the plugin manager to obtain a list of object factories in the shared object. The plugin manager makes a map of all registered object factories.
 
 Since we are mostly supporting polymorphic class hierarchies, each factory creates a concrete object that provides a common interface. The factories are grouped by the plugin manager into lists of factories that provide objects that expose the same interface type. The interface type is used as the key to the map.
 

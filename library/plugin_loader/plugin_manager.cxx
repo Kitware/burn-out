@@ -327,7 +327,7 @@ plugin_manager_impl
   }
 
   DL::SymbolPointer fp =
-    DL::GetSymbolAddress( lib_handle, "register_factories" );
+    DL::GetSymbolAddress( lib_handle, "register_items" );
   if ( 0 == fp )
   {
     std::string str("Unknown error");
@@ -337,7 +337,7 @@ plugin_manager_impl
       str = std::string( last_error );
     }
 
-    LOG_WARN( "plugin_manager:: Unable to bind to function \"register_factories()\" : "
+    LOG_WARN( "plugin_manager:: Unable to bind to function \"register_items()\" : "
               << last_error );
 
     DL::CloseLibrary( lib_handle );

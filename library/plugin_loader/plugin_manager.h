@@ -72,7 +72,7 @@ public:
    *
    * Example:
    \code
-   void register_factories( plugin_manager* pm )
+   void register_items( plugin_manager* pm )
    {
      //                 interface type                concrete type
      plugin_factory_handle_t fact = pm->ADD_FACTORY( vidtk::ns_track_reader::track_reader_interface, vidtk::ns_track_reader::track_reader_nit );
