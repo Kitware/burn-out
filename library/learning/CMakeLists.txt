@@ -1,6 +1,5 @@
 set( vidtk_learning_sources
   adaboost.h                         adaboost.cxx
-  gaussian_weak_learners.h           gaussian_weak_learners.cxx
   histogram_weak_learners.h          histogram_weak_learners.cxx
   learner_data.h                     learner_data.cxx
   linear_weak_learners.h             linear_weak_learners.cxx

@@ -24,7 +24,6 @@
 #include <math.h>
 
 #include <learning/linear_weak_learners.h>
-#include <learning/gaussian_weak_learners.h>
 #include <learning/stump_weak_learners.h>
 #include <learning/histogram_weak_learners.h>
 #include <learning/tree_weak_learners.h>
@@ -380,15 +379,6 @@ adaboost::read(std::istream & in)
         break;
       case weak_learners::histogram_weak_learner:
         this->learners_[i] = new histogram_weak_learner();
-        break;
-      case weak_learners::weak_learner_gausian:
-        this->learners_[i] = new weak_learner_gausian();
-        break;
-      case weak_learners::weak_learner_single_gausian:
-        this->learners_[i] = new weak_learner_single_gausian();
-        break;
-      case weak_learners::weak_learner_single_hw_gausian:
-        this->learners_[i] = new weak_learner_single_hw_gausian();
         break;
       case weak_learners::linear_weak_learner:
         this->learners_[i] = new linear_weak_learner();
