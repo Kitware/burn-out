@@ -219,7 +219,7 @@ high_pass_filter_process<PixType>
 template <typename PixType>
 void
 high_pass_filter_process<PixType>
-::process_region( const image_t& input_region, image_t& output_region )
+::process_region( const image_t& input_region, image_t output_region )
 {
   if( mode_ == BOX )
   {

@@ -104,7 +104,7 @@ private:
 
   thread_sys_sptr_t threads_;
 
-  void process_region( const image_t& input, image_t& output );
+  void process_region( const image_t& input, image_t output );
 };
 
 
