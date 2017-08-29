@@ -110,6 +110,20 @@ multi_descriptor_generator
   return success;
 }
 
+// Flush any partially complete descriptors and return to defaults
+bool
+multi_descriptor_generator
+::flush()
+{
+  // Flush out incompletes
+  bool success = this->terminate_all_tracks();
+
+  // Add descriptors to output
+  this->final_update_routine();
+
+  return success;
+}
+
 // Handle the frame step portion for all descriptors, currently this is unthreaded.
 bool
 multi_descriptor_generator

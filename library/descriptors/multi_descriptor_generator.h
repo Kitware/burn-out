@@ -86,8 +86,10 @@ public:
   /// new descriptors before we start processing.
   virtual bool add_generator( generator_sptr& descriptor_module );
 
-  /// Flush all partially completely descriptors, and remove all attached descriptor
-  /// modules (restoring this class to it's defaults).
+  /// Flush all partially completely descriptors.
+  virtual bool flush();
+
+  /// Returns this class to its default, removing any added descriptor modules.
   virtual bool clear();
 
   /// Attempts to restart all attached descriptor modules to their defaults.

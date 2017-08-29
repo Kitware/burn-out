@@ -459,7 +459,7 @@ bool
 online_descriptor_computer_process<PixType>
 ::flush()
 {
-  if( joint_generator_.terminate_all_tracks() )
+  if( joint_generator_.flush() )
   {
     this->collect_descriptors();
     return true;
