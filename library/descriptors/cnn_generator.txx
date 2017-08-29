@@ -136,7 +136,9 @@ cnn_generator<PixType>
 
     if( !active_track->last_state()->bbox( tmp_bbox ) ||
         ( data->last_state_ts.has_time() &&
-          data->last_state_ts.time() == current_ts.time() ) )
+          data->last_state_ts.time() == current_ts.time() ) ||
+        ( data->last_state_ts.has_frame_number() &&
+          data->last_state_ts.frame_number() == current_ts.frame_number() ) )
     {
       return true;
     }
