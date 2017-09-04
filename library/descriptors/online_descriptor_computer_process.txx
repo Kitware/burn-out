@@ -32,6 +32,9 @@
 #include <utilities/video_modality.h>
 #include <logger/logger.h>
 
+// VXL
+#include <vil/vil_copy.h>
+
 // Standard Lib
 #include <string>
 #include <fstream>
@@ -104,7 +107,8 @@ online_descriptor_computer_process<PixType>
     require_valid_timestamp_( false ),
     require_valid_image_( false ),
     minimum_shot_size_( 0 ),
-    shot_size_counter_( 0 )
+    shot_size_counter_( 0 ),
+    convert_grey_to_rgb_( 0 )
 {
   config_.add_parameter( "disabled",
                          "false",
@@ -137,6 +141,10 @@ online_descriptor_computer_process<PixType>
                          "0",
                          "Minimum shot length before generating any descriptors for "
                          "this shot, set to 0 to disable." );
+  config_.add_parameter( "convert_grey_to_rgb",
+                         "true",
+                         "Automatically convert input grey images to RGB before "
+                         "descriptor computation" );
 
 #define ADD_DESCRIPTOR_CONFIG( TYPE, NAME, TEMPLATE ) \
   config_.add_parameter( "enable_" #NAME , \
@@ -208,6 +216,7 @@ online_descriptor_computer_process<PixType>
       require_valid_timestamp_ = blk.get<bool>( "require_valid_timestamp" );
       require_valid_image_ = blk.get<bool>( "require_valid_image" );
       minimum_shot_size_ = blk.get<unsigned>( "minimum_shot_size" );
+      convert_grey_to_rgb_ = blk.get<bool>( "convert_grey_to_rgb" );
 
       joint_generator_settings_.thread_count = blk.get<unsigned>( "thread_count" );
       joint_generator_settings_.run_in_safe_mode = blk.get<bool>( "safe_mode" );
@@ -385,6 +394,24 @@ online_descriptor_computer_process<PixType>
     {
       process_frame = false;
     }
+  }
+
+  // Optionally convert input frame type
+  if( convert_grey_to_rgb_ &&
+      inputs_->image< PixType >().nplanes() == 1 )
+  {
+    vil_image_view< PixType > old_image = inputs_->image< PixType >();
+    vil_image_view< PixType > new_image( old_image.ni(), old_image.nj(), 3 );
+
+    vil_image_view< PixType > plane1 = vil_plane( old_image, 0 );
+    vil_image_view< PixType > plane2 = vil_plane( old_image, 1 );
+    vil_image_view< PixType > plane3 = vil_plane( old_image, 2 );
+
+    vil_copy_reformat( old_image, plane1 );
+    vil_copy_reformat( old_image, plane2 );
+    vil_copy_reformat( old_image, plane3 );
+
+    inputs_->set_image( new_image );
   }
 
   // Generate descriptors

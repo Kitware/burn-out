@@ -134,6 +134,9 @@ private:
   // Shot size counter
   unsigned shot_size_counter_;
 
+  // Convert grey to rgb
+  bool convert_grey_to_rgb_;
+
   // Internal parameters/settings
   config_block config_;
 
