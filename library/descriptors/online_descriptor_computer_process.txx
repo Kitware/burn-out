@@ -403,9 +403,9 @@ online_descriptor_computer_process<PixType>
     vil_image_view< PixType > old_image = inputs_->image< PixType >();
     vil_image_view< PixType > new_image( old_image.ni(), old_image.nj(), 3 );
 
-    vil_image_view< PixType > plane1 = vil_plane( old_image, 0 );
-    vil_image_view< PixType > plane2 = vil_plane( old_image, 1 );
-    vil_image_view< PixType > plane3 = vil_plane( old_image, 2 );
+    vil_image_view< PixType > plane1 = vil_plane( new_image, 0 );
+    vil_image_view< PixType > plane2 = vil_plane( new_image, 1 );
+    vil_image_view< PixType > plane3 = vil_plane( new_image, 2 );
 
     vil_copy_reformat( old_image, plane1 );
     vil_copy_reformat( old_image, plane2 );
