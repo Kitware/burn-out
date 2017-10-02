@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2015-2016 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2015-2017 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -13,8 +13,6 @@
 
 #include <vector>
 #include <string>
-
-#include <caffe/net.hpp>
 
 #include <boost/shared_ptr.hpp>
 
@@ -77,32 +75,24 @@ public:
   typedef vil_image_view< vxl_byte > input_image_t;
   typedef std::vector< feature_vec_t > output_t;
 
-  cnn_descriptor() {}
-  virtual ~cnn_descriptor() {}
+  cnn_descriptor();
+  virtual ~cnn_descriptor();
 
   /// Load models.
   bool configure( const cnn_descriptor_settings& settings );
 
   /// Compute descriptor on a single image.
-  void compute( const input_image_t image, output_t& features );
+  void compute( const input_image_t& image, output_t& features );
 
   /// Compute descriptors for multiple images.
-  void batch_compute( const std::vector< input_image_t > images,
+  void batch_compute( const std::vector< input_image_t >& images,
                       std::vector< output_t >& output );
 
 private:
 
-  // The internally loaded CNN model and weights
-  boost::shared_ptr< caffe::Net< feature_t > > cnn_;
+  class priv;
+  const std::unique_ptr<priv> d;
 
-  // Internal copy of externally set options
-  std::vector< std::string > layers_to_use_;
-
-  // Final layer string
-  std::string final_layer_str_;
-
-  // Indices to include in final layer
-  std::vector< unsigned > final_layer_inds_;
 };
 
 } // end namespace vidtk
