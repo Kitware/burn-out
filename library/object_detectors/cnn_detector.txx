@@ -147,7 +147,7 @@ cnn_detector< PixType >
   else if( settings.use_gpu == cnn_detector_settings::YES )
   {
     cudaDeviceProp prop;
-    cudaGetDeviceProperties( &prop, i );
+    cudaGetDeviceProperties( &prop, settings.device_id );
 
     d->mode_ = Caffe::GPU;
     d->device_id_ = settings.device_id;
