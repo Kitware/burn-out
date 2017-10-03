@@ -1,11 +1,12 @@
 /*ckwg +5
- * Copyright 2015-2016 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2015-2017 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
 
 #include <descriptors/cnn_descriptor.h>
 
+#include <caffe/net.hpp>
 #include <caffe/blob.hpp>
 #include <caffe/common.hpp>
 
@@ -21,6 +22,34 @@ namespace vidtk
 {
 
 VIDTK_LOGGER( "cnn_descriptor" );
+
+class cnn_descriptor::priv
+{
+public:
+  priv() {}
+  ~priv() {}
+
+  // The internally loaded CNN model and weights
+  boost::shared_ptr< caffe::Net< feature_t > > cnn_;
+
+  // Internal copy of externally set options
+  std::vector< std::string > layers_to_use_;
+
+  // Final layer string
+  std::string final_layer_str_;
+
+  // Indices to include in final layer
+  std::vector< unsigned > final_layer_inds_;
+};
+
+cnn_descriptor::cnn_descriptor()
+ : d( new priv() )
+{
+}
+
+cnn_descriptor::~cnn_descriptor()
+{
+}
 
 bool
 cnn_descriptor
@@ -38,23 +67,23 @@ cnn_descriptor
     Caffe::set_mode( Caffe::CPU );
   }
 
-  cnn_.reset( new Net< feature_t >( settings.model_definition, caffe::TEST ) );
-  cnn_->CopyTrainedLayersFrom( settings.model_weights );
+  d->cnn_.reset( new Net< feature_t >( settings.model_definition, caffe::TEST ) );
+  d->cnn_->CopyTrainedLayersFrom( settings.model_weights );
 
-  layers_to_use_ = settings.layers_to_use;
-  final_layer_str_ = settings.final_layer_string;
-  final_layer_inds_ = settings.final_layer_indices;
+  d->layers_to_use_ = settings.layers_to_use;
+  d->final_layer_str_ = settings.final_layer_string;
+  d->final_layer_inds_ = settings.final_layer_indices;
 
-  for( unsigned i = 0; i < layers_to_use_.size(); ++i )
+  for( unsigned i = 0; i < d->layers_to_use_.size(); ++i )
   {
-    if( layers_to_use_[i] == final_layer_str_ )
+    if( d->layers_to_use_[i] == d->final_layer_str_ )
     {
       continue;
     }
 
-    if( !cnn_->has_blob( layers_to_use_[i] ) )
+    if( !d->cnn_->has_blob( d->layers_to_use_[i] ) )
     {
-      LOG_ERROR( "Invalid Layer ID: " << layers_to_use_[i] );
+      LOG_ERROR( "Invalid Layer ID: " << d->layers_to_use_[i] );
       return false;
     }
   }
@@ -64,7 +93,7 @@ cnn_descriptor
 
 void
 cnn_descriptor
-::compute( const input_image_t image, output_t& features )
+::compute( const input_image_t& image, output_t& features )
 {
   std::vector< output_t > batch_output;
   batch_compute( std::vector< input_image_t >( 1, image ), batch_output );
@@ -81,7 +110,7 @@ cnn_descriptor
 
 void
 cnn_descriptor
-::batch_compute( const std::vector< input_image_t > images,
+::batch_compute( const std::vector< input_image_t >& images,
                  std::vector< output_t >& output )
 {
   if( images.empty() )
@@ -91,7 +120,7 @@ cnn_descriptor
   }
 
   output.clear();
-  output.resize( images.size(), output_t( layers_to_use_.size(), feature_vec_t() ) );
+  output.resize( images.size(), output_t( d->layers_to_use_.size(), feature_vec_t() ) );
 
   // Format input
   const unsigned image_count = images.size();
@@ -114,7 +143,7 @@ cnn_descriptor
   feature_t loss = 0.0;
 
   // Run CNN on all inputs at once
-  const std::vector< Blob< feature_t >* >& cnn_output = cnn_->Forward( input_vector, &loss );
+  const std::vector< Blob< feature_t >* >& cnn_output = d->cnn_->Forward( input_vector, &loss );
 
   if( cnn_output.empty() )
   {
@@ -123,14 +152,14 @@ cnn_descriptor
   }
 
   // Retrieve descriptors from internal CNN layers
-  for( unsigned l = 0; l < layers_to_use_.size(); ++l )
+  for( unsigned l = 0; l < d->layers_to_use_.size(); ++l )
   {
-    if( layers_to_use_[l] == final_layer_str_ )
+    if( d->layers_to_use_[l] == d->final_layer_str_ )
     {
       const unsigned batch_size = cnn_output[0]->num();
       const unsigned dim_features = cnn_output[0]->count() / batch_size;
 
-      if( final_layer_inds_.empty() )
+      if( d->final_layer_inds_.empty() )
       {
         for( unsigned i = 0; i < batch_size; ++i )
         {
@@ -142,10 +171,10 @@ cnn_descriptor
       {
         for( unsigned i = 0; i < batch_size; ++i )
         {
-          for( unsigned r = 0; r < final_layer_inds_.size(); ++r )
+          for( unsigned r = 0; r < d->final_layer_inds_.size(); ++r )
           {
             const feature_t* start = cnn_output[0]->cpu_data() + cnn_output[0]->offset( i );
-            output[i][l].push_back( start[ final_layer_inds_[r] ] );
+            output[i][l].push_back( start[ d->final_layer_inds_[r] ] );
           }
         }
       }
@@ -153,7 +182,7 @@ cnn_descriptor
     else
     {
       const boost::shared_ptr< Blob< feature_t > > feature_blob =
-        cnn_->blob_by_name( layers_to_use_[l] );
+        d->cnn_->blob_by_name( d->layers_to_use_[l] );
 
       const unsigned batch_size = feature_blob->num();
       const unsigned dim_features = feature_blob->count() / batch_size;

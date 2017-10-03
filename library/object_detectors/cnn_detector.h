@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2015-2016 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2015-2017 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -18,8 +18,6 @@
 #include <string>
 
 #include <video_transforms/frame_averaging.h>
-
-#include <caffe/net.hpp>
 
 #include <boost/shared_ptr.hpp>
 
@@ -79,7 +77,20 @@ namespace vidtk
     -1.0, \
     "If known, the average GPU memory used per image pixel for the given model. " \
     "This can be used to subdivide up input images so that we don't exceed GPU " \
-    "memory." ); \
+    "memory. If specified the chip_ni and chip_nj will be automatically computed " \
+    "and their values instead be maximum chip sizes if they are specified." ); \
+  add_param( \
+    chip_ni, \
+    unsigned, \
+    0, \
+    "Set a manual chip width, if the image width is a greater size than this " \
+    "then the image will be processes in multiple subregions seperately." ); \
+  add_param( \
+    chip_nj, \
+    unsigned, \
+    0, \
+    "Set a manual chip height, if the image width is a greater size than this " \
+    "then the image will be processes in multiple subregions seperately." ); \
   add_array( \
     bbox_side_dims, \
     unsigned, 2, \
@@ -208,18 +219,17 @@ public:
 
   typedef vil_image_view< PixType > input_image_t;
 
+  typedef float cnn_float_t;
+  typedef vil_image_view< cnn_float_t > float_image_t;
+
   typedef vil_image_view< float > detection_map_t;
   typedef vil_image_view< bool > detection_mask_t;
-
-  typedef float cnn_float_t;
-  typedef caffe::Net< cnn_float_t > detector_t;
-  typedef boost::shared_ptr< detector_t > detector_sptr_t;
 
   typedef std::pair< vgl_box_2d< unsigned >, double > detection_t;
   typedef std::vector< detection_t > detection_vec_t;
 
-  cnn_detector() {}
-  virtual ~cnn_detector() {}
+  cnn_detector();
+  virtual ~cnn_detector();
 
   /// Load models.
   bool configure( const cnn_detector_settings& settings );
@@ -259,18 +269,11 @@ public:
 
 private:
 
-  // The internally loaded CNN model and weights
-  detector_sptr_t cnn_;
+  // Class for encapsulating member variables
+  class priv;
+  const std::unique_ptr<priv> d;
 
-  // Internal frame buffer
-  ring_buffer< input_image_t > buffer_;
-
-  // Is image scaling required to bring the cnn output back to
-  // the full input image resolution?
-  bool scaling_required_;
-  bool cropping_required_;
-
-  // Internal helper function to assist with writing maps
+  // Internal helper functions
   void debug_output( const detection_map_t& map,
                      const std::string& key,
                      const unsigned id = 0 );
@@ -280,21 +283,6 @@ private:
                      const unsigned id = 0,
                      const detection_vec_t detections = detection_vec_t() );
 
-  // Internal frame counter
-  unsigned frame_counter_;
-
-  // Internal copy of externally set options
-  cnn_detector_settings settings_;
-
-  // Caffe GPU/CPU mode to use
-  caffe::Caffe::Brew mode_;
-  int device_id_;
-  double device_mem_;
-
-  // Averager class only used if declared
-  boost::shared_ptr< online_frame_averager< cnn_float_t > > averager_;
-
-  // Helper function
   void copy_image_to_blob( const vil_image_view< PixType >& source,
                            vil_image_view< cnn_float_t >& dest );
 
@@ -305,6 +293,7 @@ private:
   void gen_detections_blob( const detection_map_t& map,
                             const detection_mask_t& mask,
                             detection_vec_t& detections );
+
 };
 
 } // end namespace vidtk
