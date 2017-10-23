@@ -291,7 +291,7 @@ endif()
 
 option(BURNOUT_DISABLE_GDAL FALSE)
 set(VIDTK_HAS_GDAL FALSE)
-if (not BURNOUT_DISABLE_GDAL)
+if (NOT BURNOUT_DISABLE_GDAL)
   find_package(GDAL)
   if( GDAL_FOUND )
     # We need to build the file in a line-by-line fashon because of
