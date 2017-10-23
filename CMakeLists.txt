@@ -288,29 +288,36 @@ if( VIDTK_ENABLE_SHAPELIB )
   add_definitions("-DSHAPELIB_ENABLED")
 endif()
 
+
+option(BURNOUT_DISABLE_GDAL FALSE)
 set(VIDTK_HAS_GDAL FALSE)
-find_package(GDAL)
-if( GDAL_FOUND )
-  # We need to build the file in a line-by-line fashon because of
-  # portability with end of line markers.
-  file( WRITE  ${CMAKE_BINARY_DIR}/test_gdal_version.cxx "#include <gdal_version.h>\n" )
-  file( APPEND ${CMAKE_BINARY_DIR}/test_gdal_version.cxx "#if ( GDAL_COMPUTE_VERSION( 1, 11, 0  ) != GDAL_VERSION_NUM )\n")
-  file( APPEND ${CMAKE_BINARY_DIR}/test_gdal_version.cxx "#error \"GDAL Not required version: $GDAL_VERSION_NUM\"\n" )
-  file( APPEND ${CMAKE_BINARY_DIR}/test_gdal_version.cxx "#endif\n")
-  file( APPEND ${CMAKE_BINARY_DIR}/test_gdal_version.cxx "int main() { } // just need some code\n")
+if (not BURNOUT_DISABLE_GDAL)
+  find_package(GDAL)
+  if( GDAL_FOUND )
+    # We need to build the file in a line-by-line fashon because of
+    # portability with end of line markers.
+    file( WRITE  ${CMAKE_BINARY_DIR}/test_gdal_version.cxx "#include <gdal_version.h>\n" )
+    file( APPEND ${CMAKE_BINARY_DIR}/test_gdal_version.cxx "#if ( GDAL_COMPUTE_VERSION( 1, 11, 0  ) != GDAL_VERSION_NUM )\n")
+    file( APPEND ${CMAKE_BINARY_DIR}/test_gdal_version.cxx "#error \"GDAL Not required version: $GDAL_VERSION_NUM\"\n" )
+    file( APPEND ${CMAKE_BINARY_DIR}/test_gdal_version.cxx "#endif\n")
+    file( APPEND ${CMAKE_BINARY_DIR}/test_gdal_version.cxx "int main() { } // just need some code\n")
 
-  TRY_COMPILE( GDAL_VERSION_MATCH
-             ${CMAKE_BINARY_DIR}
-             ${CMAKE_BINARY_DIR}/test_gdal_version.cxx
-             COMPILE_DEFINITIONS "-I${GDAL_INCLUDE_DIR}"
-             OUTPUT_VARIABLE OUTPUT)
+    TRY_COMPILE( GDAL_VERSION_MATCH
+               ${CMAKE_BINARY_DIR}
+               ${CMAKE_BINARY_DIR}/test_gdal_version.cxx
+               COMPILE_DEFINITIONS "-I${GDAL_INCLUDE_DIR}"
+               OUTPUT_VARIABLE OUTPUT)
 
-  if( GDAL_VERSION_MATCH )
-    set(VIDTK_HAS_GDAL TRUE)
-    include_directories(SYSTEM ${GDAL_INCLUDE_DIR})
-  else()
-    message( WARNING "GDAL found, but not needed version. Need version: 1.11" )
-    message(${OUTPUT})
+    if( GDAL_VERSION_MATCH )
+      set(VIDTK_HAS_GDAL TRUE)
+      include_directories(SYSTEM ${GDAL_INCLUDE_DIR})
+    else()
+      message( WARNING "GDAL found, but not needed version. Need version: 1.11" )
+      message(${OUTPUT})
+      unset(GDAL_CONFIG)
+      unset(GDAL_INCLUDE_DIR)
+      unset(GDAL_LIBRARY)
+    endif()
   endif()
 endif()
 
