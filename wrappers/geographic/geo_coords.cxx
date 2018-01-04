@@ -354,14 +354,6 @@ geo_coords
 }
 
 
-double
-geo_coords
-::inverse_flattening() const
-{
-  return this->impl_->c.InverseFlattening();
-}
-
-
 bool
 geo_coords
 ::is_valid(void) const
