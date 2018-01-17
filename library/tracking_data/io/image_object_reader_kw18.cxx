@@ -163,11 +163,16 @@ image_object_reader_kw18
       obj->set_image_loc( atof( col[COL_IMG_LOC_X].c_str() ),
                           atof( col[COL_IMG_LOC_Y].c_str() ));
 
+      int min_x = atoi( col[COL_MIN_X].c_str() );
+      int max_x = atoi( col[COL_MAX_X].c_str() );
+      int min_y = atoi( col[COL_MIN_Y].c_str() );
+      int max_y = atoi( col[COL_MAX_Y].c_str() );
+
       obj->set_bbox(
-        atoi( col[COL_MIN_X].c_str() ),
-        atoi( col[COL_MAX_X].c_str() ),
-        atoi( col[COL_MIN_Y].c_str() ),
-        atoi( col[COL_MAX_Y].c_str() ));
+        ( min_x < 0 ? 0 : min_x ),
+        ( max_x < 0 ? 0 : max_x ),
+        ( min_y < 0 ? 0 : min_y ),
+        ( max_y < 0 ? 0 : max_y ) );
 
       obj->set_image_area( obj->get_bbox().area() );
 
