@@ -288,6 +288,13 @@ if( VIDTK_ENABLE_SHAPELIB )
   add_definitions("-DSHAPELIB_ENABLED")
 endif()
 
+if( ( VIDTK_ENABLE_OPENCV OR VIDTK_ENABLE_CAFFE ) AND CUDA_TOOLKIT_INCLUDE )
+  include_directories( SYSTEM ${CUDA_TOOLKIT_INCLUDE} )
+elseif( VIDTK_ENABLE_CAFFE )
+  # Temporary fix to guess if caffe was build with CUDA. Once the caffe cmake is updated
+  # to export this variable, this could be removed or modified.
+  add_definitions( -DCPU_ONLY )
+endif()
 
 option( VIDTK_ENABLE_GDAL FALSE )
 set( VIDTK_HAS_GDAL FALSE )
