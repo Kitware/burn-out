@@ -534,6 +534,10 @@ cnn_detector< PixType >
         debug_output( d->buffer_.datum_at( d->settings_.detection_image_offset ), "input", e );
       }
     }
+    else
+    {
+      debug_output( images[e], "input", e );
+    }
 
     for( unsigned r = 0; r < regions.size(); ++r )
     {
@@ -561,8 +565,6 @@ cnn_detector< PixType >
       }
       else
       {
-        debug_output( images[e], "input", e );
-
         input_image_t roi = point_view_to_region( images[e], region );
 
         float_image_t tmp(
@@ -571,7 +573,7 @@ cnn_detector< PixType >
           nplanes, 1, chip_ni,
           chip_ni*chip_nj );
 
-        copy_image_to_blob( images[e], tmp );
+        copy_image_to_blob( roi, tmp );
       }
 
       // Run CNN on all inputs at once
