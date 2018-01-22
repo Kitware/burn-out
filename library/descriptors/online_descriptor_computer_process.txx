@@ -398,6 +398,7 @@ online_descriptor_computer_process<PixType>
 
   // Optionally convert input frame type
   if( convert_grey_to_rgb_ &&
+      inputs_->was_image_set() &&
       inputs_->image< PixType >().nplanes() == 1 )
   {
     vil_image_view< PixType > old_image = inputs_->image< PixType >();
