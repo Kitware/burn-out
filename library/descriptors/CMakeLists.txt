@@ -84,7 +84,7 @@ if( VIDTK_ENABLE_VLFEAT )
 endif()
 
 if( VIDTK_ENABLE_CAFFE )
-  target_link_libraries( vidtk_descriptor ${Caffe_LIBRARIES} )
+  target_link_libraries( vidtk_descriptor ${Caffe_LIBRARIES} ${GLog_LIBRARY} )
 endif()
 
 target_link_libraries( vidtk_descriptor vcl vbl vnl vgl vnl_algo vil_algo vidl

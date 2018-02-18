@@ -15,6 +15,26 @@ link_directories(${VXL_LIBRARY_DIR})
 find_package(Qt4 4.7.0 REQUIRED)
 include(${QT_USE_FILE})
 
+# Handle setting caffe GPU settings, can be modified once caffe exports its
+# cmake variables properly
+if( VIDTK_ENABLE_CAFFE )
+  if( CUDA_TOOLKIT_INCLUDE )
+    option( VIDTK_ENABLE_CAFFE_GPU "Build caffe modules with GPU support." ON )
+  else()
+    option( VIDTK_ENABLE_CAFFE_GPU "Build caffe modules with GPU support." OFF )
+  endif()
+  mark_as_advanced( VIDTK_ENABLE_CAFFE_GPU )
+
+  if( VIDTK_ENABLE_CAFFE_GPU )
+    include_directories( SYSTEM ${CUDA_TOOLKIT_INCLUDE} )
+    find_package( CUDA REQUIRED )
+  else()
+    add_definitions( -DCPU_ONLY )
+  endif()
+elseif( VIDTK_ENABLE_OPENCV AND CUDA_TOOLKIT_INCLUDE )
+  include_directories( SYSTEM ${CUDA_TOOLKIT_INCLUDE} )
+endif()
+
 #Set CMP0022 to NEW so we error if someone writes older style cmake code
 #See http://www.cmake.org/cmake/help/v2.8.12/cmake.html#policy:CMP0022
 #for details on CMP0022
@@ -266,8 +286,10 @@ endif()
 
 if( VIDTK_ENABLE_CAFFE )
   find_package( Caffe REQUIRED )
-  add_definitions(-DUSE_CAFFE)
-  include_directories(SYSTEM ${Caffe_INCLUDE_DIRS})
+  find_package( GLog REQUIRED )
+  add_definitions( -DUSE_CAFFE )
+  include_directories( SYSTEM ${Caffe_INCLUDE_DIRS} )
+  include_directories( SYSTEM ${GTest_INCLUDE_DIRS} )
 endif()
 
 if (VIDTK_ENABLE_LIBJSON)
@@ -286,14 +308,6 @@ if( VIDTK_ENABLE_SHAPELIB )
   find_package(SHAPELIB REQUIRED)
   include_directories(SYSTEM ${SHAPELIB_INCLUDE_DIR})
   add_definitions("-DSHAPELIB_ENABLED")
-endif()
-
-if( ( VIDTK_ENABLE_OPENCV OR VIDTK_ENABLE_CAFFE ) AND CUDA_TOOLKIT_INCLUDE )
-  include_directories( SYSTEM ${CUDA_TOOLKIT_INCLUDE} )
-elseif( VIDTK_ENABLE_CAFFE )
-  # Temporary fix to guess if caffe was build with CUDA. Once the caffe cmake is updated
-  # to export this variable, this could be removed or modified.
-  add_definitions( -DCPU_ONLY )
 endif()
 
 option( VIDTK_ENABLE_GDAL FALSE )
