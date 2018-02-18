@@ -88,6 +88,8 @@ if( VIDTK_ENABLE_OPENCV )
     ${VIDTK_LIBRARIES} vil_algo vil vul )
 endif()
 
-add_vidtk_tool( train_pixel_model
-  train_pixel_model.cxx
-  ${VIDTK_LIBRARIES} vil_algo vil vul )
+if( NOT WIN32 )
+  add_vidtk_tool( train_pixel_model
+    train_pixel_model.cxx
+    ${VIDTK_LIBRARIES} vil_algo vil vul )
+endif()
