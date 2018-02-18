@@ -407,19 +407,6 @@ int main( int argc, char** argv )
   sensor_mappings[ "auto" ]        = "default";
   sensor_mappings[ "auto-detect" ] = "default";
   sensor_mappings[ "default" ]     = "default";
-  sensor_mappings[ "predator" ]    = "mts";
-  sensor_mappings[ "reaper" ]      = "mts";
-  sensor_mappings[ "mts" ]         = "mts";
-  sensor_mappings[ "raytheon" ]    = "mts";
-  sensor_mappings[ "l3" ]          = "mx";
-  sensor_mappings[ "mx" ]          = "mx";
-  sensor_mappings[ "wescam" ]      = "mx";
-  sensor_mappings[ "gd" ]          = "v14";
-  sensor_mappings[ "gen-dyn" ]     = "v14";
-  sensor_mappings[ "v14" ]         = "v14";
-  sensor_mappings[ "blue-devil" ]  = "v14";
-  sensor_mappings[ "bd" ]          = "v14";
-  sensor_mappings[ "flir" ]        = "flir";
 
   if( sensor_mappings.find( sensor_type_lc ) == sensor_mappings.end() )
   {
