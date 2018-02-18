@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2015-2016 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2015-2017 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -213,8 +213,8 @@ private:
 
   /// Helper function which computes the desired image snippet to compute
   /// cnn features on, given the input image and some initial track bbox
-  bool compute_track_snippet( const vil_image_view< PixType >& image,
-                              const vgl_box_2d< unsigned >& region,
+  bool compute_track_snippet( vil_image_view< PixType > const& image,
+                              vgl_box_2d< unsigned > const& region,
                               vil_image_view< vxl_byte >& output );
 
 };

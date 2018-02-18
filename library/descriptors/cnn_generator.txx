@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2015-2016 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2015-2017 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -280,8 +280,8 @@ cnn_generator<PixType>
 template <typename PixType>
 bool
 cnn_generator<PixType>
-::compute_track_snippet( const vil_image_view< PixType >& image,
-                         const vgl_box_2d< unsigned >& region,
+::compute_track_snippet( vil_image_view< PixType > const& image,
+                         vgl_box_2d< unsigned > const& region,
                          vil_image_view< vxl_byte>& output )
 {
   // Validate input area
@@ -312,10 +312,10 @@ cnn_generator<PixType>
   }
 
   // Create new single channel image
-  vil_image_view< vxl_byte > image_region = point_view_to_region( byte_image, scaled_region );
+  vil_image_view< vxl_byte > input_region = point_view_to_region( byte_image, scaled_region );
 
   // Validate extracted region size for min size allowed for below operations
-  if( image_region.ni() < 4 || image_region.nj() < 4 )
+  if( input_region.ni() < 4 || input_region.nj() < 4 )
   {
     return false;
   }
@@ -327,7 +327,7 @@ cnn_generator<PixType>
 
   if( settings_.stretch_chip )
   {
-    vil_resample_bilin( image_region, output, chip_length, chip_length );
+    vil_resample_bilin( input_region, output, chip_length, chip_length );
   }
   else
   {
@@ -338,7 +338,7 @@ cnn_generator<PixType>
 
     if( xmin_offset == 0 && xmax_offset == 0 && ymin_offset == 0 && ymax_offset == 0 )
     {
-      vil_resample_bilin( image_region, output, chip_length, chip_length );
+      vil_resample_bilin( input_region, output, chip_length, chip_length );
     }
     else
     {
@@ -352,7 +352,7 @@ cnn_generator<PixType>
         chip_length * ( 1.0 - static_cast< double >( ymax_offset ) / scaled_region.height() ) );
 
       vil_image_view< vxl_byte > output_subregion = point_view_to_region( output, subregion );
-      vil_resample_bilin( image_region, output_subregion, chip_length, chip_length );
+      vil_resample_bilin( input_region, output_subregion, chip_length, chip_length );
     }
   }
 

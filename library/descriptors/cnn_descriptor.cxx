@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2015-2017 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2015-2018 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -11,6 +11,9 @@
 #include <caffe/common.hpp>
 
 #include <vil/vil_convert.h>
+
+// Header in <caffe/net.hpp> defines LOG_ASSERT
+#undef LOG_ASSERT
 
 #include <logger/logger.h>
 
@@ -40,6 +43,12 @@ public:
 
   // Indices to include in final layer
   std::vector< unsigned > final_layer_inds_;
+
+  // Use GPU?
+  bool use_gpu_;
+
+  // Device ID?
+  int device_id_;
 };
 
 cnn_descriptor::cnn_descriptor()
@@ -73,6 +82,8 @@ cnn_descriptor
   d->layers_to_use_ = settings.layers_to_use;
   d->final_layer_str_ = settings.final_layer_string;
   d->final_layer_inds_ = settings.final_layer_indices;
+  d->use_gpu_ = settings.use_gpu;
+  d->device_id_ = settings.device_id;
 
   for( unsigned i = 0; i < d->layers_to_use_.size(); ++i )
   {
@@ -117,6 +128,18 @@ cnn_descriptor
   {
     output.clear();
     return;
+  }
+
+  if( d->use_gpu_ )
+  {
+    CHECK_GE( d->device_id_, 0 );
+
+    Caffe::SetDevice( d->device_id_ );
+    Caffe::set_mode( Caffe::GPU );
+  }
+  else
+  {
+    Caffe::set_mode( Caffe::CPU );
   }
 
   output.clear();
