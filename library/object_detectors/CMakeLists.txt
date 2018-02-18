@@ -128,6 +128,18 @@ if( VIDTK_ENABLE_TESSERACT )
   target_link_libraries( vidtk_object_detectors ${Tesseract_LIBRARY} )
 endif()
 
+if( VIDTK_ENABLE_CAFFE )
+  target_link_libraries( vidtk_object_detectors ${Caffe_LIBRARIES} )
+
+  if( VIDTK_ENABLE_CAFFE_GPU )
+    target_link_libraries( vidtk_object_detectors ${CUDA_LIBRARIES} )
+  endif()
+
+  if ( VIDTK_ENABLE_PROTOBUF)
+    target_link_libraries( vidtk_object_detectors protobuf)
+  endif()
+endif()
+
 install( TARGETS vidtk_object_detectors EXPORT vidtk
   RUNTIME DESTINATION bin LIBRARY DESTINATION lib ARCHIVE DESTINATION lib
 )
