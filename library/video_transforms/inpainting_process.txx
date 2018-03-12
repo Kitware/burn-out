@@ -262,7 +262,10 @@ inpainting_process<PixType>
         moving_mosaic_settings mmg_options;
         mmg_options.read_config( blk );
 
-        mmg_.configure( mmg_options );
+        if( !mmg_.configure( mmg_options ) )
+        {
+          throw config_block_parse_error( "Unable to configure mosaic generator" );
+        }
 
         if( max_buffer_size_ > 0 )
         {
@@ -434,6 +437,13 @@ inpainting_process<PixType>
     return process::SUCCESS;
   }
 
+  if( input_mask_.ni() == 0 &&
+      input_mask_.nj() == 0 )
+  {
+    input_mask_.set_size( input_image_.ni(), input_image_.nj() );
+    input_mask_.fill( false );
+  }
+
   if( input_border_.area() == 0 )
   {
     input_border_ = border_t( 0, input_image_.ni(), 0, input_image_.nj() );
@@ -546,13 +556,13 @@ inpainting_process<PixType>
     {
       if( inpaint_mask.size() < 500000 )
       {
-        center_region = border_t( 0, 0.500 * input_mask_.ni(),
-                                  0, 0.520 * input_mask_.nj() );
+        center_region = border_t( 0, 0.500 * input_border_.width(),
+                                  0, 0.520 * input_border_.height() );
       }
       else
       {
-        center_region = border_t( 0, 0.560 * input_mask_.ni(),
-                                  0, 0.575 * input_mask_.nj() );
+        center_region = border_t( 0, 0.560 * input_border_.width(),
+                                  0, 0.575 * input_border_.height() );
       }
     }
     else

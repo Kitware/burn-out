@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2012-2015 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2012-2017 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -91,7 +91,7 @@ private:
   unsigned smoothing_half_step_;
 
   // Internal helper function
-  void process_region( const input_image_t& input_image,
+  void process_region( const input_image_t input_image,
                        input_image_t aligned_edges,
                        input_image_t combined_edges,
                        float_image_t grad_i_buffer,

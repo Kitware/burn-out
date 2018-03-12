@@ -1,5 +1,5 @@
 /*ckwg +5
- * Copyright 2012-2016 by Kitware, Inc. All Rights Reserved. Please refer to
+ * Copyright 2012-2017 by Kitware, Inc. All Rights Reserved. Please refer to
  * KITWARE_LICENSE.TXT for licensing information, or contact General Counsel,
  * Kitware, Inc., 28 Corporate Drive, Clifton Park, NY 12065.
  */
@@ -175,7 +175,7 @@ aligned_edge_detection_process<PixType>
 template <typename PixType>
 void
 aligned_edge_detection_process<PixType>
-::process_region( const input_image_t& input_image,
+::process_region( const input_image_t input_image,
                   input_image_t aligned_edges,
                   input_image_t combined_edges,
                   float_image_t grad_i_buffer,
@@ -214,8 +214,7 @@ aligned_edge_detection_process<PixType>
     }
     else
     {
-      // FIXME this can't be right; need to copy the data into the view
-      combined_edges = joint_nms_edges;
+      vil_copy_reformat( joint_nms_edges, combined_edges );
     }
   }
 }
