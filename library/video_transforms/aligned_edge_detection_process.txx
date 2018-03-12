@@ -11,6 +11,8 @@
 #include <video_transforms/aligned_edge_detection.h>
 
 #include <vil/vil_math.h>
+#include <vil/vil_copy.h>
+
 #include <vil/algo/vil_gauss_filter.h>
 
 #include <logger/logger.h>
