@@ -737,7 +737,7 @@ inpainting_process<PixType>
 template <typename PixType>
 void
 inpainting_process<PixType>
-::inpaint( const image_t& input, const mask_t& mask, image_t output ) const
+::inpaint( const image_t input, const mask_t mask, image_t output ) const
 {
   // Validate input image
   if( !input || input.size() == 0 || algorithm_ == NONE )

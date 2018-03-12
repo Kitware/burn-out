@@ -103,8 +103,8 @@ private:
   // Internal algorithm helpers
   boost::scoped_ptr< thread_sys_t > threads_;
 
-  void inpaint( const image_t& input,
-                const mask_t& mask,
+  void inpaint( const image_t input,
+                const mask_t mask,
                 image_t output ) const;
 
   void compute_warped_image();
