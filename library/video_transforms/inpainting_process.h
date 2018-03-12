@@ -105,7 +105,7 @@ private:
 
   void inpaint( const image_t& input,
                 const mask_t& mask,
-                image_t& output ) const;
+                image_t output ) const;
 
   void compute_warped_image();
 

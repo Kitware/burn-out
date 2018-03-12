@@ -92,10 +92,10 @@ private:
 
   // Internal helper function
   void process_region( const input_image_t& input_image,
-                       input_image_t& aligned_edges,
-                       input_image_t& combined_edges,
-                       float_image_t& grad_i_buffer,
-                       float_image_t& grad_j_buffer );
+                       input_image_t aligned_edges,
+                       input_image_t combined_edges,
+                       float_image_t grad_i_buffer,
+                       float_image_t grad_j_buffer );
 };
 
 

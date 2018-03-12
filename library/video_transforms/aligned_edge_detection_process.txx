@@ -176,10 +176,10 @@ template <typename PixType>
 void
 aligned_edge_detection_process<PixType>
 ::process_region( const input_image_t& input_image,
-                  input_image_t& aligned_edges,
-                  input_image_t& combined_edges,
-                  float_image_t& grad_i_buffer,
-                  float_image_t& grad_j_buffer )
+                  input_image_t aligned_edges,
+                  input_image_t combined_edges,
+                  float_image_t grad_i_buffer,
+                  float_image_t grad_j_buffer )
 {
   calculate_aligned_edges( input_image,
                            threshold_,
@@ -214,6 +214,7 @@ aligned_edge_detection_process<PixType>
     }
     else
     {
+      // FIXME this can't be right; need to copy the data into the view
       combined_edges = joint_nms_edges;
     }
   }
