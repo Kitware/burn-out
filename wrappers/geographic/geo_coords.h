@@ -323,13 +323,6 @@ public:
   double major_radius() const;
 
   /**
-   * The inverse flattening of the ellipsoid.  This is the value for the
-   * WGS84 ellipsoid because the UTM and UPS projections are based on this
-   * ellipsoid.
-   **********************************************************************/
-  double inverse_flattening() const;
-
-  /**
    *Check whether or not the object has valid coordinates
    **********************************************************************/
   bool is_valid(void) const;
