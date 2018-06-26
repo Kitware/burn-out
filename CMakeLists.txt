@@ -2,6 +2,9 @@ cmake_minimum_required( VERSION 2.8.12 )
 
 project( vidtk_all )
 
+# use cpp 11
+set(CMAKE_CXX_STANDARD 11)
+
 # fletch can provide many of the external dependencies
 find_package(fletch)
 
