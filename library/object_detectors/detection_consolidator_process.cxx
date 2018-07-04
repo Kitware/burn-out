@@ -186,9 +186,9 @@ merge_if_small_overlap( const std::vector< image_object_sptr >& source,
       const vgl_box_2d< unsigned >& check_rect = to_check[j]->get_bbox();
       const vgl_box_2d< unsigned >& box_intersect = vgl_intersection( source_rect, check_rect );
 
-      double source_area = static_cast<double>( source_rect.area() );
-      double check_area = static_cast<double>( check_rect.area() );
-      double intersect_area = static_cast<double>( box_intersect.area() );
+      double source_area = static_cast<double>( source_rect.volume() );
+      double check_area = static_cast<double>( check_rect.volume() );
+      double intersect_area = static_cast<double>( box_intersect.volume() );
 
       if( ( check_area != 0.0 && intersect_area / check_area > percent_threshold ) ||
           ( source_area != 0.0 && intersect_area / source_area > percent_threshold ) )

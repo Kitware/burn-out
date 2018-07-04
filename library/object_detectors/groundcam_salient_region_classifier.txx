@@ -136,7 +136,7 @@ groundcam_salient_region_classifier< PixType, FeatureType >
     mask_image_t cropped_mask = saliency_mask;
     weight_image_t cropped_classified = classified_image;
 
-    if( border.area() > 0 )
+    if( border.volume() > 0 )
     {
       for( unsigned i = 0; i < cropped_features.size(); i++ )
       {

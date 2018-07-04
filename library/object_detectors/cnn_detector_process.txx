@@ -281,7 +281,7 @@ cnn_detector_process< PixType >
     obj->set_bbox( vgl_intersection( detected_bboxes[i].first, image_boundary ) );
     vgl_box_2d< unsigned > const& bbox = obj->get_bbox();
 
-    obj->set_image_area( bbox.area() );
+    obj->set_image_area( bbox.volume() );
     obj->set_confidence( detected_bboxes[i].second );
 
     if( obj->get_image_area() == 0 )

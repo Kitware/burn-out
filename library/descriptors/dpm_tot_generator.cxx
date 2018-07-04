@@ -804,7 +804,7 @@ dpm_tot_generator
                          double& new_target_area )
 {
   // Validate input area
-  if( region.area() <= settings_.required_min_area )
+  if( region.volume() <= settings_.required_min_area )
   {
     return false;
   }
@@ -865,7 +865,7 @@ dpm_tot_generator
     }
 
     // Resample image
-    new_target_area = static_cast<double>( resize_factor * resize_factor * region.area() );
+    new_target_area = static_cast<double>( resize_factor * resize_factor * region.volume() );
     vil_resample_bilin( img_region, resized, new_width, new_height );
     deep_cv_conversion( resized, output );
   }

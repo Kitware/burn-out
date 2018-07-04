@@ -163,7 +163,7 @@ image_object_reader_default
       bbox.set_max_y(tmp[3]);
       obj->set_bbox( bbox );
 
-      obj->set_image_area( bbox.area() );
+      obj->set_image_area( bbox.volume() );
       obj->set_area( area );
 
       return true;

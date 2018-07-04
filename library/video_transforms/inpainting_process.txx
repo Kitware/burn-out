@@ -444,7 +444,7 @@ inpainting_process<PixType>
     input_mask_.fill( false );
   }
 
-  if( input_border_.area() == 0 )
+  if( input_border_.volume() == 0 )
   {
     input_border_ = border_t( 0, input_image_.ni(), 0, input_image_.nj() );
   }
@@ -610,7 +610,7 @@ inpainting_process<PixType>
                      filter_functor );
     }
 
-    if( input_border_.area() > 0 )
+    if( input_border_.volume() > 0 )
     {
       image_t inpainted_region = point_view_to_region( inpainted_image_, input_border_ );
 
@@ -633,7 +633,7 @@ inpainting_process<PixType>
   // Average in unwarped image if set.
   if( unstab_image_factor_ > 0.0 && last_output_image_.size() > 0 )
   {
-    if( input_border_.area() > 0 )
+    if( input_border_.volume() > 0 )
     {
       image_t inpainted_region = point_view_to_region( inpainted_image_, input_border_ );
 
@@ -654,7 +654,7 @@ inpainting_process<PixType>
   }
 
   // Fill border in inpainted image if enabled
-  if( input_border_.area() > 0 && border_method_ == FILL_SOLID )
+  if( input_border_.volume() > 0 && border_method_ == FILL_SOLID )
   {
     const PixType fill_val = 0;
 
@@ -671,12 +671,12 @@ inpainting_process<PixType>
     last_unpainted_mask_.set_size( inpainted_image_.ni(), inpainted_image_.nj() );
     vil_fill( last_unpainted_mask_, false );
 
-    if( input_border_.area() > 0 )
+    if( input_border_.volume() > 0 )
     {
       fill_in_border( last_unpainted_mask_, input_border_, true, border_dilation_ );
     }
 
-    if( center_region.area() > 0 )
+    if( center_region.volume() > 0 )
     {
       mask_t input_reg = point_view_to_region( input_mask_, center_region );
       mask_t output_reg = point_view_to_region( last_unpainted_mask_, center_region );
@@ -835,7 +835,7 @@ inpainting_process<PixType>
     {
       mask_t mask_w_border;
 
-      if( input_border_.area() > 0 )
+      if( input_border_.volume() > 0 )
       {
         mask_w_border.deep_copy( input_mask_ );
         fill_in_border( mask_w_border, input_border_, true, border_dilation_+1 );
@@ -908,7 +908,7 @@ inpainting_process<PixType>
 
     if( stab_image_factor_ > 0.0 && warped_mask_.size() > 0 )
     {
-      if( entry.border.area() > 0 )
+      if( entry.border.volume() > 0 )
       {
         image_t inpainted_region = point_view_to_region( entry.image, entry.border );
 
@@ -930,7 +930,7 @@ inpainting_process<PixType>
 
     inpainted_image_ = entry.image;
 
-    if( entry.border.area() > 0 && border_method_ == FILL_SOLID )
+    if( entry.border.volume() > 0 && border_method_ == FILL_SOLID )
     {
       const PixType fill_val = 0;
 

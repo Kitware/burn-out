@@ -390,7 +390,7 @@ osd_recognizer<PixType,FeatureType>
   }
 
   // Finally, fill in border if known
-  if( input_border.area() > 0 )
+  if( input_border.volume() > 0 )
   {
     for( int i = 0; i < input_border.min_x(); ++i )
     {
@@ -748,7 +748,7 @@ osd_recognizer<PixType,FeatureType>
     double cx = std::max( std::min( region.centroid_x(), 0.999 ), 0.000 );
     double cy = std::max( std::min( region.centroid_y(), 0.999 ), 0.000 );
 
-    double nsize = region.area();
+    double nsize = region.volume();
 
     unsigned region_bin = static_cast< unsigned >( cx * width_bins ) +
                           static_cast< unsigned >( cy * height_bins ) * width_bins;

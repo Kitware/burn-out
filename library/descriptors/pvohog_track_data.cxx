@@ -128,8 +128,8 @@ pvohog_track_data
   vil_image_view<vxl_byte> const& image = frame->image_8u_gray();
   vgl_box_2d<int> const frame_bbox(0, image.ni(), 0, image.nj());
 
-  unsigned const iarea = vgl_intersection(bbox, frame_bbox).area();
-  unsigned const oarea = bbox.area();
+  unsigned const iarea = vgl_intersection(bbox, frame_bbox).volume();
+  unsigned const oarea = bbox.volume();
 
   if (iarea != oarea)
   {
@@ -879,8 +879,8 @@ pvohog_track_data
   vgl_box_2d<int> const frame_bbox_int(0, image.ni(), 0, image.nj());
   vgl_box_2d<int> const bbox_int( bbox.min_x(), bbox.max_x(), bbox.min_y(), bbox.max_y() );
 
-  unsigned const iarea = vgl_intersection(bbox_int, frame_bbox_int).area();
-  unsigned const oarea = bbox.area();
+  unsigned const iarea = vgl_intersection(bbox_int, frame_bbox_int).volume();
+  unsigned const oarea = bbox.volume();
 
   pvohog_settings const& settings = params.settings;
 

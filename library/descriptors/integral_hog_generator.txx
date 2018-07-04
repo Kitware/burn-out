@@ -229,7 +229,7 @@ integral_hog_generator<PixType>
                          vil_image_view<float>& output )
 {
   // Validate input area
-  if( region.area() == 0 )
+  if( region.volume() == 0 )
   {
     return false;
   }

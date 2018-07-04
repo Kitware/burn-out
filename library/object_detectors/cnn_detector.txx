@@ -1206,9 +1206,9 @@ cnn_detector< PixType >
         const vgl_box_2d< unsigned >& test2_rect = detections[j].first;
         const vgl_box_2d< unsigned > box_intersect = vgl_intersection( test_rect, test2_rect );
 
-        double test_area = static_cast< double >( test_rect.area() );
-        double test2_area = static_cast< double >( test2_rect.area() );
-        double intersect_area = static_cast< double >( box_intersect.area() );
+        double test_area = static_cast< double >( test_rect.volume() );
+        double test2_area = static_cast< double >( test2_rect.volume() );
+        double intersect_area = static_cast< double >( box_intersect.volume() );
 
         if( ( test_area != 0.0 && intersect_area / test_area > percent_threshold ) ||
             ( test2_area != 0.0 && intersect_area / test2_area > percent_threshold ) )

@@ -183,7 +183,7 @@ check_track_overlaps( const vidtk::track_synthesizer_params& p,
           // check the area of the box just to be sure
           ostringstream oss;
           double expected_area = p.box_side_length * p.box_side_length;
-          double actual_area = box_map[ frame_num ].back().area();
+          double actual_area = box_map[ frame_num ].back().volume();
           oss << "track index " << i << " frame " << frame_num
               << ": area is " << actual_area << "; expected " << expected_area;
           TEST( oss.str().c_str(), actual_area, expected_area );

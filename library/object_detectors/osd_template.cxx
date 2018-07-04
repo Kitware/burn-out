@@ -134,15 +134,15 @@ bool
 can_symbols_match( const osd_symbol& sym1, const osd_symbol& sym2 )
 {
   // Position matching
-  if( sym1.region_.area() == 0 || sym2.region_.area() == 0 )
+  if( sym1.region_.volume() == 0 || sym2.region_.volume() == 0 )
   {
     return false;
   }
 
   // Calculate intersection between locations
   vgl_box_2d<double> intersect = vgl_intersection( sym1.region_, sym2.region_ );
-  double percent_overlap1 = static_cast<double>(intersect.area()) / sym1.region_.area();
-  double percent_overlap2 = static_cast<double>(intersect.area()) / sym2.region_.area();
+  double percent_overlap1 = static_cast<double>(intersect.volume()) / sym1.region_.volume();
+  double percent_overlap2 = static_cast<double>(intersect.volume()) / sym2.region_.volume();
 
   // Two symbols must overlap by at least 50% to be considered the same
   if( percent_overlap1 < 0.5 && percent_overlap2 < 0.5 )
@@ -857,7 +857,7 @@ convert_blob_to_symbol( const unsigned int& ni,
   double img_height = static_cast<double>( nj );
 
   sym.lower_size_ = static_cast<double>( blob.size() ) / img_area;
-  sym.upper_size_ = static_cast<double>( border.area() ) / img_area;
+  sym.upper_size_ = static_cast<double>( border.volume() ) / img_area;
 
   sym.symbol_ = osd_symbol::UNKNOWN;
 

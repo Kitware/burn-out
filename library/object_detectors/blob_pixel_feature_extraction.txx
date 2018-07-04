@@ -147,7 +147,7 @@ void extract_blob_pixel_features( const std::vector<vil_blob_pixel_list>& blobs,
     }
     if( output_density )
     {
-      hashed_blob_density[i] = calculate_density_hash<FeatureType>( settings, blob_size, bbox.area() );
+      hashed_blob_density[i] = calculate_density_hash<FeatureType>( settings, blob_size, bbox.volume() );
     }
     if( output_ratio )
     {

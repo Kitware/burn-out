@@ -297,7 +297,7 @@ metadata_text_parser_process<PixType>
           }
           else if( frames_without_brackets_ > required_full_width_frame_count_ )
           {
-            if( border_.area() > 0 && ( border_.min_x() > border_pixel_threshold_ ||
+            if( border_.volume() > 0 && ( border_.min_x() > border_pixel_threshold_ ||
                 border_.max_x() < static_cast<int>( image_.ni() ) - border_pixel_threshold_ ) )
             {
               gsd = twd / border_.width();

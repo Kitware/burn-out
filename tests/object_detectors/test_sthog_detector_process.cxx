@@ -93,7 +93,7 @@ int test_sthog_object_detector(const std::string& indir, const std::string& outd
     for( gt_it=gt.begin(); gt_it != gt.end(); ++gt_it, ++i )
     {
       vgl_box_2d<unsigned> overlap = vgl_intersection<unsigned>( *gt_it, img_obj->get_bbox() );
-      if( overlap.area() / gt_it->area() > 0.95 )
+      if( overlap.volume() / gt_it->area() > 0.95 )
       {
         sprintf(str, "Detect vehicle %d", i );
         TEST( str, true, true );

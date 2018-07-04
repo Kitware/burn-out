@@ -124,7 +124,7 @@ mask_merge_process
   }
 
   // fill in region around optional border
-  if( border_.area() > 0 )
+  if( border_.volume() > 0 )
   {
     borderless_out_img_.deep_copy( out_img_ );
 

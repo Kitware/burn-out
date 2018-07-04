@@ -339,7 +339,7 @@ compute_image_chip( const vil_image_view<PixType>& img,
                     double desired_max_area = 7000.0 )
 {
   // Validate input area
-  if( region.area() == 0 )
+  if( region.volume() == 0 )
   {
     return false;
   }
@@ -420,7 +420,7 @@ compute_image_chip_2( const cv::Mat& img,
                       double desired_max_area = 7000.0 )
 {
   // Validate input area
-  if( region.area() == 0 )
+  if( region.volume() == 0 )
   {
     return false;
   }
@@ -679,7 +679,7 @@ track_reinit_detector
   // Simple area feature
   if( settings.use_area_descriptor )
   {
-    output_loc[ internal_model_->area_offset ] = region_scale * region.area();
+    output_loc[ internal_model_->area_offset ] = region_scale * region.volume();
   }
 
   return true;
@@ -1013,7 +1013,7 @@ is_boundary( const vgl_box_2d<unsigned>& bbox, const unsigned ni, const unsigned
 {
   vgl_box_2d< unsigned > check_bbox( 0.20 * ni, 0.8 * ni, 0.2 * nj, 0.8 * nj );
 
-  if( vgl_intersection( check_bbox, bbox ).area() > 0 )
+  if( vgl_intersection( check_bbox, bbox ).volume() > 0 )
   {
     return false;
   }
@@ -1245,8 +1245,8 @@ track_reinit_detector
 
   linking_descriptor[22] = region_scale;
 
-  linking_descriptor[23] = psi.last_bbox_.area();
-  linking_descriptor[24] = region.area();
+  linking_descriptor[23] = psi.last_bbox_.volume();
+  linking_descriptor[24] = region.volume();
   linking_descriptor[25] = similarity_metric( linking_descriptor[23], linking_descriptor[24] );
 
   double bbox_ratio = linking_descriptor[24] / ( linking_descriptor[23] + 0.00001 );

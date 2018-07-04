@@ -51,17 +51,17 @@ namespace {  /* anonymous */
     LoadBoundingBox<currType>( b1,static_cast<currType>(0.0),static_cast<currType>(0.0),static_cast<currType>(0.0),static_cast<currType>(0.0) );
     LoadBoundingBox<currType>( b2,static_cast<currType>(0.0),static_cast<currType>(0.0),static_cast<currType>(0.0),static_cast<currType>(0.0) );
 
-    TEST( "Empty boxes have zero area", b1.area() ==static_cast<currType>(0.0), true );
+    TEST( "Empty boxes have zero area", b1.volume() ==static_cast<currType>(0.0), true );
     b3 = vgl_intersection(b1,b2);
     //Note if all coords are 0 the bbox is not defined as empty. It is just a point.
-    TEST( "Empty boxes do not intersect", b3.area() ==static_cast<currType>(0.0), true );
+    TEST( "Empty boxes do not intersect", b3.volume() ==static_cast<currType>(0.0), true );
 
     LoadBoundingBox<currType>( b1,static_cast<currType>(10.0),static_cast<currType>(10.0),static_cast<currType>(20.0),static_cast<currType>(20.0) );
     LoadBoundingBox<currType>( b2,static_cast<currType>(10.0),static_cast<currType>(10.0),static_cast<currType>(20.0),static_cast<currType>(20.0) );
 
-    TEST( "Area of a 10x10 == 100", b1.area() ==static_cast<currType>(100.0), true );
+    TEST( "Area of a 10x10 == 100", b1.volume() ==static_cast<currType>(100.0), true );
     b3 = vgl_intersection( b1, b2);
-    TEST( "Intersect equal boxes gives same area", (b3.area() ==static_cast<currType>(100.0)), true );
+    TEST( "Intersect equal boxes gives same area", (b3.volume() ==static_cast<currType>(100.0)), true );
     bool boxesEqual = ((b3.min_x() == b1.min_x()) &&
       (b3.min_y() == b1.min_y()) &&
       (b3.max_x() == b1.max_x()) &&
@@ -71,23 +71,23 @@ namespace {  /* anonymous */
     // offset b1 by five; same area; intersection should be 25
     TranslateBoundingBox<currType>( b1,static_cast<currType>(5.0),static_cast<currType>(5.0) );
     b3 = vgl_intersection( b1, b2);
-    TEST( "Area of (5,5) displacement is 25%", (b3.area() ==static_cast<currType>(25.0)), true );
+    TEST( "Area of (5,5) displacement is 25%", (b3.volume() ==static_cast<currType>(25.0)), true );
     TranslateBoundingBox<currType>( b1,static_cast<currType>(-10.0),static_cast<currType>(0.0) );
     b3 = vgl_intersection( b1, b2);
-    TEST( "Area of (-5,5) displacement is 25%", (b3.area() ==static_cast<currType>(25.0)), true );
+    TEST( "Area of (-5,5) displacement is 25%", (b3.volume() ==static_cast<currType>(25.0)), true );
     TranslateBoundingBox<currType>( b1,static_cast<currType>(0.0),static_cast<currType>(-10.0) );
     b3 = vgl_intersection( b1, b2);
-    TEST( "Area of (-5,-5) displacement is 25%", (b3.area() ==static_cast<currType>(25.0)), true );
+    TEST( "Area of (-5,-5) displacement is 25%", (b3.volume() ==static_cast<currType>(25.0)), true );
     TranslateBoundingBox<currType>( b1,static_cast<currType>(10.0),static_cast<currType>(0.0) );
     b3 = vgl_intersection( b1, b2);
-    TEST( "Area of (5,-5) displacement is 25%", (b3.area() ==static_cast<currType>(25.0)), true );
+    TEST( "Area of (5,-5) displacement is 25%", (b3.volume() ==static_cast<currType>(25.0)), true );
 
     LoadBoundingBox<currType>( b1,static_cast<currType>(-5.0),static_cast<currType>(-5.0),static_cast<currType>(5.0),static_cast<currType>(5.0) );
     LoadBoundingBox<currType>( b2,static_cast<currType>(-5.0),static_cast<currType>(-5.0),static_cast<currType>(5.0),static_cast<currType>(5.0) );
 
-    TEST( "Q1/2 Area of a 10x10 == 100", (b1.area() ==static_cast<currType>(100.0)), true );
+    TEST( "Q1/2 Area of a 10x10 == 100", (b1.volume() ==static_cast<currType>(100.0)), true );
     b3 = vgl_intersection( b1, b2);
-    TEST( "Q1/2 Intersect equal boxes gives same area", (b3.area() ==static_cast<currType>(100.0)), true );
+    TEST( "Q1/2 Intersect equal boxes gives same area", (b3.volume() ==static_cast<currType>(100.0)), true );
     boxesEqual = ((b3.min_x() == b1.min_x()) &&
       (b3.min_y() == b1.min_y()) &&
       (b3.max_x() == b1.max_x()) &&
@@ -97,22 +97,22 @@ namespace {  /* anonymous */
     // offset b1 by five; same area; intersection should be 25
     TranslateBoundingBox<currType>( b1,static_cast<currType>(5.0),static_cast<currType>(5.0) );
     b3 = vgl_intersection( b1, b2);
-    TEST( "Q1/2 Area of (5,5) displacement is 25%", (b3.area() ==static_cast<currType>(25.0)), true );
+    TEST( "Q1/2 Area of (5,5) displacement is 25%", (b3.volume() ==static_cast<currType>(25.0)), true );
     TranslateBoundingBox<currType>( b1,static_cast<currType>(-10.0),static_cast<currType>(0.0) );
     b3 = vgl_intersection( b1, b2);
-    TEST( "Q1/2 Area of (-5,5) displacement is 25%", (b3.area() ==static_cast<currType>(25.0)), true );
+    TEST( "Q1/2 Area of (-5,5) displacement is 25%", (b3.volume() ==static_cast<currType>(25.0)), true );
     TranslateBoundingBox<currType>( b1,static_cast<currType>(0.0),static_cast<currType>(-10.0) );
     b3 = vgl_intersection( b1, b2);
-    TEST( "Q1/2 Area of (-5,-5) displacement is 25%", (b3.area() ==static_cast<currType>(25.0)), true );
+    TEST( "Q1/2 Area of (-5,-5) displacement is 25%", (b3.volume() ==static_cast<currType>(25.0)), true );
     TranslateBoundingBox<currType>( b1,static_cast<currType>(10.0),static_cast<currType>(0.0) );
     b3 = vgl_intersection( b1, b2);
-    TEST( "Q1/2 Area of (5,-5) displacement is 25%", (b3.area() ==static_cast<currType>(25.0)), true );
+    TEST( "Q1/2 Area of (5,-5) displacement is 25%", (b3.volume() ==static_cast<currType>(25.0)), true );
 
 
     LoadBoundingBox<currType>( b1,static_cast<currType>(50.0),static_cast<currType>(50.0),static_cast<currType>(70.0),static_cast<currType>(60.0));
     LoadBoundingBox<currType>( b2,static_cast<currType>(69.0),static_cast<currType>(59.0),static_cast<currType>(100.0),static_cast<currType>(100.0));
     b3 = vgl_intersection( b1, b2);
-    TEST( "Q1 Single-pixel bounding box intersection", (b3.area()==static_cast<currType>(1.0)), true );
+    TEST( "Q1 Single-pixel bounding box intersection", (b3.volume()==static_cast<currType>(1.0)), true );
     bool boxExpected = ((b3.min_x() ==static_cast<currType>(69.0)) &&
       (b3.min_y() ==static_cast<currType>(59.0)) &&
       (b3.max_x() ==static_cast<currType>(70.0)) &&
@@ -122,7 +122,7 @@ namespace {  /* anonymous */
     LoadBoundingBox<currType>( b1,static_cast<currType>(-10.0),static_cast<currType>(-10.0),static_cast<currType>(10.0),static_cast<currType>(10.0));
     LoadBoundingBox<currType>( b2,static_cast<currType>(-20.0),static_cast<currType>(-20.0),static_cast<currType>(20.0),static_cast<currType>(20.0));
     b3 = vgl_intersection( b1, b2);
-    TEST( "Nested bounding box intersection", (b3.area() == 400), true );
+    TEST( "Nested bounding box intersection", (b3.volume() == 400), true );
     boxExpected = ((b3.min_x() == static_cast<currType>(-10.0)) &&
       (b3.min_y() == static_cast<currType>(-10.0)) &&
       (b3.max_x() == static_cast<currType>(10.0)) &&

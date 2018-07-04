@@ -329,7 +329,7 @@ scene_obstruction_detector<PixType,FeatureType>
   feature_array input_array;
 
   // Scale views for image border if present
-  if( border.area() > 0 )
+  if( border.volume() > 0 )
   {
     for( unsigned i = 0; i < features.size(); i++ )
     {
@@ -439,7 +439,7 @@ scene_obstruction_detector<PixType,FeatureType>
 
   // Estimate colour and intensity (take a quick cross-channel mode).
   // Concurrently count # of pixels in the detected mask approximation.
-  const bool was_border_set = ( border.area() > 0 );
+  const bool was_border_set = ( border.volume() > 0 );
   const bool is_color_image = ( input.nplanes() == 3 );
 
   const unsigned lower_i = ( was_border_set ? border.min_x() : 0 );
@@ -761,7 +761,7 @@ scene_obstruction_detector<PixType,FeatureType>
     classifier_image_list.push_back( clfied );
     double lmax, lmin;
     vil_image_view< double > reg = classifier_image_list[i];
-    if( border.area() > 0 )
+    if( border.volume() > 0 )
     {
       reg = point_view_to_region( classifier_image_list[i], border );
     }

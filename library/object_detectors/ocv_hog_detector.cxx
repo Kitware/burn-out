@@ -332,7 +332,7 @@ ocv_hog_detector
       obj->set_confidence( confidence_values_[i] );
     }
 
-    obj->set_image_area( bbox.area() );
+    obj->set_image_area( bbox.volume() );
 
     if( obj->get_image_area() == 0 )
     {
@@ -343,7 +343,7 @@ ocv_hog_detector
     {
       for( unsigned j = 0; j < ignore_regions_.size(); ++j )
       {
-        if( vgl_intersection( ignore_regions_[j], bbox ).area() > 0 )
+        if( vgl_intersection( ignore_regions_[j], bbox ).volume() > 0 )
         {
           continue;
         }

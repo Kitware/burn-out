@@ -488,7 +488,7 @@ filter_image_objects_process< PixType >
 ::filter_out_min_occupied_bbox( image_object_sptr const& obj ) const
 {
   //Both areas have to be in pixels or meters.
-  double area_ratio = vgl_area( obj->get_boundary() ) / obj->get_bbox().area();
+  double area_ratio = vgl_area( obj->get_boundary() ) / obj->get_bbox().volume();
 
   return area_ratio < min_occupied_bbox_;
 }
@@ -692,7 +692,7 @@ filter_image_objects_process< PixType >
 
     vgl_box_2d<unsigned> intersection = vgl_intersection((*i)->get_bbox(), obj->get_bbox());
     if (!intersection.is_empty()
-        && (1.0 * intersection.area() / (*i)->get_bbox().area()) > max_occlusion_ )
+        && (1.0 * intersection.volume() / (*i)->get_bbox().volume()) > max_occlusion_ )
     {
       // Remove 'obj' because we want to remove the *bigger* box occludding the smaller (*i->get_bbox()).
       return true;

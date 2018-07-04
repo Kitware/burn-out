@@ -283,7 +283,7 @@ border_detection_process<PixType>
 
   // Check fixed flag
   if( fix_border_ &&
-      detected_border_.area() > 0 &&
+      detected_border_.volume() > 0 &&
       ( !frame_hold_ || initial_hold_count_ == 0 ) )
   {
     color_image_ = NULL;
@@ -387,13 +387,13 @@ border_detection_process<PixType>
 
   adj_border = vgl_intersection( adj_border, min_border );
 
-  if( max_border.area() > 0 )
+  if( max_border.volume() > 0 )
   {
     adj_border.add( max_border );
   }
 
   // Unlikely special case: The entire image is considered a border.
-  if( adj_border.area() == 0 )
+  if( adj_border.volume() == 0 )
   {
     output_mask_image_.fill( true );
   }

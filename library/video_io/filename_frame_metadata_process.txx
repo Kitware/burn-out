@@ -958,7 +958,7 @@ filename_frame_metadata_process<PixType>
       this->impl_->roi_pixel, full_pixel);
 
     // Early exit if we are entirely out of bounds
-    if(roi_sub.area() == 0)
+    if(roi_sub.volume() == 0)
     {
       LOG_WARN(this->name() << ": ROI is entirely out of bounds");
       return !this->impl_->oob_skip;

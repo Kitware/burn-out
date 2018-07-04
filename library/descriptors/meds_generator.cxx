@@ -270,7 +270,7 @@ meds_generator
   frame_data.features[1] = 0.0;
   frame_data.features[2] = compute_obj_angle( last_state->vel_ );
   frame_data.features[3] = compute_bbox_side_ratio( frame_data.bbox );
-  frame_data.features[4] = frame_data.bbox.area() * frame_gsd;
+  frame_data.features[4] = frame_data.bbox.volume() * frame_gsd;
 
   if( frame_data.features[0] > data->max_speed )
   {
@@ -348,9 +348,9 @@ meds_generator
   {
     descriptor_values[8] = obj->get_area();
 
-    if( frame_data.bbox.area() != 0 && obj->get_area() != -1 )
+    if( frame_data.bbox.volume() != 0 && obj->get_area() != -1 )
     {
-      descriptor_values[17] = obj->get_area() / frame_data.bbox.area();
+      descriptor_values[17] = obj->get_area() / frame_data.bbox.volume();
     }
   }
 

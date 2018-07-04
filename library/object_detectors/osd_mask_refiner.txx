@@ -331,7 +331,7 @@ osd_mask_refiner<PixType,FeatureType>
 
   image_region center_region( 0, input_image.ni(), 0, input_image.nj() );
 
-  if( input_border.area() > 0 )
+  if( input_border.volume() > 0 )
   {
     center_region = image_region( input_border.min_x(),
                                   input_border.max_x(),

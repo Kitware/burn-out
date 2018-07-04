@@ -697,19 +697,19 @@ void fill_border_pixels( vil_image_view< PixType >& img,
   image_border region4( border.max_x(), ni, border.min_y(), border.max_y() );
 
   // Fill regions
-  if( region1.area() > 0 )
+  if( region1.volume() > 0 )
   {
     point_view_to_region( img, region1 ).fill( value );
   }
-  if( region2.area() > 0 )
+  if( region2.volume() > 0 )
   {
     point_view_to_region( img, region2 ).fill( value );
   }
-  if( region3.area() > 0 )
+  if( region3.volume() > 0 )
   {
     point_view_to_region( img, region3 ).fill( value );
   }
-  if( region4.area() > 0 )
+  if( region4.volume() > 0 )
   {
     point_view_to_region( img, region4 ).fill( value );
   }

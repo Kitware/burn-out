@@ -174,7 +174,7 @@ image_object_reader_kw18
         ( min_y < 0 ? 0 : min_y ),
         ( max_y < 0 ? 0 : max_y ) );
 
-      obj->set_image_area( obj->get_bbox().area() );
+      obj->set_image_area( obj->get_bbox().volume() );
 
       obj->set_area( atof( col[COL_AREA].c_str() ) );
 

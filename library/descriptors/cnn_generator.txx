@@ -285,7 +285,7 @@ cnn_generator<PixType>
                          vil_image_view< vxl_byte>& output )
 {
   // Validate input area
-  if( region.area() == 0 )
+  if( region.volume() == 0 )
   {
     return false;
   }

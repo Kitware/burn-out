@@ -72,7 +72,7 @@ pixel_feature_writer< PixType >
     LOG_INFO( "Found groundtruth for frame " << frame_counter_ );
   }
 
-  if( border.area() > 0 )
+  if( border.volume() > 0 )
   {
     gt_image = point_view_to_region( gt_image, border );
   }
@@ -151,7 +151,7 @@ pixel_feature_writer< PixType >
     LOG_INFO( "Found groundtruth for frame " << frame_counter_ );
   }
 
-  if( border.area() > 0 )
+  if( border.volume() > 0 )
   {
     gt_image = point_view_to_region( gt_image, border );
   }

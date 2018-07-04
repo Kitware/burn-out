@@ -124,7 +124,7 @@ public:
     std::vector< task_t > tasks;
     std::vector< image_border > required_regions;
 
-    if( border.area() > 0 )
+    if( border.volume() > 0 )
     {
       image_border adjusted_border(
         border.min_x() + border_pixel_ignore_count_,
@@ -132,7 +132,7 @@ public:
         border.min_y() + border_pixel_ignore_count_,
         border.max_y() - border_pixel_ignore_count_ );
 
-      if( adjusted_border.area() > 0 )
+      if( adjusted_border.volume() > 0 )
       {
         required_regions.push_back( adjusted_border );
       }
@@ -157,19 +157,19 @@ public:
           border.max_x() + border_pixel_ignore_count_,
           border.max_y() + border_pixel_ignore_count_, a1.nj() );
 
-        if( border_reg1.area() > 0 )
+        if( border_reg1.volume() > 0 )
         {
           required_regions.push_back( border_reg1 );
         }
-        if( border_reg2.area() > 0 )
+        if( border_reg2.volume() > 0 )
         {
           required_regions.push_back( border_reg2 );
         }
-        if( border_reg3.area() > 0 )
+        if( border_reg3.volume() > 0 )
         {
           required_regions.push_back( border_reg3 );
         }
-        if( border_reg4.area() > 0 )
+        if( border_reg4.volume() > 0 )
         {
           required_regions.push_back( border_reg4 );
         }
@@ -196,7 +196,7 @@ public:
                                   region.min_y() + j * region.height() / ty_,
                                   region.min_y() + ( j + 1 ) * region.height() / ty_ + inner_adj_y );
 
-          if( subregion.area() > 0 )
+          if( subregion.volume() > 0 )
           {
             Arg1 a1_reg = ( a1 ? point_view_to_region( a1, subregion ) : a1 );
             Arg2 a2_reg = ( a2 ? point_view_to_region( a2, subregion ) : a2 );

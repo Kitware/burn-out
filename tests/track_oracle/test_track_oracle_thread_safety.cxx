@@ -68,7 +68,7 @@ track_stats
     {
       if (bounding_box.exists( frames[j].row ))
       {
-        this->sum_frame_area += bounding_box( frames[j].row ).area();
+        this->sum_frame_area += bounding_box( frames[j].row ).volume();
       }
     }
   }
