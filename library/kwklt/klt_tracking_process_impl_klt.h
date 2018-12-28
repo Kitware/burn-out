@@ -16,6 +16,8 @@
 #include <utilities/config_block.h>
 #include <utilities/timestamp.h>
 
+#include <vector>
+
 namespace vidtk
 {
 
@@ -57,7 +59,7 @@ protected:
   KLT_TrackingContext klt_tracking_context_;
   KLT_FeatureList klt_feature_list_;
 
-  vcl_vector<klt_track_ptr> current_;
+  std::vector<klt_track_ptr> current_;
 };
 
 

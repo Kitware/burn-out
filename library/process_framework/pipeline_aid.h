@@ -37,7 +37,7 @@
 //the templated functions.  In VC 8, 9, and 10 the *_port_unimplemnted_by_design
 //causes many, many, many warnings.
 //NOTE: We might want to come up with a cleaner solutions to this.
-#if defined(VCL_VC_8) || defined(VCL_VC_9) || defined (VCL_VC_10)
+#if _MSC_VER >= 1400 && _MSC_VER <= 1600
 #  define VIDTK_ALLOW_SEMICOLON_AT_END( FunctionName )
 #else
 #  define VIDTK_ALLOW_SEMICOLON_AT_END( FunctionName ) \
