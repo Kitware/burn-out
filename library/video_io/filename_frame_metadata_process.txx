@@ -330,7 +330,7 @@ filename_frame_metadata_process<PixType>
 
   // Initialize the decoding stream
   vil_image_resource_sptr img = vil_load_image_resource_raw(stream.as_pointer());
-  skip_status = this->check_skip(img, "Failed to determine file type.");
+  skip_status = this->check_skip(img.ptr(), "Failed to determine file type.");
   if(skip_status != process::SUCCESS)
   {
     return skip_status;

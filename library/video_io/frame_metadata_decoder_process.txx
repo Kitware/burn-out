@@ -399,7 +399,7 @@ frame_metadata_decoder_process< PixType >
 ::generic_load_image( std::string & fname )
 {
   vil_image_resource_sptr img = vil_load_image_resource( fname.c_str() );
-  if( img )
+  if( img.ptr() )
   {
     if( this->has_roi_ )
     {
@@ -425,7 +425,7 @@ frame_metadata_decoder_process< PixType >
     LOG_ERROR( this->name() << ": couldn't load image \"" << fname << "\"" );
     img_ = vil_image_view<PixType>();
   }
-  return img;
+  return img.ptr();
 }
 
 } // end namespace vidtk
