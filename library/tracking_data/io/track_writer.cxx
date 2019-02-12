@@ -107,7 +107,7 @@ track_writer
 ::set_format(std::string const& format)
 {
   writer_ = get_writer(format);
-  return writer_ != NULL;
+  return !writer_;
 }
 
 
@@ -116,7 +116,7 @@ bool
 track_writer
 ::open( std::string const& fname )
 {
-  if(writer_ == NULL && !fname.empty())
+  if(!writer_ && !fname.empty())
   {
     std::string file_ext = fname.substr(fname.rfind(".")+1);
     writer_ = get_writer(file_ext);

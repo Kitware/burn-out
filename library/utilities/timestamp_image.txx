@@ -16,7 +16,7 @@
 
 // implementation 0 means unimplemented.
 // implementation 1 uses Unix style time.h and sys/time.h
-#if defined(VCL_VC)
+#if defined(VCL_VC) || defined(WIN32)
 # define IMPLEMENTATION 0
 #else
 # include <sys/time.h>

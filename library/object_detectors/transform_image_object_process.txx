@@ -76,7 +76,7 @@ transform_image_object_process< PIXEL_TYPE >
   in_objs_ = NULL;
   out_objs_.clear();
   img_ = NULL;
-  if(function_ == NULL)
+  if(!function_)
   {
     return false;
   }
@@ -88,7 +88,7 @@ bool
 transform_image_object_process< PIXEL_TYPE >
 ::step()
 {
-  if(function_ == NULL)
+  if(!function_)
   {
     return false;
   }

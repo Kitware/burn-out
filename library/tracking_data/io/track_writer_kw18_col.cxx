@@ -119,7 +119,7 @@ track_writer_kw18_col
       ( *fstr_ ) << tss->vel_( 1 ) << " ";
     }
     std::vector< image_object_sptr > objs;
-    if ( ! tss->data_.get( tracking_keys::img_objs, objs ) || objs.empty() || ( objs[0] == NULL ) )
+    if ( ! tss->data_.get( tracking_keys::img_objs, objs ) || objs.empty() || !objs[0] )
     {
       ( *fstr_ ) << tss->loc_( 0 ) << " ";
       ( *fstr_ ) << tss->loc_( 1 ) << " ";
