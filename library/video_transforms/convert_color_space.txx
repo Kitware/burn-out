@@ -10,8 +10,8 @@
 #include <vil/vil_copy.h>
 
 #ifdef USE_OPENCV
-#include <opencv/cxcore.h>
-#include <opencv/cv.h>
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 
 #include <utilities/vxl_to_cv_converters.h>
 #endif

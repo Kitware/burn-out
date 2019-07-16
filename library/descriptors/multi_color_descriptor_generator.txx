@@ -6,7 +6,11 @@
 
 #include "multi_color_descriptor_generator.h"
 
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+
 #include <tracking_data/pvo_probability.h>
+
 #include <utilities/vxl_to_cv_converters.h>
 
 #include <vil/vil_transform.h>
