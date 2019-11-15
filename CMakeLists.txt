@@ -12,8 +12,13 @@ include_directories(SYSTEM ${VXL_VCL_INCLUDE_DIR})
 include_directories(SYSTEM ${VXL_CORE_INCLUDE_DIR})
 link_directories(${VXL_LIBRARY_DIR})
 
-find_package(Qt4 4.7.0 REQUIRED)
-include(${QT_USE_FILE})
+# qt is an optional requirement
+option( VIDTK_ENABLE_QT "Build with Qt support for IO and basic GUIs." OFF )
+
+if( VIDTK_ENABLE_QT )
+  find_package(Qt4 4.7.0 REQUIRED)
+  include(${QT_USE_FILE})
+endif()
 
 # Handle setting caffe GPU settings, can be modified once caffe exports its
 # cmake variables properly

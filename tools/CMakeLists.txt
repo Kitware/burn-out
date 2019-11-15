@@ -69,18 +69,20 @@ if( VIDTK_ENABLE_OPENCV )
     vidtk_video_io vidtk_object_detectors
     vidtk_pipeline_framework vidtk_pipelines )
 
-  if( VIDTK_ENABLE_MAPTK )
-    add_vidtk_tool( burnout_cli
-      burnout_cli.cxx
-      vidtk_video_io vidtk_object_detectors
-      ${QT_LIBRARIES} kwiversys vital vital_apm
-      vidtk_pipeline_framework vidtk_pipelines )
-  else()
-    add_vidtk_tool( burnout_cli
-      burnout_cli.cxx
-      vidtk_video_io vidtk_object_detectors
-      ${QT_LIBRARIES}
-      vidtk_pipeline_framework vidtk_pipelines )
+  if( VIDTK_ENABLE_QT )
+    if( VIDTK_ENABLE_MAPTK )
+      add_vidtk_tool( burnout_cli
+        burnout_cli.cxx
+        vidtk_video_io vidtk_object_detectors
+        ${QT_LIBRARIES} kwiversys vital vital_apm
+        vidtk_pipeline_framework vidtk_pipelines )
+    else()
+      add_vidtk_tool( burnout_cli
+        burnout_cli.cxx
+        vidtk_video_io vidtk_object_detectors
+        ${QT_LIBRARIES}
+        vidtk_pipeline_framework vidtk_pipelines )
+    endif()
   endif()
 
   add_vidtk_tool( video_enhancement

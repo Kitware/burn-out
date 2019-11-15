@@ -14,9 +14,14 @@ set( vidtk_video_io_sources
   vidl_ffmpeg_frame_process.h             vidl_ffmpeg_frame_process.cxx
   vidl_ffmpeg_metadata_frame_process.h    vidl_ffmpeg_metadata_frame_process.cxx
   vidl_ffmpeg_writer_process.h            vidl_ffmpeg_writer_process.cxx
-  qt_ffmpeg_writer_process.h              qt_ffmpeg_writer_process.cxx
   mask_reader_process.h                   mask_reader_process.cxx
 )
+
+if(VIDTK_HAS_QT)
+  set( vidtk_video_io_sources
+    ${vidtk_video_io_sources}
+    qt_ffmpeg_writer_process.h            qt_ffmpeg_writer_process.cxx )
+endif()
 
 if(VIDTK_HAS_GDAL)
   include_directories(SYSTEM ${GDAL_INCLUDE_DIR})
