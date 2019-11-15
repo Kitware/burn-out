@@ -8,6 +8,7 @@
 
 #include <utilities/vxl_to_cv_converters.h>
 
+#include "opencv2/imgproc.hpp"
 
 namespace vidtk
 {

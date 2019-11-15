@@ -29,21 +29,9 @@ if( VIDTK_ENABLE_OPENCV )
   set( vidtk_descriptor_sources
     ${vidtk_descriptor_sources}
     color_descriptor_helpers_opencv.h    color_descriptor_helpers_opencv.cxx
-    dpm_tot_generator.h                  dpm_tot_generator.cxx
-    multi_color_descriptor_generator.h  multi_color_descriptor_generator.txx
+    multi_color_descriptor_generator.h   multi_color_descriptor_generator.txx
     simple_color_histogram_generator.h   simple_color_histogram_generator.txx
-    pvohog_generator.h                   pvohog_generator.cxx
-    pvohog_track_data.h                  pvohog_track_data.cxx
-    sthog_descriptor.h                   sthog_descriptor.cxx
-    sthog_cache.h
     )
-
-  if( WIN32 )
-    set( vidtk_descriptor_sources
-      ${vidtk_descriptor_sources}
-      sthog_cache.cxx
-      )
-  endif()
 endif()
 
 

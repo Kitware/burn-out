@@ -13,15 +13,6 @@ set( vidtk_learning_sources
   learner_data_class_vector.h
   )
 
-if( VIDTK_ENABLE_OPENCV )
-  set( vidtk_learning_sources
-    ${vidtk_learning_sources}
-    kwsvm.h
-    kwsvm.cxx
-    kwsvm_ocv.cxx
-    )
-endif()
-
 if( VIDTK_ENABLE_LIBSVM )
   set( vidtk_learning_sources
     ${vidtk_learning_sources}
@@ -35,9 +26,6 @@ set_target_properties( vidtk_learning PROPERTIES
   VERSION ${vidtk_VERSION} SOVERSION ${vidtk_VERSION}
   )
 
-if( VIDTK_ENABLE_OPENCV )
-  target_link_libraries( vidtk_learning ${OpenCV_LIBS} vidtk_utilities ${vidtk_utilites_plugin_lib} )
-endif()
 
 if( VIDTK_ENABLE_LIBSVM )
   target_link_libraries( vidtk_learning ${LIBSVM_LIBRARY} )

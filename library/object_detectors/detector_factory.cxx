@@ -14,10 +14,6 @@
 #include "motion_and_saliency_detector_pipeline.h"
 #include "detection_reader_pipeline.h"
 
-#ifdef USE_OPENCV
-#include "ocv_hog_detector_pipeline.h"
-#endif
-
 #ifdef USE_CAFFE
 #include "cnn_detector_pipeline.h"
 #include "motion_and_cnn_detector_pipeline.h"
@@ -44,9 +40,6 @@ namespace vidtk
   MACRO( motion_and_saliency, motion_and_saliency_detector_pipeline );  \
   MACRO( detection_reader,    detection_reader_pipeline );
 
-#define OPENCV_VARIANTS( MACRO )                                        \
-  MACRO( ocv_hog_detector,    ocv_hog_detector_pipeline );
-
 #define CAFFE_VARIANTS( MACRO )                                         \
   MACRO( cnn_detector,        cnn_detector_pipeline );                  \
   MACRO( motion_and_cnn,      motion_and_cnn_detector_pipeline );       \
@@ -56,10 +49,6 @@ namespace vidtk
 // Should not need to change anything below here
 // ==================================================================
 // Compile List of All Variants
-#ifndef USE_OPENCV
-  #undef OPENCV_VARIANTS
-  #define OPENCV_VARIANTS( MACRO )
-#endif
 
 #ifndef USE_CAFFE
   #undef CAFFE_VARIANTS
@@ -68,7 +57,6 @@ namespace vidtk
 
 #define VARIANTS( MACRO )                                               \
   VXL_VARIANTS( MACRO )                                                 \
-  OPENCV_VARIANTS( MACRO )                                              \
   CAFFE_VARIANTS( MACRO )
 
 

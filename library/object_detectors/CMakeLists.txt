@@ -64,7 +64,6 @@ set( vidtk_object_detector_sources
   threaded_detector.h
   three_frame_differencing.h                three_frame_differencing.txx
   three_frame_differencing_process.h        three_frame_differencing_process.txx
-  track_reinit_detector.h                   track_reinit_detector.cxx
   transform_image_object_functors.h         transform_image_object_functors.txx
   transform_image_object_process.h          transform_image_object_process.txx
 )
@@ -73,13 +72,7 @@ if( VIDTK_ENABLE_OPENCV )
   set( vidtk_object_detector_sources
     ${vidtk_object_detector_sources}
     moving_burnin_detector_opencv.h           moving_burnin_detector_opencv.cxx
-    ocv_hog_detector.h                        ocv_hog_detector.cxx
-    ocv_hog_detector_pipeline.h               ocv_hog_detector_pipeline.txx
-    ocv_hog_detector_process.h                ocv_hog_detector_process.cxx
-    ocv_multi_image_hog_process.h             ocv_multi_image_hog_process.cxx
     ocv_training_display.h                    ocv_training_display.cxx
-    sthog_detector.h                          sthog_detector.cxx
-    sthog_detector_process.h                  sthog_detector_process.txx
     )
 endif()
 

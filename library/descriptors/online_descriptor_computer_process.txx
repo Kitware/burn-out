@@ -19,8 +19,6 @@
 #ifdef USE_OPENCV
 #include <descriptors/simple_color_histogram_generator.h>
 #include <descriptors/multi_color_descriptor_generator.h>
-#include <descriptors/pvohog_generator.h>
-#include <descriptors/dpm_tot_generator.h>
 #endif
 
 #ifdef USE_CAFFE
@@ -56,9 +54,6 @@ VIDTK_LOGGER ("online_descriptor_computer_process");
 #define OPENCV_DESCRIPTORS( MACRO ) \
   MACRO( simple_color_histogram, simple_color_histogram, <PixType> ); \
   MACRO( multi_color_descriptor, multi_color_descriptor, <PixType> ); \
-  MACRO( pvohog, pvohog, ); \
-  MACRO( pvohog, pvohog_2, ); \
-  MACRO( dpm_tot, dpm_tot, ); \
 
 #define VLFEAT_DESCRIPTORS( MACRO ) \
   MACRO( dsift_bow, dsift_bow, <PixType> ); \

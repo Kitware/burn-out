@@ -13,10 +13,6 @@
 #include <object_detectors/motion_and_saliency_detector_pipeline.txx>
 #include <object_detectors/detection_reader_pipeline.txx>
 
-#ifdef USE_OPENCV
-#include <object_detectors/ocv_hog_detector_pipeline.txx>
-#endif
-
 #ifdef USE_CAFFE
 #include <object_detectors/cnn_detector_pipeline.txx>
 #include <object_detectors/motion_and_cnn_detector_pipeline.txx>
@@ -29,17 +25,10 @@ template class vidtk::motion_detector_pipeline< T >;                     \
 template class vidtk::motion_and_saliency_detector_pipeline< T >;        \
 template class vidtk::detection_reader_pipeline< T >;                    \
 
-#define DETECTOR_LIST_OCV(T)                                             \
-template class vidtk::ocv_hog_detector_pipeline< T >;
-
 #define DETECTOR_LIST_CFE(T)                                             \
 template class vidtk::cnn_detector_pipeline< T >;                        \
 template class vidtk::motion_and_cnn_detector_pipeline< T >;             \
 
-#ifndef USE_OPENCV
-  #undef DETECTOR_LIST_OCV
-  #define DETECTOR_LIST_OCV(T)
-#endif
 
 #ifndef USE_CAFFE
   #undef DETECTOR_LIST_CFE
@@ -48,7 +37,6 @@ template class vidtk::motion_and_cnn_detector_pipeline< T >;             \
 
 #define DETECTOR_LIST(T)                                                 \
   DETECTOR_LIST_VXL(T)                                                   \
-  DETECTOR_LIST_OCV(T)                                                   \
   DETECTOR_LIST_CFE(T)
 
 
